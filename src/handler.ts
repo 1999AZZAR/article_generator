@@ -29,35 +29,6 @@ export interface NovelResponse {
   }>;
 }
 
-// Create a simple RTF (Rich Text Format) file that can be opened by Word
-function createSimpleRtf(title: string, subtitle: string, content: string): Uint8Array {
-  // Escape RTF special characters
-  const escapeRtf = (text: string) => {
-    return text
-      .replace(/\\/g, '\\\\')
-      .replace(/\{/g, '\\{')
-      .replace(/\}/g, '\\}')
-      .replace(/\n/g, '\\par ')
-      .replace(/\t/g, '\\tab ');
-  };
-
-  const titleRtf = escapeRtf(title);
-  const subtitleRtf = subtitle ? escapeRtf(subtitle) : '';
-  const contentRtf = escapeRtf(content);
-
-  // Create RTF content with formatting
-  const rtfContent = `{\\rtf1\\ansi\\deff0
-{\\fonttbl{\\f0 Times New Roman;}}
-{\\colortbl;\\red0\\green0\\blue0;}
-\\margl1440\\margr1440\\margt1440\\margb1440
-\\pard\\qc\\f0\\fs36\\b ${titleRtf}\\par
-${subtitle ? `\\pard\\qc\\f0\\fs24\\i ${subtitleRtf}\\par\\par` : '\\par'}
-\\pard\\f0\\fs22 ${contentRtf}
-}`;
-
-  const encoder = new TextEncoder();
-  return encoder.encode(rtfContent);
-}
 
 export async function handleRequest(request: Request, env: { GEMINI_API_KEY: string }): Promise<Response> {
   // Handle CORS
@@ -121,79 +92,7 @@ export async function handleRequest(request: Request, env: { GEMINI_API_KEY: str
     }
   }
 
-  if (request.method === 'POST' && new URL(request.url).pathname === '/api/export-chapter') {
-    try {
-      const body: {
-        chapterNumber: number;
-        chapterTitle: string;
-        chapterSubtitle: string;
-        content: string;
-      } = await request.json();
 
-      const { chapterNumber, chapterTitle, chapterSubtitle, content } = body;
-
-      if (!chapterTitle || !content) {
-        return new Response(JSON.stringify({ error: 'Chapter title and content are required' }), {
-          status: 400,
-          headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
-        });
-      }
-
-      // Create RTF content for the chapter
-      const chapterRtfContent = createSimpleRtf(
-        `Chapter ${chapterNumber}: ${chapterTitle}`,
-        chapterSubtitle,
-        content
-      );
-
-      return new Response(chapterRtfContent, {
-        status: 200,
-        headers: {
-          'Content-Type': 'application/rtf',
-          'Content-Disposition': `attachment; filename="${chapterTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_chapter_${chapterNumber}.rtf"`,
-          'Access-Control-Allow-Origin': '*',
-        },
-      });
-    } catch (error) {
-      console.error('Chapter export error:', error);
-      return new Response(JSON.stringify({ error: 'Chapter export failed' }), {
-        status: 500,
-        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
-      });
-    }
-  }
-
-  if (request.method === 'POST' && new URL(request.url).pathname === '/api/export-docx') {
-    try {
-      const body: { title: string; subtitle?: string; content: string } = await request.json();
-      const { title, subtitle, content } = body;
-
-      if (!title || !content) {
-        return new Response(JSON.stringify({ error: 'Title and content are required' }), {
-          status: 400,
-          headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
-        });
-      }
-
-      // Create an RTF file that can be opened by Microsoft Word and other word processors
-      const rtfContent = createSimpleRtf(title, subtitle || '', content);
-
-      return new Response(rtfContent, {
-        status: 200,
-        headers: {
-          'Content-Type': 'application/rtf',
-          'Content-Disposition': `attachment; filename="${title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.rtf"`,
-          'Access-Control-Allow-Origin': '*',
-        },
-      });
-    } catch (error) {
-      console.error('DOCX export error:', error);
-      return new Response(JSON.stringify({ error: 'Export failed' }), {
-        status: 500,
-        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
-      });
-    }
-  }
 
   if (request.method === 'POST' && new URL(request.url).pathname === '/api/test-key') {
     try {
@@ -1101,7 +1000,6 @@ async function serveStatic(request: Request): Promise<Response> {
                 missingFields: 'Missing required fields',
                 tagsRequired: 'Please add at least one tag',
                 exportMarkdown: 'Export as Markdown',
-                exportRtf: 'Export as RTF',
                 generateChapter: 'Generate Chapter Content',
                 generatingChapter: 'Generating...',
                 regenerateChapter: 'Regenerate Chapter',
@@ -1193,7 +1091,6 @@ async function serveStatic(request: Request): Promise<Response> {
                 missingFields: 'Kolom yang diperlukan tidak lengkap',
                 tagsRequired: 'Silakan tambahkan setidaknya satu tag',
                 exportMarkdown: 'Ekspor sebagai Markdown',
-                exportRtf: 'Ekspor sebagai RTF',
                 generateChapter: 'Hasilkan Konten Bab',
                 generatingChapter: 'Menghasilkan...',
                 regenerateChapter: 'Hasilkan Ulang Bab',
@@ -1564,9 +1461,6 @@ async function serveStatic(request: Request): Promise<Response> {
                                 <button class="export-btn" onclick="exportAsMarkdown()">
                                     📄 \${texts.exportMarkdown}
                                 </button>
-                                <button class="export-btn" onclick="exportAsRtf()">
-                                    📝 \${texts.exportRtf}
-                                </button>
                             </div>
                         </div>
                     \`;
@@ -1667,9 +1561,6 @@ async function serveStatic(request: Request): Promise<Response> {
                                 <button class="export-btn" onclick="exportNovelAsMarkdown()">
                                     📄 \${texts.exportMarkdown}
                                 </button>
-                                <button class="export-btn" onclick="exportNovelAsRtf()">
-                                    📝 \${texts.exportRtf}
-                                </button>
                             </div>
                         </div>
                     \`;
@@ -1727,58 +1618,6 @@ async function serveStatic(request: Request): Promise<Response> {
             URL.revokeObjectURL(url);
         }
 
-        async         function exportAsRtf() {
-            const selectedTitle = document.getElementById('selectedTitle').value;
-            const selectedSubtitle = document.getElementById('selectedSubtitle').value;
-
-            if (!selectedTitle) {
-                alert('Please select a title first.');
-                return;
-            }
-
-            // Get the content from the result
-            const contentElement = document.querySelector('.content-display');
-            if (!contentElement) {
-                alert('No content found to export.');
-                return;
-            }
-
-            const content = contentElement.textContent || contentElement.innerText;
-
-            try {
-                // Send to backend for RTF generation
-                const response = await fetch('/api/export-docx', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        title: selectedTitle,
-                        subtitle: selectedSubtitle,
-                        content: content
-                    })
-                });
-
-                if (!response.ok) {
-                    throw new Error('Export failed');
-                }
-
-                // Download the RTF file
-                const blob = await response.blob();
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = \`\${selectedTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.rtf\`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-
-            } catch (error) {
-                alert('RTF export failed. Please try Markdown export instead.');
-                console.error('RTF export error:', error);
-            }
-        }
 
         function toggleChapter(chapterNumber) {
             const contentSection = document.getElementById(\`chapter-content-section-\${chapterNumber}\`);
@@ -1896,57 +1735,18 @@ async function serveStatic(request: Request): Promise<Response> {
 
             const content = contentElement.textContent || contentElement.innerText;
 
-            // Show export options dialog
-            const exportChoice = confirm(\`Export Chapter \${chapterNumber} as:\n\nOK = RTF (Word compatible)\nCancel = Markdown\`);
+            // Export as Markdown (client-side)
+            const markdown = \`# Chapter \${chapterNumber}: \${chapterTitle}\n\n## \${chapterSubtitle}\n\n\${content}\n\n---\n\`;
 
-            if (exportChoice) {
-                // Export as RTF
-                try {
-                    const response = await fetch('/api/export-chapter', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            chapterNumber: chapterNumber,
-                            chapterTitle: chapterTitle,
-                            chapterSubtitle: chapterSubtitle,
-                            content: content
-                        })
-                    });
-
-                    if (!response.ok) {
-                        throw new Error('Export failed');
-                    }
-
-                    const blob = await response.blob();
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = \`\${chapterTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_chapter_\${chapterNumber}.rtf\`;
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
-
-                } catch (error) {
-                    alert('Chapter RTF export failed. Please try again.');
-                    console.error('Chapter RTF export error:', error);
-                }
-            } else {
-                // Export as Markdown (client-side)
-                const markdown = \`# Chapter \${chapterNumber}: \${chapterTitle}\n\n## \${chapterSubtitle}\n\n\${content}\n\n---\n\`;
-
-                const blob = new Blob([markdown], { type: 'text/markdown' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = \`\${chapterTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_chapter_\${chapterNumber}.md\`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-            }
+            const blob = new Blob([markdown], { type: 'text/markdown' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = \`\${chapterTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_chapter_\${chapterNumber}.md\`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
         }
 
         function exportNovelAsMarkdown() {
@@ -2001,76 +1801,6 @@ async function serveStatic(request: Request): Promise<Response> {
             URL.revokeObjectURL(url);
         }
 
-        async function exportNovelAsRtf() {
-            const selectedTitle = document.getElementById('selectedNovelTitle').value;
-
-            if (!selectedTitle) {
-                alert('Please select a novel title first.');
-                return;
-            }
-
-            // Collect all content
-            const chapters = [];
-            const chapterItems = document.querySelectorAll('.chapter-item');
-
-            chapterItems.forEach((item, index) => {
-                const chapterNumber = index + 1;
-                const chapterTitle = item.querySelector('.chapter-number').textContent;
-                const chapterContent = item.querySelector('.chapter-content');
-
-                chapters.push({
-                    number: chapterNumber,
-                    title: chapterTitle,
-                    content: chapterContent && chapterContent.style.display !== 'none' ?
-                        chapterContent.textContent : '[Chapter content not generated yet]'
-                });
-            });
-
-            // Get synopsis
-            const synopsisElement = document.querySelector('.content-display');
-            const synopsis = synopsisElement ?
-                (synopsisElement.textContent || synopsisElement.innerText) : '';
-
-            // Combine all content
-            let fullContent = \`Synopsis:\n\n\${synopsis}\n\n\`;
-            chapters.forEach(chapter => {
-                fullContent += \`\${chapter.title}\n\n\${chapter.content}\n\n\`;
-            });
-
-            try {
-                // Send to backend for RTF generation
-                const response = await fetch('/api/export-docx', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        title: selectedTitle,
-                        subtitle: 'Novel',
-                        content: fullContent
-                    })
-                });
-
-                if (!response.ok) {
-                    throw new Error('Export failed');
-                }
-
-                // Download the RTF file
-                const blob = await response.blob();
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = \`\${selectedTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_novel.rtf\`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-
-            } catch (error) {
-                alert('RTF export failed. Please try Markdown export instead.');
-                console.error('RTF export error:', error);
-            }
-        }
     </script>
 </body>
 </html>`;
