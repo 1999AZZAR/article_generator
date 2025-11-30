@@ -1610,8 +1610,8 @@ async function serveStatic(request: Request): Promise<Response> {
                         <div class="result-section">
                             <h3>\${texts.outline}</h3>
                             <div class="chapter-outline">
-                                \${result.outline.map(chapter => \`
-                                    <div class="chapter-item">
+                                  \${result.outline.map(chapter => \`
+                                      <div class="chapter-item">
                                         <div class="chapter-header" onclick="toggleChapter(\${chapter.chapterNumber})">
                                             <div class="chapter-title-section">
                                                 <div class="chapter-number">\${texts.chapter} \${chapter.chapterNumber}: \${chapter.title}</div>
@@ -1648,8 +1648,8 @@ async function serveStatic(request: Request): Promise<Response> {
                                                 <div class="chapter-content" id="chapter-\${chapter.chapterNumber}-content" style="display: none;"></div>
                                             </div>
                                         </div>
-                                    </div>
-                                \`).join('')}
+                                      </div>
+                                  \`).join('')}
                             </div>
                         </div>
 
@@ -1861,7 +1861,6 @@ async function serveStatic(request: Request): Promise<Response> {
                 const toggleButton = document.getElementById(\`chapter-toggle-\${chapterNumber}\`);
                 if (!contentSection.classList.contains('expanded')) {
                     toggleChapter(chapterNumber);
-                }
                 }
 
                 // Update button
