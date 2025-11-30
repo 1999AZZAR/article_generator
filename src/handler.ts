@@ -905,8 +905,8 @@ async function serveStatic(request: Request): Promise<Response> {
                     <label for="type">Type *</label>
                     <select id="type" name="type" required>
                         <option value="">Select type</option>
-                        <option value="article">Article/Chapter</option>
-                        <option value="shortstory">Short Story/Cerpen</option>
+                        <option value="article">Article</option>
+                        <option value="shortstory">Short Story</option>
                         <option value="novel">Novel Outline</option>
                     </select>
                 </div>
@@ -987,8 +987,8 @@ async function serveStatic(request: Request): Promise<Response> {
                 addButton: 'Add',
                 chapterCountPlaceholder: 'e.g. 10',
                 typeLabel: 'Type *',
-                typeArticle: 'Article/Chapter',
-                typeShortStory: 'Short Story/Cerpen',
+                typeArticle: 'Article',
+                typeShortStory: 'Short Story',
                 typeNovel: 'Novel Outline',
                 chapterCountLabel: 'Number of Chapters',
                 languageLabel: 'Content Language *',
@@ -1078,8 +1078,8 @@ async function serveStatic(request: Request): Promise<Response> {
                 addButton: 'Tambah',
                 chapterCountPlaceholder: 'contoh: 10',
                 typeLabel: 'Tipe *',
-                typeArticle: 'Artikel/Bab',
-                typeShortStory: 'Cerita Pendek/Cerpen',
+                typeArticle: 'Artikel',
+                typeShortStory: 'Cerita Pendek',
                 typeNovel: 'Outline Novel',
                 chapterCountLabel: 'Jumlah Bab',
                 languageLabel: 'Bahasa Konten *',
