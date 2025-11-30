@@ -39,6 +39,7 @@ A professional content generation system built on Cloudflare Workers that create
 ### User Interface
 - Responsive design for desktop, tablet, and mobile devices
 - Professional dark theme interface
+- Multi-language support (English and Indonesian)
 - Comprehensive form validation
 - Loading states and error handling
 
@@ -118,16 +119,31 @@ GEMINI_API_KEY=your_api_key_here
 ### Basic Content Generation
 
 1. Access the application at the deployed URL or local development server
-2. Select the content type (Article/Chapter or Novel Outline)
-3. Complete the input form:
+2. **Optional**: Switch interface language using the EN/ID buttons in the header
+3. Select the content type (Article/Chapter or Novel Outline)
+4. Complete the input form:
    - Topic or title
    - Author writing style
    - Content language
    - Optional tags and keywords
    - Optional main idea/plot description
    - Chapter count (for novels)
-4. Submit the form to generate content
-5. Review the generated content and export as needed
+5. Submit the form to generate content
+6. Review the generated content and export as needed
+
+### Language Settings
+
+The application supports two interface languages:
+
+- **English (EN)**: Default interface language
+- **Indonesian (Bahasa Indonesia)**: Localized interface
+
+**To change language:**
+- Use the language toggle buttons (EN/ID) in the main page header
+- Or visit Settings page (`/settings`) and select your preferred language from the dropdown
+- Language preference is saved locally in your browser
+
+All UI elements, form labels, buttons, and messages will be displayed in your selected language.
 
 ### Novel Writing Workflow
 

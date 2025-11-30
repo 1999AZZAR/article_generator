@@ -370,6 +370,36 @@ async function serveStatic(request: Request): Promise<Response> {
             background: rgba(0, 212, 255, 0.1);
         }
 
+        .language-toggle {
+            position: absolute;
+            top: 0;
+            right: 120px;
+            display: flex;
+            gap: 5px;
+        }
+
+        .lang-btn {
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            color: #ccc;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .lang-btn.active {
+            background: rgba(0, 212, 255, 0.2);
+            border-color: #00d4ff;
+            color: #00d4ff;
+        }
+
+        .lang-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+
         .form-container {
             background: rgba(255, 255, 255, 0.05);
             border-radius: 20px;
@@ -762,6 +792,10 @@ async function serveStatic(request: Request): Promise<Response> {
 <body>
     <div class="container">
         <div class="header">
+            <div class="language-toggle">
+                <button class="lang-btn" data-lang="english">EN</button>
+                <button class="lang-btn" data-lang="indonesian">ID</button>
+            </div>
             <a href="/settings" class="settings-link">⚙️ Settings</a>
             <h1>AI Article Auto Writer</h1>
             <p>Generate professional articles and novel outlines with AI</p>
@@ -863,6 +897,114 @@ async function serveStatic(request: Request): Promise<Response> {
     </div>
 
     <script>
+        // Language strings
+        const uiLanguages = {
+            english: {
+                title: 'AI Article Auto Writer',
+                subtitle: 'Generate professional articles and novel outlines with AI',
+                settings: 'Settings',
+                topicLabel: 'Topic *',
+                topicPlaceholder: 'e.g. romance, horror, philosophy',
+                tagsLabel: 'Tags',
+                tagsPlaceholder: 'Add a tag and press Enter',
+                keywordsLabel: 'Keywords',
+                keywordsPlaceholder: 'Add a keyword and press Enter',
+                authorStyleLabel: 'Author Style *',
+                customAuthorPlaceholder: 'Enter custom author name',
+                typeLabel: 'Type *',
+                typeArticle: 'Article/Chapter',
+                typeNovel: 'Novel Outline',
+                chapterCountLabel: 'Number of Chapters',
+                languageLabel: 'Content Language *',
+                mainIdeaLabel: 'Main Idea/Plot',
+                mainIdeaPlaceholder: 'Describe your main idea, plot, or concept that you want the AI to build upon. This will help generate content that aligns with your specific vision.',
+                generateButton: 'Generate Content',
+                generating: 'Generating your content with AI...',
+                apiKeyRequired: 'Please set your Gemini API key in Settings first.',
+                missingFields: 'Missing required fields',
+                tagsRequired: 'Please add at least one tag',
+                exportMarkdown: 'Export as Markdown',
+                exportRtf: 'Export as RTF',
+                generateChapter: 'Generate Chapter Content',
+                exportChapter: 'Export Chapter',
+                selectTitle: 'Select Title',
+                selectSubtitle: 'Select Subtitle',
+                novelTitle: 'Novel Title',
+                synopsis: 'Synopsis',
+                outline: 'Outline',
+                chapter: 'Chapter',
+                refinedTags: 'Refined Tags',
+                content: 'Content',
+                backToGenerator: '← Back to Generator',
+                languageSettings: 'Language Settings',
+                interfaceLanguage: 'Interface Language',
+                languageHelp: 'Choose the language for the user interface',
+                apiConfiguration: 'Gemini AI Configuration',
+                getApiKey: 'How to get your API key:',
+                apiSteps: ['Go to Google AI Studio', 'Sign in with your Google account', 'Create a new API key', 'Copy the key and paste it below'],
+                apiKeyLabel: 'Gemini API Key *',
+                apiKeyPlaceholder: 'Enter your Gemini API key',
+                saveApiKey: 'Save API Key',
+                apiKeySaved: 'API key saved successfully!',
+                apiKeyVerified: 'API key verified and saved successfully!',
+                apiKeyVerificationFailed: 'API key saved but verification failed: ',
+                apiKeySaveError: 'API key saved but could not verify: ',
+                pleaseEnterApiKey: 'Please enter an API key'
+            },
+            indonesian: {
+                title: 'Penulis Artikel AI',
+                subtitle: 'Hasilkan artikel profesional dan outline novel dengan AI',
+                settings: 'Pengaturan',
+                topicLabel: 'Topik *',
+                topicPlaceholder: 'contoh: romansa, horor, filsafat',
+                tagsLabel: 'Tag',
+                tagsPlaceholder: 'Tambahkan tag dan tekan Enter',
+                keywordsLabel: 'Kata Kunci',
+                keywordsPlaceholder: 'Tambahkan kata kunci dan tekan Enter',
+                authorStyleLabel: 'Gaya Penulis *',
+                customAuthorPlaceholder: 'Masukkan nama penulis kustom',
+                typeLabel: 'Tipe *',
+                typeArticle: 'Artikel/Bab',
+                typeNovel: 'Outline Novel',
+                chapterCountLabel: 'Jumlah Bab',
+                languageLabel: 'Bahasa Konten *',
+                mainIdeaLabel: 'Ide Utama/Alur',
+                mainIdeaPlaceholder: 'Jelaskan ide utama, alur, atau konsep yang ingin Anda bangun oleh AI. Ini akan membantu menghasilkan konten yang selaras dengan visi spesifik Anda.',
+                generateButton: 'Hasilkan Konten',
+                generating: 'Menghasilkan konten Anda dengan AI...',
+                apiKeyRequired: 'Silakan atur kunci API Gemini Anda di Pengaturan terlebih dahulu.',
+                missingFields: 'Kolom yang diperlukan tidak lengkap',
+                tagsRequired: 'Silakan tambahkan setidaknya satu tag',
+                exportMarkdown: 'Ekspor sebagai Markdown',
+                exportRtf: 'Ekspor sebagai RTF',
+                generateChapter: 'Hasilkan Konten Bab',
+                exportChapter: 'Ekspor Bab',
+                selectTitle: 'Pilih Judul',
+                selectSubtitle: 'Pilih Subjudul',
+                novelTitle: 'Judul Novel',
+                synopsis: 'Sinopsis',
+                outline: 'Outline',
+                chapter: 'Bab',
+                refinedTags: 'Tag yang Dimurnikan',
+                content: 'Konten',
+                backToGenerator: '← Kembali ke Generator',
+                languageSettings: 'Pengaturan Bahasa',
+                interfaceLanguage: 'Bahasa Antarmuka',
+                languageHelp: 'Pilih bahasa untuk antarmuka pengguna',
+                apiConfiguration: 'Konfigurasi Gemini AI',
+                getApiKey: 'Cara mendapatkan kunci API:',
+                apiSteps: ['Kunjungi Google AI Studio', 'Masuk dengan akun Google Anda', 'Buat kunci API baru', 'Salin kunci dan tempel di bawah'],
+                apiKeyLabel: 'Kunci API Gemini *',
+                apiKeyPlaceholder: 'Masukkan kunci API Gemini Anda',
+                saveApiKey: 'Simpan Kunci API',
+                apiKeySaved: 'Kunci API berhasil disimpan!',
+                apiKeyVerified: 'Kunci API diverifikasi dan berhasil disimpan!',
+                apiKeyVerificationFailed: 'Kunci API disimpan tetapi verifikasi gagal: ',
+                apiKeySaveError: 'Kunci API disimpan tetapi tidak dapat diverifikasi: ',
+                pleaseEnterApiKey: 'Silakan masukkan kunci API'
+            }
+        };
+
         // Form handling and UI logic
         document.addEventListener('DOMContentLoaded', function() {
             const form = document.getElementById('articleForm');
@@ -874,6 +1016,54 @@ async function serveStatic(request: Request): Promise<Response> {
             const loading = document.getElementById('loading');
             const errorMessage = document.getElementById('errorMessage');
             const resultContainer = document.getElementById('resultContainer');
+            const langBtns = document.querySelectorAll('.lang-btn');
+
+            // Load saved language preference
+            const savedLanguage = localStorage.getItem('uiLanguage') || 'english';
+
+            // Function to update UI language
+            function updateUILanguage(lang) {
+                const texts = uiLanguages[lang];
+                document.querySelector('h1').textContent = texts.title;
+                document.querySelector('p').textContent = texts.subtitle;
+                document.querySelector('.settings-link').textContent = '⚙️ ' + texts.settings;
+                document.querySelector('label[for="topic"]').textContent = texts.topicLabel;
+                document.querySelector('#topic').placeholder = texts.topicPlaceholder;
+                document.querySelector('label[for="tags"]').textContent = texts.tagsLabel;
+                document.querySelector('#tagInput').placeholder = texts.tagsPlaceholder;
+                document.querySelector('label[for="keywords"]').textContent = texts.keywordsLabel;
+                document.querySelector('#keywordInput').placeholder = texts.keywordsPlaceholder;
+                document.querySelector('label[for="authorStyle"]').textContent = texts.authorStyleLabel;
+                document.querySelector('#customAuthorStyle').placeholder = texts.customAuthorPlaceholder;
+                document.querySelector('label[for="type"]').textContent = texts.typeLabel;
+                document.querySelector('#type option[value="article"]').textContent = texts.typeArticle;
+                document.querySelector('#type option[value="novel"]').textContent = texts.typeNovel;
+                document.querySelector('label[for="chapterCount"]').textContent = texts.chapterCountLabel;
+                document.querySelector('label[for="language"]').textContent = texts.languageLabel;
+                document.querySelector('label[for="mainIdea"]').textContent = texts.mainIdeaLabel;
+                document.querySelector('#mainIdea').placeholder = texts.mainIdeaPlaceholder;
+                document.querySelector('#generateBtn').textContent = texts.generateButton;
+                document.querySelector('#loading p').textContent = texts.generating;
+
+                // Update language button states
+                langBtns.forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.lang === lang);
+                });
+
+                // Store language preference
+                localStorage.setItem('uiLanguage', lang);
+            }
+
+            // Initialize language
+            updateUILanguage(savedLanguage);
+
+            // Handle language switching
+            langBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const lang = this.dataset.lang;
+                    updateUILanguage(lang);
+                });
+            });
 
             // Tag and keyword management
             let tags = [];
@@ -969,7 +1159,8 @@ async function serveStatic(request: Request): Promise<Response> {
                 const formData = new FormData(form);
                 const apiKey = localStorage.getItem('geminiApiKey');
                 if (!apiKey) {
-                    showError('Please set your Gemini API key in Settings first.');
+                    const currentLang = localStorage.getItem('uiLanguage') || 'english';
+                    showError(uiLanguages[currentLang].apiKeyRequired);
                     return;
                 }
 
@@ -1029,12 +1220,14 @@ async function serveStatic(request: Request): Promise<Response> {
             }
 
             function displayArticleResults(result) {
+                const currentLang = localStorage.getItem('uiLanguage') || 'english';
+                const texts = uiLanguages[currentLang];
                 let html = '';
 
                 if (result.refinedTags && result.refinedTags.length > 0) {
                     html += \`
                         <div class="result-section">
-                            <h3>Refined Tags</h3>
+                            <h3>\${texts.refinedTags}</h3>
                             <div class="tags-container">
                                 \${result.refinedTags.map(tag => \`<div class="tag">\${tag}</div>\`).join('')}
                             </div>
@@ -1045,7 +1238,7 @@ async function serveStatic(request: Request): Promise<Response> {
                 if (result.titleSelection && result.titleSelection.length > 0) {
                     html += \`
                         <div class="result-section">
-                            <h3>Title Selection</h3>
+                            <h3>\${texts.selectTitle}</h3>
                             <div class="title-options">
                                 \${result.titleSelection.map((title, index) =>
                                     \`<div class="option-card" onclick="selectOption(this, 'title', \${index})">
@@ -1061,7 +1254,7 @@ async function serveStatic(request: Request): Promise<Response> {
                 if (result.subtitleSelection && result.subtitleSelection.length > 0) {
                     html += \`
                         <div class="result-section">
-                            <h3>Subtitle Selection</h3>
+                            <h3>\${texts.selectSubtitle}</h3>
                             <div class="title-options">
                                 \${result.subtitleSelection.map((subtitle, index) =>
                                     \`<div class="option-card" onclick="selectOption(this, 'subtitle', \${index})">
@@ -1077,7 +1270,7 @@ async function serveStatic(request: Request): Promise<Response> {
                 if (result.content) {
                     html += \`
                         <div class="result-section">
-                            <h3>Content</h3>
+                            <h3>\${texts.content}</h3>
                             <div class="content-display">\${result.content}</div>
                         </div>
 
@@ -1085,13 +1278,13 @@ async function serveStatic(request: Request): Promise<Response> {
                             <h3>Export Your Content</h3>
                             <div class="export-controls">
                                 <select id="selectedTitle" class="export-select">
-                                    <option value="">Select a title...</option>
+                                    <option value="">\${texts.selectTitle}...</option>
                                     \${result.titleSelection ? result.titleSelection.map((title, index) =>
                                         \`<option value="\${title}">\${title}</option>\`
                                     ).join('') : ''}
                                 </select>
                                 <select id="selectedSubtitle" class="export-select">
-                                    <option value="">Select a subtitle...</option>
+                                    <option value="">\${texts.selectSubtitle}...</option>
                                     \${result.subtitleSelection ? result.subtitleSelection.map((subtitle, index) =>
                                         \`<option value="\${subtitle}">\${subtitle}</option>\`
                                     ).join('') : ''}
@@ -1099,10 +1292,10 @@ async function serveStatic(request: Request): Promise<Response> {
                             </div>
                             <div class="export-buttons">
                                 <button class="export-btn" onclick="exportAsMarkdown()">
-                                    📄 Export as Markdown
+                                    📄 \${texts.exportMarkdown}
                                 </button>
                                 <button class="export-btn" onclick="exportAsRtf()">
-                                    📝 Export as RTF
+                                    📝 \${texts.exportRtf}
                                 </button>
                             </div>
                         </div>
@@ -1113,12 +1306,14 @@ async function serveStatic(request: Request): Promise<Response> {
             }
 
             function displayNovelResults(result) {
+                const currentLang = localStorage.getItem('uiLanguage') || 'english';
+                const texts = uiLanguages[currentLang];
                 let html = '';
 
                 if (result.titleSelection && result.titleSelection.length > 0) {
                     html += \`
                         <div class="result-section">
-                            <h3>Title Selection</h3>
+                            <h3>\${texts.selectTitle}</h3>
                             <div class="title-options">
                                 \${result.titleSelection.map((title, index) =>
                                     \`<div class="option-card" onclick="selectOption(this, 'title', \${index})">
@@ -1134,7 +1329,7 @@ async function serveStatic(request: Request): Promise<Response> {
                 if (result.synopsis) {
                     html += \`
                         <div class="result-section">
-                            <h3>Synopsis</h3>
+                            <h3>\${texts.synopsis}</h3>
                             <div class="content-display">\${result.synopsis}</div>
                         </div>
                     \`;
@@ -1143,11 +1338,11 @@ async function serveStatic(request: Request): Promise<Response> {
                 if (result.outline && result.outline.length > 0) {
                     html += \`
                         <div class="result-section">
-                            <h3>Chapter Outline</h3>
+                            <h3>\${texts.outline}</h3>
                             <div class="chapter-outline">
                                 \${result.outline.map(chapter => \`
                                     <div class="chapter-item">
-                                        <div class="chapter-number">Chapter \${chapter.chapterNumber}: \${chapter.title}</div>
+                                        <div class="chapter-number">\${texts.chapter} \${chapter.chapterNumber}: \${chapter.title}</div>
                                         <div>\${chapter.subtitle}</div>
                                         <div class="chapter-actions">
                                             <button class="generate-chapter-btn"
@@ -1157,7 +1352,7 @@ async function serveStatic(request: Request): Promise<Response> {
                                                     data-novel-title="\${result.titleSelection ? result.titleSelection[0].replace(/"/g, '&quot;') : ''}"
                                                     data-novel-synopsis="\${result.synopsis ? result.synopsis.substring(0, 100).replace(/"/g, '&quot;') : ''}"
                                                     onclick="generateChapter(this)">
-                                                Generate Chapter Content
+                                                \${texts.generateChapter}
                                             </button>
                                             <button class="export-chapter-btn"
                                                     id="export-chapter-\${chapter.chapterNumber}-btn"
@@ -1166,7 +1361,7 @@ async function serveStatic(request: Request): Promise<Response> {
                                                     data-chapter-subtitle="\${chapter.subtitle.replace(/"/g, '&quot;')}"
                                                     onclick="exportChapter(this)"
                                                     style="display: none;">
-                                                📄 Export Chapter
+                                                📄 \${texts.exportChapter}
                                             </button>
                                         </div>
                                         <div class="chapter-loading" id="chapter-\${chapter.chapterNumber}-loading" style="display: none;">
@@ -1183,7 +1378,7 @@ async function serveStatic(request: Request): Promise<Response> {
                             <h3>Export Your Novel</h3>
                             <div class="export-controls">
                                 <select id="selectedNovelTitle" class="export-select">
-                                    <option value="">Select a title...</option>
+                                    <option value="">\${texts.selectTitle}...</option>
                                     \${result.titleSelection ? result.titleSelection.map((title, index) =>
                                         \`<option value="\${title}">\${title}</option>\`
                                     ).join('') : ''}
@@ -1191,10 +1386,10 @@ async function serveStatic(request: Request): Promise<Response> {
                             </div>
                             <div class="export-buttons">
                                 <button class="export-btn" onclick="exportNovelAsMarkdown()">
-                                    📄 Export as Markdown
+                                    📄 \${texts.exportMarkdown}
                                 </button>
                                 <button class="export-btn" onclick="exportNovelAsRtf()">
-                                    📝 Export as RTF
+                                    📝 \${texts.exportRtf}
                                 </button>
                             </div>
                         </div>
@@ -1663,6 +1858,23 @@ async function serveStatic(request: Request): Promise<Response> {
             margin-bottom: 20px;
         }
 
+        .language-select {
+            width: 100%;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .language-select:focus {
+            outline: none;
+            border-color: #00d4ff;
+            box-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
+        }
+
         label {
             display: block;
             margin-bottom: 8px;
@@ -1763,6 +1975,19 @@ async function serveStatic(request: Request): Promise<Response> {
 
         <div class="settings-container">
             <div class="settings-section">
+                <h3>Language Settings</h3>
+
+                <div class="form-group">
+                    <label for="uiLanguage">Interface Language</label>
+                    <select id="uiLanguage" class="language-select">
+                        <option value="english">English</option>
+                        <option value="indonesian">Bahasa Indonesia</option>
+                    </select>
+                    <small style="color: #888; display: block; margin-top: 5px;">Choose the language for the user interface</small>
+                </div>
+            </div>
+
+            <div class="settings-section">
                 <h3>Gemini AI Configuration</h3>
 
                 <div class="info-box">
@@ -1795,6 +2020,51 @@ async function serveStatic(request: Request): Promise<Response> {
             const apiKeyInput = document.getElementById('apiKey');
             const saveBtn = document.getElementById('saveBtn');
             const statusMessage = document.getElementById('statusMessage');
+            const languageSelect = document.getElementById('uiLanguage');
+
+            // Language strings
+            const languages = {
+                english: {
+                    navBack: '← Back to Generator',
+                    title: 'Settings',
+                    languageTitle: 'Language Settings',
+                    languageLabel: 'Interface Language',
+                    languageHelp: 'Choose the language for the user interface',
+                    apiTitle: 'Gemini AI Configuration',
+                    apiInstructions: 'How to get your API key:',
+                    apiSteps: ['Go to Google AI Studio', 'Sign in with your Google account', 'Create a new API key', 'Copy the key and paste it below'],
+                    apiKeyLabel: 'Gemini API Key *',
+                    apiKeyPlaceholder: 'Enter your Gemini API key',
+                    saveButton: 'Save API Key',
+                    apiKeySaved: 'API key saved successfully!',
+                    apiKeyVerified: 'API key verified and saved successfully!',
+                    apiKeyVerificationFailed: 'API key saved but verification failed: ',
+                    apiKeySaveError: 'API key saved but could not verify: ',
+                    pleaseEnterApiKey: 'Please enter an API key'
+                },
+                indonesian: {
+                    navBack: '← Kembali ke Generator',
+                    title: 'Pengaturan',
+                    languageTitle: 'Pengaturan Bahasa',
+                    languageLabel: 'Bahasa Antarmuka',
+                    languageHelp: 'Pilih bahasa untuk antarmuka pengguna',
+                    apiTitle: 'Konfigurasi Gemini AI',
+                    apiInstructions: 'Cara mendapatkan kunci API:',
+                    apiSteps: ['Kunjungi Google AI Studio', 'Masuk dengan akun Google Anda', 'Buat kunci API baru', 'Salin kunci dan tempel di bawah'],
+                    apiKeyLabel: 'Kunci API Gemini *',
+                    apiKeyPlaceholder: 'Masukkan kunci API Gemini Anda',
+                    saveButton: 'Simpan Kunci API',
+                    apiKeySaved: 'Kunci API berhasil disimpan!',
+                    apiKeyVerified: 'Kunci API diverifikasi dan berhasil disimpan!',
+                    apiKeyVerificationFailed: 'Kunci API disimpan tetapi verifikasi gagal: ',
+                    apiKeySaveError: 'Kunci API disimpan tetapi tidak dapat diverifikasi: ',
+                    pleaseEnterApiKey: 'Silakan masukkan kunci API'
+                }
+            };
+
+            // Load saved language preference
+            const savedLanguage = localStorage.getItem('uiLanguage') || 'english';
+            languageSelect.value = savedLanguage;
 
             // Load saved API key
             const savedApiKey = localStorage.getItem('geminiApiKey');
@@ -1802,19 +2072,50 @@ async function serveStatic(request: Request): Promise<Response> {
                 apiKeyInput.value = savedApiKey;
             }
 
+            // Function to update UI language
+            function updateLanguage(lang) {
+                const texts = languages[lang];
+                document.querySelector('.nav a').textContent = texts.navBack;
+                document.querySelector('h1').textContent = texts.title;
+                document.querySelectorAll('.settings-section h3')[0].textContent = texts.languageTitle;
+                document.querySelector('label[for="uiLanguage"]').textContent = texts.languageLabel;
+                document.querySelector('.settings-section small').textContent = texts.languageHelp;
+                document.querySelectorAll('.settings-section h3')[1].textContent = texts.apiTitle;
+                document.querySelector('.info-box h4').textContent = texts.apiInstructions;
+                const steps = document.querySelector('.info-box p');
+                steps.innerHTML = texts.apiSteps.map((step, index) => (index + 1) + '. ' + step).join('<br>');
+                document.querySelector('label[for="apiKey"]').textContent = texts.apiKeyLabel;
+                apiKeyInput.placeholder = texts.apiKeyPlaceholder;
+                saveBtn.textContent = texts.saveButton;
+
+                // Store language preference
+                localStorage.setItem('uiLanguage', lang);
+            }
+
+            // Initialize language
+            updateLanguage(savedLanguage);
+
+            // Handle language change
+            languageSelect.addEventListener('change', function() {
+                updateLanguage(this.value);
+            });
+
             // Save API key
             apiKeyForm.addEventListener('submit', async function(e) {
                 e.preventDefault();
 
+                const currentLang = localStorage.getItem('uiLanguage') || 'english';
+                const texts = languages[currentLang];
+
                 const apiKey = apiKeyInput.value.trim();
                 if (!apiKey) {
-                    showStatus('Please enter an API key', 'error');
+                    showStatus(texts.pleaseEnterApiKey, 'error');
                     return;
                 }
 
                 // Save to localStorage
                 localStorage.setItem('geminiApiKey', apiKey);
-                showStatus('API key saved successfully!', 'success');
+                showStatus(texts.apiKeySaved, 'success');
 
                 // Test the API key
                 try {
@@ -1827,13 +2128,13 @@ async function serveStatic(request: Request): Promise<Response> {
                     });
 
                     if (response.ok) {
-                        showStatus('API key verified and saved successfully!', 'success');
+                        showStatus(texts.apiKeyVerified, 'success');
                     } else {
                         const result = await response.json();
-                        showStatus('API key saved but verification failed: ' + (result.error || 'Unknown error'), 'error');
+                        showStatus(texts.apiKeyVerificationFailed + (result.error || 'Unknown error'), 'error');
                     }
                 } catch (error) {
-                    showStatus('API key saved but could not verify: ' + error.message, 'error');
+                    showStatus(texts.apiKeySaveError + error.message, 'error');
                 }
             });
 
