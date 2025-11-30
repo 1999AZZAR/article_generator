@@ -20,9 +20,10 @@ AI-powered writing assistant for creating professional articles and novel outlin
 ## Features
 
 ### Content Generation
-- Article creation with comprehensive coverage (1500-2000 words)
-- Novel outline generation with detailed chapter structures
-- Individual chapter content generation for novels
+- **Articles**: Comprehensive coverage (1500-2000 words)
+- **Short Stories**: Complete narrative fiction (2250-3000 words) - 1.5x longer than articles
+- **Novel Outlines**: Detailed chapter structures with synopsis
+- **Individual Chapters**: Content generation for novel chapters (2000-3000 words each)
 - Multi-language support (English and Indonesian)
 - User-guided content creation with main idea/plot input
 
@@ -163,14 +164,17 @@ All UI elements, form labels, buttons, and messages will be displayed in your se
 
 ### POST `/api/generate`
 
-Generates articles or novel outlines based on provided parameters.
+Generates articles, short stories, or novel outlines based on provided parameters.
 
 **Request Body:**
 ```json
 {
   "topic": "string",
   "authorStyle": "string",
-  "type": "article" | "novel",
+        "type": "article" | "shortstory" | "novel",
+        // "article": Generates a comprehensive article (1500-2000 words)
+        // "shortstory": Generates a complete short story/cerpen (2250-3000 words)
+        // "novel": Generates a novel outline with chapter structure
   "language": "english" | "indonesian",
   "tags": ["string"],
   "keywords": ["string"],

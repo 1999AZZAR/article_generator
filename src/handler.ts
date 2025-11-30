@@ -1,11 +1,11 @@
-import { generateArticle, generateNovelOutline, callGeminiAPI, testGeminiAPIKey, generateChapterContent } from './gemini';
+import { generateArticle, generateNovelOutline, generateShortStory, callGeminiAPI, testGeminiAPIKey, generateChapterContent } from './gemini';
 
 export interface GenerateRequest {
   topic: string;
   tags?: string[];
   keywords?: string[];
   authorStyle: string;
-  type: 'article' | 'novel';
+  type: 'article' | 'shortstory' | 'novel';
   chapterCount?: number;
   language: 'english' | 'indonesian';
   mainIdea?: string;
@@ -275,6 +275,8 @@ export async function handleRequest(request: Request, env: { GEMINI_API_KEY: str
       let result;
       if (body.type === 'article') {
         result = await generateArticle(body, apiKey);
+      } else if (body.type === 'shortstory') {
+        result = await generateShortStory(body, apiKey);
       } else {
         result = await generateNovelOutline(body, apiKey);
       }
@@ -803,6 +805,7 @@ async function serveStatic(request: Request): Promise<Response> {
                     <select id="type" name="type" required>
                         <option value="">Select type</option>
                         <option value="article">Article/Chapter</option>
+                        <option value="shortstory">Short Story/Cerpen</option>
                         <option value="novel">Novel Outline</option>
                     </select>
                 </div>
@@ -879,6 +882,7 @@ async function serveStatic(request: Request): Promise<Response> {
                 customAuthorPlaceholder: 'Enter custom author name',
                 typeLabel: 'Type *',
                 typeArticle: 'Article/Chapter',
+                typeShortStory: 'Short Story/Cerpen',
                 typeNovel: 'Novel Outline',
                 chapterCountLabel: 'Number of Chapters',
                 languageLabel: 'Content Language *',
@@ -931,6 +935,7 @@ async function serveStatic(request: Request): Promise<Response> {
                 customAuthorPlaceholder: 'Masukkan nama penulis kustom',
                 typeLabel: 'Tipe *',
                 typeArticle: 'Artikel/Bab',
+                typeShortStory: 'Cerita Pendek/Cerpen',
                 typeNovel: 'Outline Novel',
                 chapterCountLabel: 'Jumlah Bab',
                 languageLabel: 'Bahasa Konten *',
@@ -1001,6 +1006,7 @@ async function serveStatic(request: Request): Promise<Response> {
                 document.querySelector('#customAuthorStyle').placeholder = texts.customAuthorPlaceholder;
                 document.querySelector('label[for="type"]').textContent = texts.typeLabel;
                 document.querySelector('#type option[value="article"]').textContent = texts.typeArticle;
+                document.querySelector('#type option[value="shortstory"]').textContent = texts.typeShortStory;
                 document.querySelector('#type option[value="novel"]').textContent = texts.typeNovel;
                 document.querySelector('label[for="chapterCount"]').textContent = texts.chapterCountLabel;
                 document.querySelector('label[for="language"]').textContent = texts.languageLabel;
@@ -1160,7 +1166,7 @@ async function serveStatic(request: Request): Promise<Response> {
             function displayResults(result, type) {
                 resultContainer.innerHTML = '';
 
-                if (type === 'article') {
+                if (type === 'article' || type === 'shortstory') {
                     displayArticleResults(result);
                 } else {
                     displayNovelResults(result);
