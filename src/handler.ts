@@ -890,6 +890,17 @@ async function serveStatic(request: Request): Promise<Response> {
                 mainIdeaPlaceholder: 'Describe your main idea, plot, or concept that you want the AI to build upon. This will help generate content that aligns with your specific vision.',
                 generateButton: 'Generate Content',
                 generating: 'Generating your content with AI...',
+                loadingFacts: [
+                    'Did you know? The quill pen was invented in the 6th century...',
+                    'Crafting your story with AI precision...',
+                    'The first quills came from swan feathers...',
+                    'AI is weaving your narrative masterpiece...',
+                    'Ancient scribes used reed pens before quills...',
+                    'Polishing your words with intelligent algorithms...',
+                    'Quill pens can write up to 10,000 words per day...',
+                    'Transforming ideas into beautiful prose...',
+                    'The quill revolutionized writing in medieval Europe...'
+                ],
                 apiKeyRequired: 'Please set your Gemini API key in Settings first.',
                 missingFields: 'Missing required fields',
                 tagsRequired: 'Please add at least one tag',
@@ -943,6 +954,17 @@ async function serveStatic(request: Request): Promise<Response> {
                 mainIdeaPlaceholder: 'Jelaskan ide utama, alur, atau konsep yang ingin Anda bangun oleh AI. Ini akan membantu menghasilkan konten yang selaras dengan visi spesifik Anda.',
                 generateButton: 'Hasilkan Konten',
                 generating: 'Menghasilkan konten Anda dengan AI...',
+                loadingFacts: [
+                    'Tahukah Anda? Pena quill ditemukan pada abad ke-6...',
+                    'Membuat cerita Anda dengan presisi AI...',
+                    'Quill pertama berasal dari bulu angsa...',
+                    'AI sedang menenun masterpiece naratif Anda...',
+                    'Para penulis kuno menggunakan pena reed sebelum quill...',
+                    'Memoles kata-kata Anda dengan algoritma cerdas...',
+                    'Pena quill dapat menulis hingga 10.000 kata per hari...',
+                    'Mengubah ide menjadi prosa yang indah...',
+                    'Quill merevolusi penulisan di Eropa abad pertengahan...'
+                ],
                 apiKeyRequired: 'Silakan atur kunci API Gemini Anda di Pengaturan terlebih dahulu.',
                 missingFields: 'Kolom yang diperlukan tidak lengkap',
                 tagsRequired: 'Silakan tambahkan setidaknya satu tag',
@@ -1013,10 +1035,44 @@ async function serveStatic(request: Request): Promise<Response> {
                 document.querySelector('label[for="mainIdea"]').textContent = texts.mainIdeaLabel;
                 document.querySelector('#mainIdea').placeholder = texts.mainIdeaPlaceholder;
                 document.querySelector('#generateBtn').textContent = texts.generateButton;
-                document.querySelector('#loading p').textContent = texts.generating;
+                // Only update loading text if not currently cycling through facts
+                if (!loadingInterval) {
+                    document.querySelector('#loading p').textContent = texts.generating;
+                }
 
                 // Store language preference
                 localStorage.setItem('uiLanguage', lang);
+            }
+
+            // Loading text cycling functionality
+            let loadingInterval;
+            let currentFactIndex = 0;
+
+            function startLoadingFacts(lang) {
+                const texts = uiLanguages[lang];
+                const facts = texts.loadingFacts;
+                if (!facts || facts.length === 0) return;
+
+                // Reset to first fact
+                currentFactIndex = 0;
+                const loadingTextElement = document.querySelector('#loading p');
+
+                // Start cycling through facts every 3 seconds
+                loadingInterval = setInterval(() => {
+                    currentFactIndex = (currentFactIndex + 1) % facts.length;
+                    loadingTextElement.textContent = facts[currentFactIndex];
+                }, 3000);
+            }
+
+            function stopLoadingFacts() {
+                if (loadingInterval) {
+                    clearInterval(loadingInterval);
+                    loadingInterval = null;
+                    // Reset to default generating text
+                    const currentLang = localStorage.getItem('uiLanguage') || 'english';
+                    const texts = uiLanguages[currentLang];
+                    document.querySelector('#loading p').textContent = texts.generating;
+                }
             }
 
             // Initialize language
@@ -1139,6 +1195,10 @@ async function serveStatic(request: Request): Promise<Response> {
                 errorMessage.style.display = 'none';
                 resultContainer.style.display = 'none';
 
+                // Start cycling loading facts
+                const currentLang = localStorage.getItem('uiLanguage') || 'english';
+                startLoadingFacts(currentLang);
+
                 try {
                     const response = await fetch('/api/generate', {
                         method: 'POST',
@@ -1160,6 +1220,8 @@ async function serveStatic(request: Request): Promise<Response> {
                 } finally {
                     loading.style.display = 'none';
                     generateBtn.disabled = false;
+                    // Stop cycling loading facts
+                    stopLoadingFacts();
                 }
             });
 
