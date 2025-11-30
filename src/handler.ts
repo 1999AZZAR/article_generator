@@ -787,6 +787,11 @@ async function serveStatic(request: Request): Promise<Response> {
                         <option value="Neil Gaiman">Neil Gaiman</option>
                         <option value="Chimamanda Ngozi Adichie">Chimamanda Ngozi Adichie</option>
                         <option value="Cormac McCarthy">Cormac McCarthy</option>
+                        <option value="Dee Lestari">Dee Lestari</option>
+                        <option value="Najwa Shihab">Najwa Shihab</option>
+                        <option value="Pramoedya Ananta Toer">Pramoedya Ananta Toer</option>
+                        <option value="Goenawan Mohamad">Goenawan Mohamad</option>
+                        <option value="Leila S. Chudori">Leila S. Chudori</option>
                         <option value="custom">Custom (enter below)</option>
                     </select>
                     <input type="text" id="customAuthorStyle" name="customAuthorStyle" placeholder="Enter custom author style" style="margin-top: 10px; display: none;">
