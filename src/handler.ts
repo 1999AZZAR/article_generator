@@ -465,19 +465,31 @@ async function serveStatic(request: Request): Promise<Response> {
             margin: 20px 0;
         }
 
-        .spinner {
-            border: 4px solid rgba(255, 255, 255, 0.1);
-            border-left: 4px solid #00d4ff;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 10px;
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+            margin-bottom: 15px;
         }
 
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        .progress-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 40%;
+            background-color: #22C55E;
+            border-radius: 4px;
+            animation: progress-slide 2s linear infinite;
+        }
+
+        @keyframes progress-slide {
+            0% { left: -40%; }
+            100% { left: 100%; }
         }
 
         .result-container {
@@ -789,11 +801,31 @@ async function serveStatic(request: Request): Promise<Response> {
         }
 
         .chapter-loading {
-            display: flex;
-            align-items: center;
-            gap: 8px;
             margin-top: 10px;
             color: #00ff88;
+        }
+
+        .chapter-progress-bar {
+            width: 100%;
+            height: 6px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+            overflow: hidden;
+            position: relative;
+            margin-bottom: 8px;
+        }
+
+        .chapter-progress-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 40%;
+            background-color: #22C55E;
+            border-radius: 3px;
+            animation: progress-slide 2s linear infinite;
+        }
             font-size: 12px;
         }
 
@@ -923,7 +955,7 @@ async function serveStatic(request: Request): Promise<Response> {
         </form>
 
         <div class="loading" id="loading">
-            <div class="spinner"></div>
+            <div class="progress-bar"></div>
             <p>Generating your content with AI...</p>
         </div>
 
@@ -1536,7 +1568,7 @@ async function serveStatic(request: Request): Promise<Response> {
                                                     </button>
                                                 </div>
                                                 <div class="chapter-loading" id="chapter-\${chapter.chapterNumber}-loading" style="display: none;">
-                                                    <div class="spinner" style="width: 20px; height: 20px;"></div>
+                                                    <div class="chapter-progress-bar"></div>
                                                     <span id="generating-chapter-text-\${chapter.chapterNumber}">\${texts.generatingChapter}</span>
                                                 </div>
                                                 <div class="chapter-content" id="chapter-\${chapter.chapterNumber}-content" style="display: none;"></div>
