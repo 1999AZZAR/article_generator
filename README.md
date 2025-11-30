@@ -24,6 +24,7 @@ AI-powered writing assistant for creating professional articles and novel outlin
 - Novel outline generation with detailed chapter structures
 - Individual chapter content generation for novels
 - Multi-language support (English and Indonesian)
+- User-guided content creation with main idea/plot input
 
 ### Author Style Simulation
 - Predefined author selection including international and Indonesian writers
@@ -61,7 +62,7 @@ AI-powered writing assistant for creating professional articles and novel outlin
 
 ### Live Application
 
-The application is deployed and available at: **https://article-generator.azzar.workers.dev**
+Quill is deployed and available at: **https://article-generator.azzar.workers.dev**
 
 ### Local Development Setup
 
