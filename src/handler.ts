@@ -1200,12 +1200,6 @@ async function serveStatic(request: Request): Promise<Response> {
                     document.querySelector('#loading p').textContent = texts.generating;
                 }
 
-                // Update chapter loading texts if they exist
-                const chapterLoadingTexts = document.querySelectorAll('[id^="generating-chapter-text"]');
-                chapterLoadingTexts.forEach(text => {
-                    text.textContent = texts.generatingChapter;
-                });
-
                 // Store language preference
                 localStorage.setItem('uiLanguage', lang);
             }
@@ -1569,7 +1563,6 @@ async function serveStatic(request: Request): Promise<Response> {
                                                 </div>
                                                 <div class="chapter-loading" id="chapter-\${chapter.chapterNumber}-loading" style="display: none;">
                                                     <div class="chapter-progress-bar"></div>
-                                                    <span id="generating-chapter-text-\${chapter.chapterNumber}">\${texts.generatingChapter}</span>
                                                 </div>
                                                 <div class="chapter-content" id="chapter-\${chapter.chapterNumber}-content" style="display: none;"></div>
                                             </div>
