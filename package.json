@@ -1,7 +1,7 @@
 {
   "name": "quill-ai-writer",
   "version": "1.0.0",
-  "description": "Quill - AI-powered writing assistant for articles and novels",
+  "description": "Quill™ - AI-powered writing assistant for articles and novels",
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",

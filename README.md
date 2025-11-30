@@ -1,4 +1,4 @@
-# Quill
+# Quill™
 
 AI-powered writing assistant for creating professional articles and novel outlines using Google Gemini AI, built on Cloudflare Workers.
 

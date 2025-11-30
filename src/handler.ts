@@ -765,7 +765,7 @@ async function serveStatic(request: Request): Promise<Response> {
     <div class="container">
         <div class="header">
             <a href="/settings" class="settings-link">⚙️ Settings</a>
-            <h1>Quill</h1>
+            <h1><a href="https://azzar.netlify.app" target="_blank" style="color: inherit; text-decoration: none;">Quill™</a></h1>
             <p>AI-powered writing assistant for articles and novels</p>
         </div>
 
@@ -869,7 +869,7 @@ async function serveStatic(request: Request): Promise<Response> {
         // Language strings
         const uiLanguages = {
             english: {
-                title: 'Quill',
+                title: 'Quill™',
                 subtitle: 'AI-powered writing assistant for articles and novels',
                 settings: 'Settings',
                 settingsDescription: 'Configure your Quill writing assistant',
@@ -961,7 +961,7 @@ async function serveStatic(request: Request): Promise<Response> {
                 pleaseEnterApiKey: 'Please enter an API key'
             },
             indonesian: {
-                title: 'Quill',
+                title: 'Quill™',
                 subtitle: 'Asisten penulisan bertenaga AI untuk artikel dan novel',
                 settings: 'Pengaturan',
                 settingsDescription: 'Konfigurasikan asisten penulisan Quill Anda',
@@ -1884,7 +1884,7 @@ async function serveStatic(request: Request): Promise<Response> {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quill - Settings</title>
+    <title>Quill™ - Settings</title>
     <style>
         * {
             margin: 0;
@@ -2071,7 +2071,7 @@ async function serveStatic(request: Request): Promise<Response> {
 <body>
     <div class="container">
         <div class="header">
-            <h1>Settings</h1>
+            <h1>Quill™ Settings</h1>
             <p id="settingsDescription">Configure your Quill writing assistant</p>
         </div>
 
@@ -2132,7 +2132,7 @@ async function serveStatic(request: Request): Promise<Response> {
             const languages = {
                 english: {
                     navBack: '← Back to Generator',
-                    title: 'Settings',
+                    title: 'Quill™ Settings',
                     settingsDescription: 'Configure your Quill writing assistant',
                     languageTitle: 'Language Settings',
                     languageLabel: 'Interface Language',
@@ -2151,7 +2151,7 @@ async function serveStatic(request: Request): Promise<Response> {
                 },
                 indonesian: {
                     navBack: '← Kembali ke Generator',
-                    title: 'Pengaturan',
+                    title: 'Pengaturan Quill™',
                     settingsDescription: 'Konfigurasikan asisten penulisan Quill Anda',
                     languageTitle: 'Pengaturan Bahasa',
                     languageLabel: 'Bahasa Antarmuka',
