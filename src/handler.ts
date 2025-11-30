@@ -872,6 +872,7 @@ async function serveStatic(request: Request): Promise<Response> {
                 title: 'Quill',
                 subtitle: 'AI-powered writing assistant for articles and novels',
                 settings: 'Settings',
+                settingsDescription: 'Configure your Quill writing assistant',
                 topicLabel: 'Topic *',
                 topicPlaceholder: 'e.g. romance, horror, philosophy',
                 tagsLabel: 'Tags',
@@ -957,6 +958,7 @@ async function serveStatic(request: Request): Promise<Response> {
                 title: 'Quill',
                 subtitle: 'Asisten penulisan bertenaga AI untuk artikel dan novel',
                 settings: 'Pengaturan',
+                settingsDescription: 'Konfigurasikan asisten penulisan Quill Anda',
                 topicLabel: 'Topik *',
                 topicPlaceholder: 'contoh: romansa, horor, filsafat',
                 tagsLabel: 'Tag',
@@ -2041,7 +2043,7 @@ async function serveStatic(request: Request): Promise<Response> {
     <div class="container">
         <div class="header">
             <h1>Settings</h1>
-            <p>Configure your Quill writing assistant</p>
+            <p id="settingsDescription">Configure your Quill writing assistant</p>
         </div>
 
         <div class="nav">
@@ -2102,12 +2104,13 @@ async function serveStatic(request: Request): Promise<Response> {
                 english: {
                     navBack: '← Back to Generator',
                     title: 'Settings',
+                    settingsDescription: 'Configure your Quill writing assistant',
                     languageTitle: 'Language Settings',
                     languageLabel: 'Interface Language',
                     languageHelp: 'Choose the language for the user interface',
                     apiTitle: 'Gemini AI Configuration',
                     apiInstructions: 'How to get your API key:',
-                    apiSteps: ['Go to Google AI Studio', 'Sign in with your Google account', 'Create a new API key', 'Copy the key and paste it below'],
+                    apiSteps: ['<a href="https://aistudio.google.com/app/apikey" target="_blank" style="color: #00d4ff; text-decoration: underline;">Go to Google AI Studio</a>', 'Sign in with your Google account', 'Create a new API key', 'Copy the key and paste it below'],
                     apiKeyLabel: 'Gemini API Key *',
                     apiKeyPlaceholder: 'Enter your Gemini API key',
                     saveButton: 'Save API Key',
@@ -2120,12 +2123,13 @@ async function serveStatic(request: Request): Promise<Response> {
                 indonesian: {
                     navBack: '← Kembali ke Generator',
                     title: 'Pengaturan',
+                    settingsDescription: 'Konfigurasikan asisten penulisan Quill Anda',
                     languageTitle: 'Pengaturan Bahasa',
                     languageLabel: 'Bahasa Antarmuka',
                     languageHelp: 'Pilih bahasa untuk antarmuka pengguna',
                     apiTitle: 'Konfigurasi Gemini AI',
                     apiInstructions: 'Cara mendapatkan kunci API:',
-                    apiSteps: ['Kunjungi Google AI Studio', 'Masuk dengan akun Google Anda', 'Buat kunci API baru', 'Salin kunci dan tempel di bawah'],
+                    apiSteps: ['<a href="https://aistudio.google.com/app/apikey" target="_blank" style="color: #00d4ff; text-decoration: underline;">Kunjungi Google AI Studio</a>', 'Masuk dengan akun Google Anda', 'Buat kunci API baru', 'Salin kunci dan tempel di bawah'],
                     apiKeyLabel: 'Kunci API Gemini *',
                     apiKeyPlaceholder: 'Masukkan kunci API Gemini Anda',
                     saveButton: 'Simpan Kunci API',
@@ -2152,6 +2156,7 @@ async function serveStatic(request: Request): Promise<Response> {
                 const texts = languages[lang];
                 document.querySelector('.nav a').textContent = texts.navBack;
                 document.querySelector('h1').textContent = texts.title;
+                document.querySelector('#settingsDescription').textContent = texts.settingsDescription;
                 document.querySelectorAll('.settings-section h3')[0].textContent = texts.languageTitle;
                 document.querySelector('label[for="uiLanguage"]').textContent = texts.languageLabel;
                 document.querySelector('.settings-section small').textContent = texts.languageHelp;
