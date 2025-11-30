@@ -335,9 +335,6 @@ async function serveStatic(request: Request): Promise<Response> {
         .header {
             text-align: center;
             margin-bottom: 40px;
-        }
-
-        .header {
             position: relative;
         }
 
@@ -354,6 +351,39 @@ async function serveStatic(request: Request): Promise<Response> {
         .header p {
             font-size: 1.1rem;
             opacity: 0.8;
+        }
+
+        /* Mobile responsiveness improvements */
+        @media (max-width: 768px) {
+            body {
+                padding: 15px;
+            }
+
+            .header {
+                margin-bottom: 30px;
+            }
+
+            .header h1 {
+                font-size: 2.2rem;
+            }
+
+            .header p {
+                font-size: 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+
+            .header h1 {
+                font-size: 1.8rem;
+            }
+
+            .header p {
+                font-size: 0.9rem;
+            }
         }
 
         .settings-link {
@@ -387,15 +417,27 @@ async function serveStatic(request: Request): Promise<Response> {
             gap: 20px;
         }
 
+        /* Responsive form improvements */
         @media (max-width: 768px) {
+            .form-container {
+                padding: 20px;
+                border-radius: 15px;
+            }
+
             .form-grid {
                 grid-template-columns: 1fr;
+                gap: 15px;
             }
         }
 
-        @media (max-width: 1200px) {
+        @media (max-width: 480px) {
+            .form-container {
+                padding: 15px;
+                margin-bottom: 20px;
+            }
+
             .form-grid {
-                grid-template-columns: 1fr;
+                gap: 12px;
             }
         }
 
@@ -509,6 +551,15 @@ async function serveStatic(request: Request): Promise<Response> {
             transform: none;
         }
 
+        /* Mobile button improvements */
+        @media (max-width: 480px) {
+            .generate-btn {
+                padding: 14px 24px;
+                font-size: 15px;
+                margin-top: 15px;
+            }
+        }
+
         .loading {
             display: none;
             text-align: center;
@@ -539,6 +590,20 @@ async function serveStatic(request: Request): Promise<Response> {
             display: none;
         }
 
+        /* Mobile result container improvements */
+        @media (max-width: 768px) {
+            .result-container {
+                padding: 20px;
+                border-radius: 15px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .result-container {
+                padding: 15px;
+            }
+        }
+
         .result-section {
             margin-bottom: 30px;
         }
@@ -562,6 +627,14 @@ async function serveStatic(request: Request): Promise<Response> {
             grid-template-columns: 1fr 1fr;
             gap: 15px;
             margin-bottom: 20px;
+        }
+
+        /* Mobile export controls improvements */
+        @media (max-width: 768px) {
+            .export-controls {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
         }
 
         .export-select {
@@ -618,6 +691,14 @@ async function serveStatic(request: Request): Promise<Response> {
             margin-bottom: 20px;
         }
 
+        /* Mobile title/subtitle options improvements */
+        @media (max-width: 768px) {
+            .title-options, .subtitle-options {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+        }
+
         .option-card {
             background: rgba(255, 255, 255, 0.08);
             border: 1px solid rgba(255, 255, 255, 0.2);
@@ -667,6 +748,23 @@ async function serveStatic(request: Request): Promise<Response> {
             color: #00d4ff;
             font-weight: 600;
             margin-bottom: 5px;
+        }
+
+        /* Mobile chapter improvements */
+        @media (max-width: 768px) {
+            .chapter-item {
+                padding: 12px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .chapter-outline {
+                gap: 12px;
+            }
+
+            .chapter-item {
+                padding: 10px;
+            }
         }
 
         .chapter-actions {
@@ -1960,6 +2058,33 @@ async function serveStatic(request: Request): Promise<Response> {
             font-size: 1.3rem;
         }
 
+        /* Mobile settings improvements */
+        @media (max-width: 768px) {
+            .settings-container {
+                padding: 20px;
+                border-radius: 15px;
+            }
+
+            .settings-section {
+                margin-bottom: 25px;
+            }
+
+            .settings-section h3 {
+                font-size: 1.2rem;
+                margin-bottom: 12px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .settings-container {
+                padding: 15px;
+            }
+
+            .settings-section h3 {
+                font-size: 1.1rem;
+            }
+        }
+
         .form-group {
             margin-bottom: 20px;
         }
@@ -2065,6 +2190,19 @@ async function serveStatic(request: Request): Promise<Response> {
         .info-box p {
             opacity: 0.8;
             line-height: 1.5;
+        }
+
+        /* Mobile info-box improvements */
+        @media (max-width: 768px) {
+            .info-box {
+                padding: 15px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .info-box {
+                padding: 12px;
+            }
         }
     </style>
 </head>
@@ -2271,3 +2409,4 @@ async function serveStatic(request: Request): Promise<Response> {
 
   return new Response('File not found', { status: 404 });
 }
+
