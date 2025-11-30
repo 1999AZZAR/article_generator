@@ -1,195 +1,213 @@
 # AI Article Auto Writer
 
-A web-based AI-powered article and novel outline generator built with TypeScript and Cloudflare Workers. Uses Google's Gemini AI to create professional content based on user specifications.
+A professional content generation system built on Cloudflare Workers that creates high-quality articles and novel outlines using Google Gemini AI.
+
+## Table of Contents
+
+- [Features](#features)
+- [Prerequisites](#prerequisites)
+- [Installation](#installation)
+- [Configuration](#configuration)
+- [Usage](#usage)
+- [API Reference](#api-reference)
+- [Deployment](#deployment)
+- [Development](#development)
+- [Project Structure](#project-structure)
+- [Contributing](#contributing)
+- [License](#license)
+- [Support](#support)
 
 ## Features
 
-- **Article Generation**: Create full articles or chapters with AI assistance
-- **Novel Outlines**: Generate complete novel outlines with chapter breakdowns
-- **Author Style Emulation**: Choose from popular authors or specify custom styles
-- **Dark Modern UI**: Professional, clean interface with dark theme
-- **Flexible Input**: Support for topics, tags, keywords, and chapter counts
-- **JSON API**: All responses formatted as structured JSON
+### Content Generation
+- Article creation with comprehensive coverage (1500-2000 words)
+- Novel outline generation with detailed chapter structures
+- Individual chapter content generation for novels
+- Multi-language support (English and Indonesian)
 
-## Input Form
+### Author Style Simulation
+- Predefined author selection including international and Indonesian writers
+- Custom author input capability
+- Consistent writing style maintenance throughout content
 
-### Required Fields
-- **Topic**: Main subject (e.g., romance, horror, philosophy)
-- **Author Style**: Writing style to emulate (predefined authors or custom)
-- **Type**: Article/Chapter or Novel Outline
-- **Language**: Content language (English or Indonesian)
+### Export Functionality
+- Markdown format export for documentation and version control
+- Rich Text Format (RTF) export compatible with word processors
+- Individual chapter export capability
+- Complete novel compilation export
 
-### Optional Fields
-- **Tags**: Additional categorization tags
-- **Keywords**: Specific terms to include
-- **Chapter Count**: Required for novel outlines
+### User Interface
+- Responsive design for desktop, tablet, and mobile devices
+- Professional dark theme interface
+- Comprehensive form validation
+- Loading states and error handling
 
-## Output Formats
+### Technical Features
+- Serverless architecture using Cloudflare Workers
+- TypeScript implementation for type safety
+- RESTful API design
+- Secure environment variable management
+- Edge computing for performance
 
-### Article/Chapter Response
-```json
-{
-  "refinedTags": ["refined", "tags", "array"],
-  "titleSelection": ["Title Option 1", "Title Option 2", "Title Option 3"],
-  "subtitleSelection": ["Subtitle Option 1", "Subtitle Option 2", "Subtitle Option 3"],
-  "content": "Full article content in specified author's style"
-}
-```
+## Prerequisites
 
-### Novel Outline Response
-```json
-{
-  "titleSelection": ["Novel Title 1", "Novel Title 2", "Novel Title 3"],
-  "synopsis": "Compelling novel synopsis",
-  "outline": [
-    {
-      "chapterNumber": 1,
-      "title": "Chapter 1 Title",
-      "subtitle": "Chapter 1 Subtitle"
-    }
-  ]
-}
-```
+- Node.js 18.x or later
+- npm package manager
+- Google Gemini API key
+- Cloudflare account (for deployment)
 
-## Setup
+## Installation
 
-1. **Install Dependencies**
+### Local Development Setup
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/your-username/article_generator.git
+   cd article_generator
+   ```
+
+2. Install dependencies:
    ```bash
    npm install
    ```
 
-2. **Configure Gemini API**
-   - Go to the Settings page (`/settings`) in the web interface
-   - Enter your Gemini API key from [Google AI Studio](https://aistudio.google.com/app/apikey)
-   - The key is stored locally in your browser
-
-   **Alternative**: Set your Gemini API key in Cloudflare Workers environment variables:
-   ```bash
-   wrangler secret put GEMINI_API_KEY
-   ```
-
-3. **Development**
-   ```bash
-   npm run dev
-   # Open http://localhost:8787 in your browser
-   ```
-
-4. **Build for Production**
+3. Build the project:
    ```bash
    npm run build
    ```
 
-## 🚀 Deployment
-
-### Cloudflare Workers Deployment
-
-1. **Install Wrangler CLI:**
+4. Start the development server:
    ```bash
-   npm install -g wrangler
+   npm run dev
    ```
 
-2. **Authenticate with Cloudflare:**
-   ```bash
-   wrangler auth login
-   ```
+5. Open the application in a web browser at `http://localhost:8787`
 
-3. **Set your Gemini API key:**
-   ```bash
-   wrangler secret put GEMINI_API_KEY
-   # Paste your API key when prompted
-   ```
+## Configuration
 
-4. **Deploy to Cloudflare:**
-   ```bash
-   wrangler deploy
-   ```
+### Environment Variables
 
-5. **Your app will be live at the URL provided by Wrangler**
+The application requires a Google Gemini API key for content generation:
 
-### GitHub Repository Setup
+- `GEMINI_API_KEY`: Your Google Gemini API key
 
-1. **Create a new repository on GitHub**
+### API Key Setup Options
 
-2. **Push your code:**
-   ```bash
-   git remote add origin <your-github-repo-url>
-   git push -u origin main
-   ```
+#### Option 1: Web Interface Configuration
+- Access the settings page at `/settings`
+- Enter your Gemini API key in the provided field
+- The key is stored locally in browser storage
 
-3. **Set up GitHub Secrets for Auto-deployment:**
+#### Option 2: Cloudflare Environment Variables
+```bash
+npx wrangler secret put GEMINI_API_KEY
+```
 
-   Go to your repository **Settings > Secrets and variables > Actions** and add:
+#### Option 3: Local Environment File
+Create a `.env` file in the project root:
+```
+GEMINI_API_KEY=your_api_key_here
+```
 
-   - **`CLOUDFLARE_API_TOKEN`**: Your Cloudflare API token
-     - Get it from: https://dash.cloudflare.com/profile/api-tokens
-     - Create a token with "Workers" edit permissions
+## Usage
 
-   - **`CLOUDFLARE_ACCOUNT_ID`**: Your Cloudflare Account ID
-     - Find it in: https://dash.cloudflare.com/ (right sidebar)
+### Basic Content Generation
 
-   - **`GEMINI_API_KEY`** (optional): Your Google Gemini API key
-     - Get it from: https://aistudio.google.com/app/apikey
+1. Access the application at the deployed URL or local development server
+2. Select the content type (Article/Chapter or Novel Outline)
+3. Complete the input form:
+   - Topic or title
+   - Author writing style
+   - Content language
+   - Optional tags and keywords
+   - Chapter count (for novels)
+4. Submit the form to generate content
+5. Review the generated content and export as needed
 
-4. **The workflow will automatically deploy on every push to main branch**
+### Novel Writing Workflow
 
-3. **Optional: Add GitHub Actions for automated deployment**
-   - Create `.github/workflows/deploy.yml` for CI/CD
-   - Automatically deploy on push to main branch
+1. Generate a novel outline with desired specifications
+2. Review the generated chapter structure and titles
+3. Generate content for individual chapters as needed
+4. Export chapters separately or compile the complete novel
 
-## Technology Stack
+### Export Options
 
-- **Backend**: Cloudflare Workers (TypeScript)
-- **AI**: Google Gemini Pro API
-- **Frontend**: Vanilla JavaScript with modern CSS
-- **Styling**: Dark theme with gradient effects and glassmorphism
+- **Markdown**: Suitable for documentation, blogging, and version control
+- **RTF**: Compatible with Microsoft Word and other word processing applications
+- **File Naming**: Automatic naming based on content titles and chapter numbers
 
-## API Endpoints
+## API Reference
 
 ### POST `/api/generate`
-Generate content based on form data.
+
+Generates articles or novel outlines based on provided parameters.
 
 **Request Body:**
 ```json
 {
   "topic": "string",
-  "tags": ["optional", "array"],
-  "keywords": ["optional", "array"],
   "authorStyle": "string",
   "type": "article" | "novel",
   "language": "english" | "indonesian",
-  "chapterCount": "number (required for novels)",
-  "apiKey": "string (optional, falls back to environment variable)"
+  "tags": ["string"],
+  "keywords": ["string"],
+  "chapterCount": number,
+  "apiKey": "string"
 }
 ```
 
-## Export Features
+**Response (Article):**
+```json
+{
+  "refinedTags": ["string"],
+  "titleSelection": ["string"],
+  "subtitleSelection": ["string"],
+  "content": "string"
+}
+```
 
-After generating content, users can export their articles with custom titles and subtitles:
+**Response (Novel):**
+```json
+{
+  "titleSelection": ["string"],
+  "synopsis": "string",
+  "outline": [
+    {
+      "chapterNumber": number,
+      "title": "string",
+      "subtitle": "string"
+    }
+  ]
+}
+```
 
-- **Markdown Export**: Client-side download of formatted Markdown files
-- **RTF Export**: Server-side generation of Rich Text Format files (compatible with Microsoft Word)
+### POST `/api/generate-chapter`
 
-### API Endpoints
-
-### POST `/api/generate`
-Generate content based on form data.
-
-### POST `/api/test-key`
-Test if a Gemini API key is valid.
-
-### POST `/api/export-docx`
-Export content as an RTF file for word processors.
+Generates content for individual novel chapters.
 
 **Request Body:**
 ```json
 {
-  "title": "Article Title",
-  "subtitle": "Optional Subtitle",
-  "content": "Full article content"
+  "chapterNumber": number,
+  "chapterTitle": "string",
+  "chapterSubtitle": "string",
+  "novelTitle": "string",
+  "novelSynopsis": "string",
+  "apiKey": "string"
 }
 ```
 
-**Response:** RTF file download
+**Response:**
+```json
+{
+  "content": "string"
+}
+```
+
+### POST `/api/test-key`
+
+Validates the provided Gemini API key.
 
 **Request Body:**
 ```json
@@ -201,43 +219,213 @@ Export content as an RTF file for word processors.
 **Response:**
 ```json
 {
-  "success": true,
-  "message": "API key is valid"
+  "success": boolean,
+  "message": "string"
 }
 ```
 
-## Settings Page
+### POST `/api/export-docx`
 
-Access the settings page at `/settings` to:
+Exports content as an RTF file.
 
-- Configure your Gemini API key
-- Test API key validity
-- Get instructions on how to obtain a Gemini API key from Google AI Studio
+**Request Body:**
+```json
+{
+  "title": "string",
+  "subtitle": "string",
+  "content": "string"
+}
+```
 
-The API key is stored locally in your browser's localStorage for security.
+**Response:** RTF file download
 
-## Supported Authors
+### POST `/api/export-chapter`
 
-- J.K. Rowling
-- George R.R. Martin
-- Jane Austen
-- Ernest Hemingway
-- Toni Morrison
-- Haruki Murakami
-- Margaret Atwood
-- Neil Gaiman
-- Chimamanda Ngozi Adichie
-- Cormac McCarthy
-- Custom (user-defined)
+Exports individual chapter content as an RTF file.
 
-## Development Notes
+**Request Body:**
+```json
+{
+  "chapterNumber": number,
+  "chapterTitle": "string",
+  "chapterSubtitle": "string",
+  "content": "string"
+}
+```
 
-- Built for Cloudflare Workers deployment
-- TypeScript for type safety
-- Modern ES modules
-- Responsive design
-- CORS enabled for API access
+**Response:** RTF file download
+
+## Deployment
+
+### Cloudflare Workers Deployment
+
+1. Install the Wrangler CLI:
+   ```bash
+   npm install -g wrangler
+   ```
+
+2. Authenticate with Cloudflare:
+   ```bash
+   npx wrangler auth login
+   ```
+
+3. Configure account settings in `wrangler.toml` if needed:
+   ```toml
+   account_id = "your_account_id"
+   ```
+
+4. Set the API key as a secret:
+   ```bash
+   npx wrangler secret put GEMINI_API_KEY
+   ```
+
+5. Deploy the application:
+   ```bash
+   npm run build
+   npx wrangler deploy
+   ```
+
+### Automated Deployment (GitHub Actions)
+
+The repository includes automated deployment configuration.
+
+#### Required GitHub Secrets
+
+Configure these secrets in your GitHub repository settings:
+
+- `CLOUDFLARE_API_TOKEN`: Cloudflare API token with Workers permissions
+- `CLOUDFLARE_ACCOUNT_ID`: Cloudflare account identifier
+- `GEMINI_API_KEY`: Google Gemini API key
+
+#### Deployment Triggers
+
+- Automatic deployment on pushes to the main branch
+- Manual deployment via GitHub Actions workflow dispatch
+
+## Development
+
+### Development Workflow
+
+1. Install project dependencies:
+   ```bash
+   npm install
+   ```
+
+2. Start the development server:
+   ```bash
+   npm run dev
+   ```
+
+3. Modify source files in the `src/` directory
+
+4. Build and test changes:
+   ```bash
+   npm run build
+   npm run dev
+   ```
+
+### Project Structure
+
+```
+article_generator/
+├── .github/
+│   └── workflows/          # CI/CD configuration
+├── src/
+│   ├── index.ts           # Cloudflare Worker entry point
+│   ├── handler.ts         # HTTP request handling and UI
+│   ├── gemini.ts          # AI integration and content generation
+│   └── pages/
+│       └── index.html     # HTML template
+├── .gitignore             # Version control exclusions
+├── package.json           # Project dependencies and scripts
+├── tsconfig.json          # TypeScript configuration
+├── wrangler.toml          # Cloudflare Workers configuration
+└── README.md              # Project documentation
+```
+
+### Code Standards
+
+- TypeScript with strict type checking
+- Consistent code formatting
+- Comprehensive error handling
+- Modular architecture
+
+## Project Structure
+
+```
+article_generator/
+├── .github/
+│   └── workflows/
+│       └── deploy.yml
+├── src/
+│   ├── index.ts
+│   ├── handler.ts
+│   ├── gemini.ts
+│   └── pages/
+│       └── index.html
+├── .gitignore
+├── LICENSE
+├── package.json
+├── tsconfig.json
+├── wrangler.toml
+└── README.md
+```
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch:
+   ```bash
+   git checkout -b feature/your-feature-name
+   ```
+3. Make your changes
+4. Test your changes locally
+5. Commit your changes:
+   ```bash
+   git commit -m "feat: description of changes"
+   ```
+6. Push to your fork:
+   ```bash
+   git push origin feature/your-feature-name
+   ```
+7. Create a pull request
+
+### Contribution Guidelines
+
+- Follow TypeScript best practices
+- Add appropriate error handling
+- Update documentation for new features
+- Ensure code passes type checking
+- Test changes before submission
 
 ## License
 
-ISC
+This project is licensed under the MIT License. See the LICENSE file for details.
+
+## Support
+
+### Documentation Links
+
+- [Cloudflare Workers Documentation](https://developers.cloudflare.com/workers/)
+- [Google Gemini API Documentation](https://ai.google.dev/docs)
+- [Wrangler CLI Documentation](https://developers.cloudflare.com/workers/wrangler/)
+
+### Troubleshooting
+
+#### Common Issues
+
+1. **API Key Errors**
+   - Verify API key validity and permissions
+   - Check API quota limits
+
+2. **Deployment Failures**
+   - Confirm Cloudflare account permissions
+   - Validate API token scope
+
+3. **Content Generation Issues**
+   - Check network connectivity
+   - Verify API key configuration
+
+### Getting Help
+
+For questions or issues, please create an issue in the GitHub repository.
