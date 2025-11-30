@@ -880,7 +880,11 @@ async function serveStatic(request: Request): Promise<Response> {
                 keywordsLabel: 'Keywords',
                 keywordsPlaceholder: 'Add a keyword and press Enter',
                 authorStyleLabel: 'Author Style *',
+                selectAuthor: 'Select an author',
                 customAuthorPlaceholder: 'Enter custom author name',
+                selectLanguage: 'Select language',
+                addButton: 'Add',
+                chapterCountPlaceholder: 'e.g. 10',
                 typeLabel: 'Type *',
                 typeArticle: 'Article/Chapter',
                 typeShortStory: 'Short Story/Cerpen',
@@ -966,7 +970,11 @@ async function serveStatic(request: Request): Promise<Response> {
                 keywordsLabel: 'Kata Kunci',
                 keywordsPlaceholder: 'Tambahkan kata kunci dan tekan Enter',
                 authorStyleLabel: 'Gaya Penulis *',
+                selectAuthor: 'Pilih penulis',
                 customAuthorPlaceholder: 'Masukkan nama penulis kustom',
+                selectLanguage: 'Pilih bahasa',
+                addButton: 'Tambah',
+                chapterCountPlaceholder: 'contoh: 10',
                 typeLabel: 'Tipe *',
                 typeArticle: 'Artikel/Bab',
                 typeShortStory: 'Cerita Pendek/Cerpen',
@@ -1066,16 +1074,21 @@ async function serveStatic(request: Request): Promise<Response> {
                 document.querySelector('#topic').placeholder = texts.topicPlaceholder;
                 document.querySelector('label[for="tags"]').textContent = texts.tagsLabel;
                 document.querySelector('#tagInput').placeholder = texts.tagsPlaceholder;
+                document.querySelector('#addTagBtn').textContent = texts.addButton;
                 document.querySelector('label[for="keywords"]').textContent = texts.keywordsLabel;
                 document.querySelector('#keywordInput').placeholder = texts.keywordsPlaceholder;
+                document.querySelector('#addKeywordBtn').textContent = texts.addButton;
                 document.querySelector('label[for="authorStyle"]').textContent = texts.authorStyleLabel;
+                document.querySelector('#authorStyle option[value=""]').textContent = texts.selectAuthor;
                 document.querySelector('#customAuthorStyle').placeholder = texts.customAuthorPlaceholder;
                 document.querySelector('label[for="type"]').textContent = texts.typeLabel;
                 document.querySelector('#type option[value="article"]').textContent = texts.typeArticle;
                 document.querySelector('#type option[value="shortstory"]').textContent = texts.typeShortStory;
                 document.querySelector('#type option[value="novel"]').textContent = texts.typeNovel;
                 document.querySelector('label[for="chapterCount"]').textContent = texts.chapterCountLabel;
+                document.querySelector('#chapterCount').placeholder = texts.chapterCountPlaceholder;
                 document.querySelector('label[for="language"]').textContent = texts.languageLabel;
+                document.querySelector('#language option[value=""]').textContent = texts.selectLanguage;
                 document.querySelector('label[for="mainIdea"]').textContent = texts.mainIdeaLabel;
                 document.querySelector('#mainIdea').placeholder = texts.mainIdeaPlaceholder;
                 document.querySelector('#generateBtn').textContent = texts.generateButton;
