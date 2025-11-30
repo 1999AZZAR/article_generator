@@ -120,6 +120,48 @@ export async function handleRequest(request: Request, env: { GEMINI_API_KEY: str
     }
   }
 
+  if (request.method === 'POST' && new URL(request.url).pathname === '/api/export-chapter') {
+    try {
+      const body: {
+        chapterNumber: number;
+        chapterTitle: string;
+        chapterSubtitle: string;
+        content: string;
+      } = await request.json();
+
+      const { chapterNumber, chapterTitle, chapterSubtitle, content } = body;
+
+      if (!chapterTitle || !content) {
+        return new Response(JSON.stringify({ error: 'Chapter title and content are required' }), {
+          status: 400,
+          headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+        });
+      }
+
+      // Create RTF content for the chapter
+      const chapterRtfContent = createSimpleRtf(
+        `Chapter ${chapterNumber}: ${chapterTitle}`,
+        chapterSubtitle,
+        content
+      );
+
+      return new Response(chapterRtfContent, {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/rtf',
+          'Content-Disposition': `attachment; filename="${chapterTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_chapter_${chapterNumber}.rtf"`,
+          'Access-Control-Allow-Origin': '*',
+        },
+      });
+    } catch (error) {
+      console.error('Chapter export error:', error);
+      return new Response(JSON.stringify({ error: 'Chapter export failed' }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+      });
+    }
+  }
+
   if (request.method === 'POST' && new URL(request.url).pathname === '/api/export-docx') {
     try {
       const body: { title: string; subtitle?: string; content: string } = await request.json();
@@ -624,6 +666,13 @@ async function serveStatic(request: Request): Promise<Response> {
             margin-bottom: 5px;
         }
 
+        .chapter-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
         .generate-chapter-btn {
             background: linear-gradient(45deg, #00ff88, #00d4ff);
             color: #0f0f0f;
@@ -634,7 +683,6 @@ async function serveStatic(request: Request): Promise<Response> {
             font-weight: 500;
             cursor: pointer;
             transition: all 0.3s ease;
-            margin-top: 10px;
         }
 
         .generate-chapter-btn:hover {
@@ -646,6 +694,26 @@ async function serveStatic(request: Request): Promise<Response> {
             opacity: 0.6;
             cursor: not-allowed;
             transform: none;
+        }
+
+        .export-chapter-btn {
+            background: linear-gradient(45deg, #ff6b6b, #ffa500);
+            color: #ffffff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .export-chapter-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
         }
 
         .chapter-loading {
@@ -1069,9 +1137,14 @@ async function serveStatic(request: Request): Promise<Response> {
                                     <div class="chapter-item">
                                         <div class="chapter-number">Chapter \${chapter.chapterNumber}: \${chapter.title}</div>
                                         <div>\${chapter.subtitle}</div>
-                                        <button class="generate-chapter-btn" onclick="generateChapter(\${chapter.chapterNumber}, '\${chapter.title.replace(/'/g, "\\'")}', '\${chapter.subtitle.replace(/'/g, "\\'")}', '\${result.titleSelection ? result.titleSelection[0] : ''}', '\${result.synopsis ? result.synopsis.substring(0, 100) : ''}')">
-                                            Generate Chapter Content
-                                        </button>
+                                        <div class="chapter-actions">
+                                            <button class="generate-chapter-btn" onclick="generateChapter(\${chapter.chapterNumber}, '\${chapter.title.replace(/'/g, "\\'")}', '\${chapter.subtitle.replace(/'/g, "\\'")}', '\${result.titleSelection ? result.titleSelection[0] : ''}', '\${result.synopsis ? result.synopsis.substring(0, 100) : ''}')">
+                                                Generate Chapter Content
+                                            </button>
+                                            <button class="export-chapter-btn" id="export-chapter-\${chapter.chapterNumber}-btn" onclick="exportChapter(\${chapter.chapterNumber}, '\${chapter.title.replace(/'/g, "\\'")}', '\${chapter.subtitle.replace(/'/g, "\\'")}')" style="display: none;">
+                                                📄 Export Chapter
+                                            </button>
+                                        </div>
                                         <div class="chapter-loading" id="chapter-\${chapter.chapterNumber}-loading" style="display: none;">
                                             <div class="spinner" style="width: 20px; height: 20px;"></div>
                                             <span>Generating...</span>
@@ -1253,6 +1326,12 @@ async function serveStatic(request: Request): Promise<Response> {
                 contentDiv.style.display = 'block';
                 contentDiv.textContent = result.content;
 
+                // Show export button
+                const exportBtn = document.getElementById(\`export-chapter-\${chapterNumber}-btn\`);
+                if (exportBtn) {
+                    exportBtn.style.display = 'inline-flex';
+                }
+
                 // Update button
                 button.textContent = 'Regenerate Chapter';
                 button.disabled = false;
@@ -1265,6 +1344,69 @@ async function serveStatic(request: Request): Promise<Response> {
                 button.disabled = false;
                 button.textContent = 'Generate Chapter Content';
                 loadingDiv.style.display = 'none';
+            }
+        }
+
+        async function exportChapter(chapterNumber, chapterTitle, chapterSubtitle) {
+            const contentElement = document.getElementById(\`chapter-\${chapterNumber}-content\`);
+
+            if (!contentElement || contentElement.style.display === 'none') {
+                alert('No chapter content found to export. Please generate the chapter first.');
+                return;
+            }
+
+            const content = contentElement.textContent || contentElement.innerText;
+
+            // Show export options dialog
+            const exportChoice = confirm(\`Export Chapter \${chapterNumber} as:\n\nOK = RTF (Word compatible)\nCancel = Markdown\`);
+
+            if (exportChoice) {
+                // Export as RTF
+                try {
+                    const response = await fetch('/api/export-chapter', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            chapterNumber: chapterNumber,
+                            chapterTitle: chapterTitle,
+                            chapterSubtitle: chapterSubtitle,
+                            content: content
+                        })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Export failed');
+                    }
+
+                    const blob = await response.blob();
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = \`\${chapterTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_chapter_\${chapterNumber}.rtf\`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+
+                } catch (error) {
+                    alert('Chapter RTF export failed. Please try again.');
+                    console.error('Chapter RTF export error:', error);
+                }
+            } else {
+                // Export as Markdown (client-side)
+                const markdown = \`# Chapter \${chapterNumber}: \${chapterTitle}\n\n## \${chapterSubtitle}\n\n\${content}\n\n---\n\`;
+
+                const blob = new Blob([markdown], { type: 'text/markdown' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = \`\${chapterTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_chapter_\${chapterNumber}.md\`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
             }
         }
 
