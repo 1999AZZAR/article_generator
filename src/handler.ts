@@ -8,6 +8,7 @@ export interface GenerateRequest {
   type: 'article' | 'novel';
   chapterCount?: number;
   language: 'english' | 'indonesian';
+  mainIdea?: string;
   apiKey?: string;
 }
 
@@ -837,6 +838,11 @@ async function serveStatic(request: Request): Promise<Response> {
                     </div>
                     <div class="tags-container" id="keywordsContainer"></div>
                 </div>
+
+                <div class="form-group">
+                    <label for="mainIdea">Main Idea/Plot</label>
+                    <textarea id="mainIdea" name="mainIdea" rows="4" placeholder="Describe your main idea, plot, or concept that you want the AI to build upon. This will help generate content that aligns with your specific vision."></textarea>
+                </div>
             </div>
 
             <button type="submit" class="generate-btn" id="generateBtn">
@@ -975,6 +981,7 @@ async function serveStatic(request: Request): Promise<Response> {
                     type: formData.get('type'),
                     chapterCount: formData.get('chapterCount') ? parseInt(formData.get('chapterCount')) : undefined,
                     language: formData.get('language'),
+                    mainIdea: formData.get('mainIdea') || undefined,
                     apiKey: apiKey
                 };
 

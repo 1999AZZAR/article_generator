@@ -30,6 +30,7 @@ export async function generateArticle(request: GenerateRequest, apiKey: string):
 
 ${request.tags ? `Include these themes and tags: ${request.tags.join(', ')}` : ''}
 ${request.keywords ? `Incorporate these keywords naturally throughout: ${request.keywords.join(', ')}` : ''}
+${request.mainIdea ? `Build upon this main idea/concept: ${request.mainIdea}` : ''}
 
 Make the article thorough and detailed with:
 - Comprehensive introduction with historical/technical background
@@ -194,6 +195,7 @@ export async function generateNovelOutline(request: GenerateRequest, apiKey: str
 
 ${request.tags ? `Include these themes: ${request.tags.join(', ')}` : ''}
 ${request.keywords ? `Incorporate these elements: ${request.keywords.join(', ')}` : ''}
+${request.mainIdea ? `Build upon this main idea/concept: ${request.mainIdea}` : ''}
 
 Create an outline for exactly ${chapterCount} chapters.
 

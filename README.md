@@ -120,6 +120,7 @@ GEMINI_API_KEY=your_api_key_here
    - Author writing style
    - Content language
    - Optional tags and keywords
+   - Optional main idea/plot description
    - Chapter count (for novels)
 4. Submit the form to generate content
 5. Review the generated content and export as needed
@@ -152,6 +153,7 @@ Generates articles or novel outlines based on provided parameters.
   "language": "english" | "indonesian",
   "tags": ["string"],
   "keywords": ["string"],
+  "mainIdea": "string",
   "chapterCount": number,
   "apiKey": "string"
 }
