@@ -933,6 +933,8 @@ async function serveStatic(request: Request): Promise<Response> {
                 exportMarkdown: 'Export as Markdown',
                 exportRtf: 'Export as RTF',
                 generateChapter: 'Generate Chapter Content',
+                generatingChapter: 'Generating...',
+                regenerateChapter: 'Regenerate Chapter',
                 exportChapter: 'Export Chapter',
                 selectTitle: 'Select Title',
                 selectSubtitle: 'Select Subtitle',
@@ -1023,6 +1025,8 @@ async function serveStatic(request: Request): Promise<Response> {
                 exportMarkdown: 'Ekspor sebagai Markdown',
                 exportRtf: 'Ekspor sebagai RTF',
                 generateChapter: 'Hasilkan Konten Bab',
+                generatingChapter: 'Menghasilkan...',
+                regenerateChapter: 'Hasilkan Ulang Bab',
                 exportChapter: 'Ekspor Bab',
                 selectTitle: 'Pilih Judul',
                 selectSubtitle: 'Pilih Subjudul',
@@ -1096,6 +1100,12 @@ async function serveStatic(request: Request): Promise<Response> {
                 if (!loadingInterval) {
                     document.querySelector('#loading p').textContent = texts.generating;
                 }
+
+                // Update chapter loading texts if they exist
+                const chapterLoadingTexts = document.querySelectorAll('[id^="generating-chapter-text"]');
+                chapterLoadingTexts.forEach(text => {
+                    text.textContent = texts.generatingChapter;
+                });
 
                 // Store language preference
                 localStorage.setItem('uiLanguage', lang);
@@ -1456,7 +1466,7 @@ async function serveStatic(request: Request): Promise<Response> {
                                         </div>
                                         <div class="chapter-loading" id="chapter-\${chapter.chapterNumber}-loading" style="display: none;">
                                             <div class="spinner" style="width: 20px; height: 20px;"></div>
-                                            <span>Generating...</span>
+                                            <span id="generating-chapter-text-\${chapter.chapterNumber}">\${texts.generatingChapter}</span>
                                         </div>
                                         <div class="chapter-content" id="chapter-\${chapter.chapterNumber}-content" style="display: none;"></div>
                                     </div>
@@ -1610,7 +1620,9 @@ async function serveStatic(request: Request): Promise<Response> {
 
             // Show loading state
             button.disabled = true;
-            button.textContent = 'Generating...';
+            const currentLang = localStorage.getItem('uiLanguage') || 'english';
+            const texts = uiLanguages[currentLang];
+            button.textContent = texts.generatingChapter;
             loadingDiv.style.display = 'flex';
 
             try {
@@ -1647,7 +1659,9 @@ async function serveStatic(request: Request): Promise<Response> {
                 }
 
                 // Update button
-                button.textContent = 'Regenerate Chapter';
+                const currentLang = localStorage.getItem('uiLanguage') || 'english';
+                const texts = uiLanguages[currentLang];
+                button.textContent = texts.regenerateChapter;
                 button.disabled = false;
 
             } catch (error) {
@@ -1655,8 +1669,10 @@ async function serveStatic(request: Request): Promise<Response> {
                 console.error('Chapter generation error:', error);
 
                 // Reset button and hide loading
+                const currentLang = localStorage.getItem('uiLanguage') || 'english';
+                const texts = uiLanguages[currentLang];
                 button.disabled = false;
-                button.textContent = 'Generate Chapter Content';
+                button.textContent = texts.generateChapter;
                 loadingDiv.style.display = 'none';
             }
         }
