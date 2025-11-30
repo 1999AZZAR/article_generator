@@ -58,6 +58,10 @@ A professional content generation system built on Cloudflare Workers that create
 
 ## Installation
 
+### Live Application
+
+The application is deployed and available at: **https://article-generator.azzar.workers.dev**
+
 ### Local Development Setup
 
 1. Clone the repository:
