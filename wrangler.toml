@@ -1,6 +1,7 @@
 name = "article-generator"
 main = "src/index.ts"
 compatibility_date = "2024-01-01"
+account_id = "0aee2a71de479c4578c217737ffaceb3"
 
 [vars]
 GEMINI_API_KEY = ""
