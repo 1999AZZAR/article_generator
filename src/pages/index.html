@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Article Auto Writer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 100%);
+            color: #e0e0e0;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            font-weight: 300;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #00d4ff, #00ff88);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.8;
+        }
+
+        .form-container {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #00d4ff;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: #e0e0e0;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #00d4ff;
+            box-shadow: 0 0 0 2px rgba(0, 212, 255, 0.2);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .tag-input-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .tag-input {
+            flex: 1;
+        }
+
+        .add-tag-btn {
+            padding: 12px 16px;
+            background: rgba(0, 212, 255, 0.2);
+            border: 1px solid #00d4ff;
+            border-radius: 8px;
+            color: #00d4ff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .add-tag-btn:hover {
+            background: rgba(0, 212, 255, 0.3);
+        }
+
+        .tags-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .tag {
+            background: rgba(0, 212, 255, 0.2);
+            border: 1px solid #00d4ff;
+            border-radius: 20px;
+            padding: 6px 12px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tag-remove {
+            cursor: pointer;
+            color: #ff6b6b;
+            font-weight: bold;
+        }
+
+        .generate-btn {
+            background: linear-gradient(45deg, #00d4ff, #00ff88);
+            color: #0f0f0f;
+            border: none;
+            padding: 16px 32px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .generate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 212, 255, 0.3);
+        }
+
+        .generate-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-left: 4px solid #00d4ff;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .result-container {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: none;
+        }
+
+        .result-section {
+            margin-bottom: 30px;
+        }
+
+        .result-section h3 {
+            color: #00ff88;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+
+        .title-options, .subtitle-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .option-card {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .option-card:hover {
+            border-color: #00d4ff;
+            transform: translateY(-2px);
+        }
+
+        .option-card.selected {
+            border-color: #00ff88;
+            background: rgba(0, 255, 136, 0.1);
+        }
+
+        .option-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .content-display {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            padding: 20px;
+            white-space: pre-wrap;
+            line-height: 1.6;
+            font-family: 'Georgia', serif;
+        }
+
+        .chapter-outline {
+            display: grid;
+            gap: 15px;
+        }
+
+        .chapter-item {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 15px;
+            border-left: 4px solid #00d4ff;
+        }
+
+        .chapter-number {
+            color: #00d4ff;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .error-message {
+            background: rgba(255, 0, 0, 0.1);
+            border: 1px solid rgba(255, 0, 0, 0.3);
+            border-radius: 12px;
+            padding: 15px;
+            color: #ff6b6b;
+            display: none;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .chapter-count-group {
+            display: none;
+        }
+
+        .chapter-count-group.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>AI Article Auto Writer</h1>
+            <p>Generate professional articles and novel outlines with AI</p>
+        </div>
+
+        <form class="form-container" id="articleForm">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="topic">Topic *</label>
+                    <input type="text" id="topic" required placeholder="e.g. romance, horror, philosophy">
+                </div>
+
+                <div class="form-group">
+                    <label for="authorStyle">Author Style to Copy *</label>
+                    <select id="authorStyle" required>
+                        <option value="">Select an author</option>
+                        <option value="J.K. Rowling">J.K. Rowling</option>
+                        <option value="George R.R. Martin">George R.R. Martin</option>
+                        <option value="Jane Austen">Jane Austen</option>
+                        <option value="Ernest Hemingway">Ernest Hemingway</option>
+                        <option value="Toni Morrison">Toni Morrison</option>
+                        <option value="Haruki Murakami">Haruki Murakami</option>
+                        <option value="Margaret Atwood">Margaret Atwood</option>
+                        <option value="Neil Gaiman">Neil Gaiman</option>
+                        <option value="Chimamanda Ngozi Adichie">Chimamanda Ngozi Adichie</option>
+                        <option value="Cormac McCarthy">Cormac McCarthy</option>
+                        <option value="custom">Custom (enter below)</option>
+                    </select>
+                    <input type="text" id="customAuthorStyle" placeholder="Enter custom author style" style="margin-top: 10px; display: none;">
+                </div>
+
+                <div class="form-group">
+                    <label for="type">Type *</label>
+                    <select id="type" required>
+                        <option value="">Select type</option>
+                        <option value="article">Article/Chapter</option>
+                        <option value="novel">Novel Outline</option>
+                    </select>
+                </div>
+
+                <div class="form-group chapter-count-group" id="chapterCountGroup">
+                    <label for="chapterCount">Number of Chapters *</label>
+                    <input type="number" id="chapterCount" min="1" max="50" placeholder="e.g. 10">
+                </div>
+
+                <div class="form-group">
+                    <label for="tags">Tags</label>
+                    <div class="tag-input-container">
+                        <input type="text" id="tagInput" placeholder="Add a tag and press Enter">
+                        <button type="button" class="add-tag-btn" id="addTagBtn">Add</button>
+                    </div>
+                    <div class="tags-container" id="tagsContainer"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="keywords">Keywords</label>
+                    <div class="tag-input-container">
+                        <input type="text" id="keywordInput" placeholder="Add a keyword and press Enter">
+                        <button type="button" class="add-tag-btn" id="addKeywordBtn">Add</button>
+                    </div>
+                    <div class="tags-container" id="keywordsContainer"></div>
+                </div>
+            </div>
+
+            <button type="submit" class="generate-btn" id="generateBtn">
+                Generate Content
+            </button>
+        </form>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Generating your content with AI...</p>
+        </div>
+
+        <div class="error-message" id="errorMessage"></div>
+
+        <div class="result-container" id="resultContainer">
+            <!-- Results will be dynamically inserted here -->
+        </div>
+    </div>
+
+    <script>
+        // Form handling and UI logic
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('articleForm');
+            const typeSelect = document.getElementById('type');
+            const chapterCountGroup = document.getElementById('chapterCountGroup');
+            const authorStyleSelect = document.getElementById('authorStyle');
+            const customAuthorStyle = document.getElementById('customAuthorStyle');
+            const generateBtn = document.getElementById('generateBtn');
+            const loading = document.getElementById('loading');
+            const errorMessage = document.getElementById('errorMessage');
+            const resultContainer = document.getElementById('resultContainer');
+
+            // Tag and keyword management
+            let tags = [];
+            let keywords = [];
+
+            function setupTagSystem(inputId, containerId, array, addBtnId) {
+                const input = document.getElementById(inputId);
+                const container = document.getElementById(containerId);
+                const addBtn = document.getElementById(addBtnId);
+
+                function addItem(value) {
+                    if (value && !array.includes(value)) {
+                        array.push(value);
+                        renderItems();
+                        input.value = '';
+                    }
+                }
+
+                function removeItem(index) {
+                    array.splice(index, 1);
+                    renderItems();
+                }
+
+                function renderItems() {
+                    container.innerHTML = '';
+                    array.forEach((item, index) => {
+                        const tagElement = document.createElement('div');
+                        tagElement.className = 'tag';
+                        tagElement.innerHTML = `
+                            ${item}
+                            <span class="tag-remove" onclick="removeItem(${index}, '${array === tags ? 'tags' : 'keywords'}')">&times;</span>
+                        `;
+                        container.appendChild(tagElement);
+                    });
+                }
+
+                input.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        addItem(input.value.trim());
+                    }
+                });
+
+                addBtn.addEventListener('click', function() {
+                    addItem(input.value.trim());
+                });
+
+                // Make removeItem available globally for onclick
+                window.removeItem = function(index, type) {
+                    if (type === 'tags') {
+                        tags.splice(index, 1);
+                        renderItems();
+                    } else {
+                        keywords.splice(index, 1);
+                        renderItems();
+                    }
+                };
+            }
+
+            setupTagSystem('tagInput', 'tagsContainer', tags, 'addTagBtn');
+            setupTagSystem('keywordInput', 'keywordsContainer', keywords, 'addKeywordBtn');
+
+            // Type selection handling
+            typeSelect.addEventListener('change', function() {
+                if (this.value === 'novel') {
+                    chapterCountGroup.classList.add('show');
+                } else {
+                    chapterCountGroup.classList.remove('show');
+                }
+            });
+
+            // Author style handling
+            authorStyleSelect.addEventListener('change', function() {
+                if (this.value === 'custom') {
+                    customAuthorStyle.style.display = 'block';
+                    customAuthorStyle.required = true;
+                } else {
+                    customAuthorStyle.style.display = 'none';
+                    customAuthorStyle.required = false;
+                }
+            });
+
+            // Form submission
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault();
+
+                const formData = new FormData(form);
+                const data = {
+                    topic: formData.get('topic'),
+                    tags: tags.length > 0 ? tags : undefined,
+                    keywords: keywords.length > 0 ? keywords : undefined,
+                    authorStyle: authorStyleSelect.value === 'custom' ? customAuthorStyle.value : authorStyleSelect.value,
+                    type: formData.get('type'),
+                    chapterCount: formData.get('chapterCount') ? parseInt(formData.get('chapterCount')) : undefined
+                };
+
+                // Show loading
+                loading.style.display = 'block';
+                generateBtn.disabled = true;
+                errorMessage.style.display = 'none';
+                resultContainer.style.display = 'none';
+
+                try {
+                    const response = await fetch('/api/generate', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(data)
+                    });
+
+                    const result = await response.json();
+
+                    if (!response.ok) {
+                        throw new Error(result.error || 'Failed to generate content');
+                    }
+
+                    displayResults(result, data.type);
+                } catch (error) {
+                    errorMessage.textContent = error.message;
+                    errorMessage.style.display = 'block';
+                } finally {
+                    loading.style.display = 'none';
+                    generateBtn.disabled = false;
+                }
+            });
+
+            function displayResults(result, type) {
+                resultContainer.innerHTML = '';
+
+                if (type === 'article') {
+                    displayArticleResults(result);
+                } else {
+                    displayNovelResults(result);
+                }
+
+                resultContainer.style.display = 'block';
+                resultContainer.scrollIntoView({ behavior: 'smooth' });
+            }
+
+            function displayArticleResults(result) {
+                let html = '';
+
+                if (result.refinedTags && result.refinedTags.length > 0) {
+                    html += `
+                        <div class="result-section">
+                            <h3>Refined Tags</h3>
+                            <div class="tags-container">
+                                ${result.refinedTags.map(tag => `<div class="tag">${tag}</div>`).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
+
+                if (result.titleSelection && result.titleSelection.length > 0) {
+                    html += `
+                        <div class="result-section">
+                            <h3>Title Selection</h3>
+                            <div class="title-options">
+                                ${result.titleSelection.map((title, index) =>
+                                    `<div class="option-card" onclick="selectOption(this, 'title', ${index})">
+                                        <div class="option-title">Option ${index + 1}</div>
+                                        <div>${title}</div>
+                                    </div>`
+                                ).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
+
+                if (result.subtitleSelection && result.subtitleSelection.length > 0) {
+                    html += `
+                        <div class="result-section">
+                            <h3>Subtitle Selection</h3>
+                            <div class="title-options">
+                                ${result.subtitleSelection.map((subtitle, index) =>
+                                    `<div class="option-card" onclick="selectOption(this, 'subtitle', ${index})">
+                                        <div class="option-title">Option ${index + 1}</div>
+                                        <div>${subtitle}</div>
+                                    </div>`
+                                ).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
+
+                if (result.content) {
+                    html += `
+                        <div class="result-section">
+                            <h3>Content</h3>
+                            <div class="content-display">${result.content}</div>
+                        </div>
+                    `;
+                }
+
+                resultContainer.innerHTML = html;
+            }
+
+            function displayNovelResults(result) {
+                let html = '';
+
+                if (result.titleSelection && result.titleSelection.length > 0) {
+                    html += `
+                        <div class="result-section">
+                            <h3>Title Selection</h3>
+                            <div class="title-options">
+                                ${result.titleSelection.map((title, index) =>
+                                    `<div class="option-card" onclick="selectOption(this, 'title', ${index})">
+                                        <div class="option-title">Option ${index + 1}</div>
+                                        <div>${title}</div>
+                                    </div>`
+                                ).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
+
+                if (result.synopsis) {
+                    html += `
+                        <div class="result-section">
+                            <h3>Synopsis</h3>
+                            <div class="content-display">${result.synopsis}</div>
+                        </div>
+                    `;
+                }
+
+                if (result.outline && result.outline.length > 0) {
+                    html += `
+                        <div class="result-section">
+                            <h3>Chapter Outline</h3>
+                            <div class="chapter-outline">
+                                ${result.outline.map(chapter => `
+                                    <div class="chapter-item">
+                                        <div class="chapter-number">Chapter ${chapter.chapterNumber}: ${chapter.title}</div>
+                                        <div>${chapter.subtitle}</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
+
+                resultContainer.innerHTML = html;
+            }
+        });
+
+        function selectOption(element, type, index) {
+            // Remove selected class from all options of this type
+            const container = element.closest('.title-options, .subtitle-options');
+            container.querySelectorAll('.option-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+
+            // Add selected class to clicked option
+            element.classList.add('selected');
+        }
+    </script>
+</body>
+</html>
