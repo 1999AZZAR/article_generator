@@ -1,6 +1,6 @@
-# AI Article Auto Writer
+# Quill
 
-A professional content generation system built on Cloudflare Workers that creates high-quality articles and novel outlines using Google Gemini AI.
+AI-powered writing assistant for creating professional articles and novel outlines using Google Gemini AI, built on Cloudflare Workers.
 
 ## Table of Contents
 

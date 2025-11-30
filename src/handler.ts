@@ -309,7 +309,7 @@ async function serveStatic(request: Request): Promise<Response> {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Article Auto Writer</title>
+    <title>Quill - AI Writing Assistant</title>
     <style>
         * {
             margin: 0;
@@ -763,8 +763,8 @@ async function serveStatic(request: Request): Promise<Response> {
     <div class="container">
         <div class="header">
             <a href="/settings" class="settings-link">⚙️ Settings</a>
-            <h1>AI Article Auto Writer</h1>
-            <p>Generate professional articles and novel outlines with AI</p>
+            <h1>Quill</h1>
+            <p>AI-powered writing assistant for articles and novels</p>
         </div>
 
         <form class="form-container" id="articleForm">
@@ -866,8 +866,8 @@ async function serveStatic(request: Request): Promise<Response> {
         // Language strings
         const uiLanguages = {
             english: {
-                title: 'AI Article Auto Writer',
-                subtitle: 'Generate professional articles and novel outlines with AI',
+                title: 'Quill',
+                subtitle: 'AI-powered writing assistant for articles and novels',
                 settings: 'Settings',
                 topicLabel: 'Topic *',
                 topicPlaceholder: 'e.g. romance, horror, philosophy',
@@ -918,8 +918,8 @@ async function serveStatic(request: Request): Promise<Response> {
                 pleaseEnterApiKey: 'Please enter an API key'
             },
             indonesian: {
-                title: 'Penulis Artikel AI',
-                subtitle: 'Hasilkan artikel profesional dan outline novel dengan AI',
+                title: 'Quill',
+                subtitle: 'Asisten penulisan bertenaga AI untuk artikel dan novel',
                 settings: 'Pengaturan',
                 topicLabel: 'Topik *',
                 topicPlaceholder: 'contoh: romansa, horor, filsafat',
@@ -1729,7 +1729,7 @@ async function serveStatic(request: Request): Promise<Response> {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Settings - AI Article Auto Writer</title>
+    <title>Quill - Settings</title>
     <style>
         * {
             margin: 0;
@@ -1917,7 +1917,7 @@ async function serveStatic(request: Request): Promise<Response> {
     <div class="container">
         <div class="header">
             <h1>Settings</h1>
-            <p>Configure your AI Article Auto Writer</p>
+            <p>Configure your Quill writing assistant</p>
         </div>
 
         <div class="nav">
