@@ -370,36 +370,6 @@ async function serveStatic(request: Request): Promise<Response> {
             background: rgba(0, 212, 255, 0.1);
         }
 
-        .language-toggle {
-            position: absolute;
-            top: 0;
-            right: 120px;
-            display: flex;
-            gap: 5px;
-        }
-
-        .lang-btn {
-            padding: 8px 12px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 6px;
-            color: #ccc;
-            cursor: pointer;
-            font-size: 12px;
-            transition: all 0.3s ease;
-        }
-
-        .lang-btn.active {
-            background: rgba(0, 212, 255, 0.2);
-            border-color: #00d4ff;
-            color: #00d4ff;
-        }
-
-        .lang-btn:hover {
-            background: rgba(255, 255, 255, 0.1);
-            color: #fff;
-        }
-
         .form-container {
             background: rgba(255, 255, 255, 0.05);
             border-radius: 20px;
@@ -792,10 +762,6 @@ async function serveStatic(request: Request): Promise<Response> {
 <body>
     <div class="container">
         <div class="header">
-            <div class="language-toggle">
-                <button class="lang-btn" data-lang="english">EN</button>
-                <button class="lang-btn" data-lang="indonesian">ID</button>
-            </div>
             <a href="/settings" class="settings-link">⚙️ Settings</a>
             <h1>AI Article Auto Writer</h1>
             <p>Generate professional articles and novel outlines with AI</p>
@@ -1016,8 +982,6 @@ async function serveStatic(request: Request): Promise<Response> {
             const loading = document.getElementById('loading');
             const errorMessage = document.getElementById('errorMessage');
             const resultContainer = document.getElementById('resultContainer');
-            const langBtns = document.querySelectorAll('.lang-btn');
-
             // Load saved language preference
             const savedLanguage = localStorage.getItem('uiLanguage') || 'english';
 
@@ -1045,25 +1009,12 @@ async function serveStatic(request: Request): Promise<Response> {
                 document.querySelector('#generateBtn').textContent = texts.generateButton;
                 document.querySelector('#loading p').textContent = texts.generating;
 
-                // Update language button states
-                langBtns.forEach(btn => {
-                    btn.classList.toggle('active', btn.dataset.lang === lang);
-                });
-
                 // Store language preference
                 localStorage.setItem('uiLanguage', lang);
             }
 
             // Initialize language
             updateUILanguage(savedLanguage);
-
-            // Handle language switching
-            langBtns.forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const lang = this.dataset.lang;
-                    updateUILanguage(lang);
-                });
-            });
 
             // Tag and keyword management
             let tags = [];

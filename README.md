@@ -119,7 +119,7 @@ GEMINI_API_KEY=your_api_key_here
 ### Basic Content Generation
 
 1. Access the application at the deployed URL or local development server
-2. **Optional**: Switch interface language using the EN/ID buttons in the header
+2. **Optional**: Change interface language via Settings page (`/settings`)
 3. Select the content type (Article/Chapter or Novel Outline)
 4. Complete the input form:
    - Topic or title
@@ -135,12 +135,12 @@ GEMINI_API_KEY=your_api_key_here
 
 The application supports two interface languages:
 
-- **English (EN)**: Default interface language
+- **English**: Default interface language
 - **Indonesian (Bahasa Indonesia)**: Localized interface
 
 **To change language:**
-- Use the language toggle buttons (EN/ID) in the main page header
-- Or visit Settings page (`/settings`) and select your preferred language from the dropdown
+- Visit the Settings page (`/settings`)
+- Select your preferred language from the "Interface Language" dropdown
 - Language preference is saved locally in your browser
 
 All UI elements, form labels, buttons, and messages will be displayed in your selected language.
