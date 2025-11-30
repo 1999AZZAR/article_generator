@@ -744,16 +744,76 @@ async function serveStatic(request: Request): Promise<Response> {
             border-left: 4px solid #00d4ff;
         }
 
+        .chapter-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            padding: 5px 0;
+            margin-bottom: 10px;
+        }
+
+        .chapter-title-section {
+            flex: 1;
+        }
+
         .chapter-number {
             color: #00d4ff;
             font-weight: 600;
             margin-bottom: 5px;
         }
 
+        .chapter-toggle {
+            color: #00d4ff;
+            font-size: 18px;
+            font-weight: bold;
+            transition: transform 0.3s ease;
+            margin-left: 10px;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: rgba(0, 212, 255, 0.1);
+        }
+
+        .chapter-toggle.collapsed {
+            transform: rotate(0deg);
+        }
+
+        .chapter-toggle.expanded {
+            transform: rotate(90deg);
+        }
+
+        .chapter-content-section {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .chapter-content-section.expanded {
+            max-height: 2000px; /* Large enough for long content */
+        }
+
+        .chapter-details {
+            margin-bottom: 15px;
+        }
+
         /* Mobile chapter improvements */
         @media (max-width: 768px) {
             .chapter-item {
                 padding: 12px;
+            }
+
+            .chapter-header {
+                padding: 3px 0;
+            }
+
+            .chapter-toggle {
+                font-size: 16px;
+                width: 20px;
+                height: 20px;
             }
         }
 
@@ -764,6 +824,18 @@ async function serveStatic(request: Request): Promise<Response> {
 
             .chapter-item {
                 padding: 10px;
+            }
+
+            .chapter-header {
+                padding: 2px 0;
+                margin-bottom: 8px;
+            }
+
+            .chapter-toggle {
+                font-size: 14px;
+                width: 18px;
+                height: 18px;
+                margin-left: 5px;
             }
         }
 
@@ -1540,33 +1612,42 @@ async function serveStatic(request: Request): Promise<Response> {
                             <div class="chapter-outline">
                                 \${result.outline.map(chapter => \`
                                     <div class="chapter-item">
-                                        <div class="chapter-number">\${texts.chapter} \${chapter.chapterNumber}: \${chapter.title}</div>
-                                        <div>\${chapter.subtitle}</div>
-                                        <div class="chapter-actions">
-                                            <button class="generate-chapter-btn"
-                                                    data-chapter-number="\${chapter.chapterNumber}"
-                                                    data-chapter-title="\${chapter.title.replace(/"/g, '&quot;')}"
-                                                    data-chapter-subtitle="\${chapter.subtitle.replace(/"/g, '&quot;')}"
-                                                    data-novel-title="\${result.titleSelection ? result.titleSelection[0].replace(/"/g, '&quot;') : ''}"
-                                                    data-novel-synopsis="\${result.synopsis ? result.synopsis.substring(0, 100).replace(/"/g, '&quot;') : ''}"
-                                                    onclick="generateChapter(this)">
-                                                \${texts.generateChapter}
-                                            </button>
-                                            <button class="export-chapter-btn"
-                                                    id="export-chapter-\${chapter.chapterNumber}-btn"
-                                                    data-chapter-number="\${chapter.chapterNumber}"
-                                                    data-chapter-title="\${chapter.title.replace(/"/g, '&quot;')}"
-                                                    data-chapter-subtitle="\${chapter.subtitle.replace(/"/g, '&quot;')}"
-                                                    onclick="exportChapter(this)"
-                                                    style="display: none;">
-                                                📄 \${texts.exportChapter}
-                                            </button>
+                                        <div class="chapter-header" onclick="toggleChapter(\${chapter.chapterNumber})">
+                                            <div class="chapter-title-section">
+                                                <div class="chapter-number">\${texts.chapter} \${chapter.chapterNumber}: \${chapter.title}</div>
+                                                <div>\${chapter.subtitle}</div>
+                                            </div>
+                                            <div class="chapter-toggle collapsed" id="chapter-toggle-\${chapter.chapterNumber}">▶</div>
                                         </div>
-                                        <div class="chapter-loading" id="chapter-\${chapter.chapterNumber}-loading" style="display: none;">
-                                            <div class="spinner" style="width: 20px; height: 20px;"></div>
-                                            <span id="generating-chapter-text-\${chapter.chapterNumber}">\${texts.generatingChapter}</span>
+                                        <div class="chapter-content-section" id="chapter-content-section-\${chapter.chapterNumber}">
+                                            <div class="chapter-details">
+                                                <div class="chapter-actions">
+                                                    <button class="generate-chapter-btn"
+                                                            data-chapter-number="\${chapter.chapterNumber}"
+                                                            data-chapter-title="\${chapter.title.replace(/"/g, '&quot;')}"
+                                                            data-chapter-subtitle="\${chapter.subtitle.replace(/"/g, '&quot;')}"
+                                                            data-novel-title="\${result.titleSelection ? result.titleSelection[0].replace(/"/g, '&quot;') : ''}"
+                                                            data-novel-synopsis="\${result.synopsis ? result.synopsis.substring(0, 100).replace(/"/g, '&quot;') : ''}"
+                                                            onclick="generateChapter(this)">
+                                                        \${texts.generateChapter}
+                                                    </button>
+                                                    <button class="export-chapter-btn"
+                                                            id="export-chapter-\${chapter.chapterNumber}-btn"
+                                                            data-chapter-number="\${chapter.chapterNumber}"
+                                                            data-chapter-title="\${chapter.title.replace(/"/g, '&quot;')}"
+                                                            data-chapter-subtitle="\${chapter.subtitle.replace(/"/g, '&quot;')}"
+                                                            onclick="exportChapter(this)"
+                                                            style="display: none;">
+                                                        📄 \${texts.exportChapter}
+                                                    </button>
+                                                </div>
+                                                <div class="chapter-loading" id="chapter-\${chapter.chapterNumber}-loading" style="display: none;">
+                                                    <div class="spinner" style="width: 20px; height: 20px;"></div>
+                                                    <span id="generating-chapter-text-\${chapter.chapterNumber}">\${texts.generatingChapter}</span>
+                                                </div>
+                                                <div class="chapter-content" id="chapter-\${chapter.chapterNumber}-content" style="display: none;"></div>
+                                            </div>
                                         </div>
-                                        <div class="chapter-content" id="chapter-\${chapter.chapterNumber}-content" style="display: none;"></div>
                                     </div>
                                 \`).join('')}
                             </div>
@@ -1699,6 +1780,25 @@ async function serveStatic(request: Request): Promise<Response> {
             }
         }
 
+        function toggleChapter(chapterNumber) {
+            const contentSection = document.getElementById(\`chapter-content-section-\${chapterNumber}\`);
+            const toggleButton = document.getElementById(\`chapter-toggle-\${chapterNumber}\`);
+
+            if (contentSection.classList.contains('expanded')) {
+                // Collapse
+                contentSection.classList.remove('expanded');
+                toggleButton.classList.remove('expanded');
+                toggleButton.classList.add('collapsed');
+                toggleButton.textContent = '▶';
+            } else {
+                // Expand
+                contentSection.classList.add('expanded');
+                toggleButton.classList.remove('collapsed');
+                toggleButton.classList.add('expanded');
+                toggleButton.textContent = '▼';
+            }
+        }
+
         async function generateChapter(button) {
             const chapterNumber = parseInt(button.getAttribute('data-chapter-number'));
             const chapterTitle = button.getAttribute('data-chapter-title');
@@ -1754,6 +1854,14 @@ async function serveStatic(request: Request): Promise<Response> {
                 const exportBtn = document.getElementById(\`export-chapter-\${chapterNumber}-btn\`);
                 if (exportBtn) {
                     exportBtn.style.display = 'inline-flex';
+                }
+
+                // Auto-expand the chapter to show the generated content
+                const contentSection = document.getElementById(\`chapter-content-section-\${chapterNumber}\`);
+                const toggleButton = document.getElementById(\`chapter-toggle-\${chapterNumber}\`);
+                if (!contentSection.classList.contains('expanded')) {
+                    toggleChapter(chapterNumber);
+                }
                 }
 
                 // Update button
