@@ -116,6 +116,22 @@ A web-based AI-powered article and novel outline generator built with TypeScript
    git push -u origin main
    ```
 
+3. **Set up GitHub Secrets for Auto-deployment:**
+
+   Go to your repository **Settings > Secrets and variables > Actions** and add:
+
+   - **`CLOUDFLARE_API_TOKEN`**: Your Cloudflare API token
+     - Get it from: https://dash.cloudflare.com/profile/api-tokens
+     - Create a token with "Workers" edit permissions
+
+   - **`CLOUDFLARE_ACCOUNT_ID`**: Your Cloudflare Account ID
+     - Find it in: https://dash.cloudflare.com/ (right sidebar)
+
+   - **`GEMINI_API_KEY`** (optional): Your Google Gemini API key
+     - Get it from: https://aistudio.google.com/app/apikey
+
+4. **The workflow will automatically deploy on every push to main branch**
+
 3. **Optional: Add GitHub Actions for automated deployment**
    - Create `.github/workflows/deploy.yml` for CI/CD
    - Automatically deploy on push to main branch
