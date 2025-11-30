@@ -1138,10 +1138,22 @@ async function serveStatic(request: Request): Promise<Response> {
                                         <div class="chapter-number">Chapter \${chapter.chapterNumber}: \${chapter.title}</div>
                                         <div>\${chapter.subtitle}</div>
                                         <div class="chapter-actions">
-                                            <button class="generate-chapter-btn" onclick="generateChapter(\${chapter.chapterNumber}, '\${chapter.title.replace(/'/g, "\\'")}', '\${chapter.subtitle.replace(/'/g, "\\'")}', '\${result.titleSelection ? result.titleSelection[0] : ''}', '\${result.synopsis ? result.synopsis.substring(0, 100) : ''}')">
+                                            <button class="generate-chapter-btn"
+                                                    data-chapter-number="\${chapter.chapterNumber}"
+                                                    data-chapter-title="\${chapter.title.replace(/"/g, '&quot;')}"
+                                                    data-chapter-subtitle="\${chapter.subtitle.replace(/"/g, '&quot;')}"
+                                                    data-novel-title="\${result.titleSelection ? result.titleSelection[0].replace(/"/g, '&quot;') : ''}"
+                                                    data-novel-synopsis="\${result.synopsis ? result.synopsis.substring(0, 100).replace(/"/g, '&quot;') : ''}"
+                                                    onclick="generateChapter(this)">
                                                 Generate Chapter Content
                                             </button>
-                                            <button class="export-chapter-btn" id="export-chapter-\${chapter.chapterNumber}-btn" onclick="exportChapter(\${chapter.chapterNumber}, '\${chapter.title.replace(/'/g, "\\'")}', '\${chapter.subtitle.replace(/'/g, "\\'")}')" style="display: none;">
+                                            <button class="export-chapter-btn"
+                                                    id="export-chapter-\${chapter.chapterNumber}-btn"
+                                                    data-chapter-number="\${chapter.chapterNumber}"
+                                                    data-chapter-title="\${chapter.title.replace(/"/g, '&quot;')}"
+                                                    data-chapter-subtitle="\${chapter.subtitle.replace(/"/g, '&quot;')}"
+                                                    onclick="exportChapter(this)"
+                                                    style="display: none;">
                                                 📄 Export Chapter
                                             </button>
                                         </div>
@@ -1282,8 +1294,13 @@ async function serveStatic(request: Request): Promise<Response> {
             }
         }
 
-        async function generateChapter(chapterNumber, chapterTitle, chapterSubtitle, novelTitle, novelSynopsis) {
-            const button = event.target;
+        async function generateChapter(button) {
+            const chapterNumber = parseInt(button.getAttribute('data-chapter-number'));
+            const chapterTitle = button.getAttribute('data-chapter-title');
+            const chapterSubtitle = button.getAttribute('data-chapter-subtitle');
+            const novelTitle = button.getAttribute('data-novel-title');
+            const novelSynopsis = button.getAttribute('data-novel-synopsis');
+
             const loadingDiv = document.getElementById(\`chapter-\${chapterNumber}-loading\`);
             const contentDiv = document.getElementById(\`chapter-\${chapterNumber}-content\`);
 
@@ -1347,7 +1364,11 @@ async function serveStatic(request: Request): Promise<Response> {
             }
         }
 
-        async function exportChapter(chapterNumber, chapterTitle, chapterSubtitle) {
+        async function exportChapter(button) {
+            const chapterNumber = parseInt(button.getAttribute('data-chapter-number'));
+            const chapterTitle = button.getAttribute('data-chapter-title');
+            const chapterSubtitle = button.getAttribute('data-chapter-subtitle');
+
             const contentElement = document.getElementById(\`chapter-\${chapterNumber}-content\`);
 
             if (!contentElement || contentElement.style.display === 'none') {
