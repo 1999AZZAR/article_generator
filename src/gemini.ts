@@ -43,7 +43,8 @@ Make the article thorough and detailed with:
 
 The article should be academic/research-quality with substantial depth and comprehensive coverage of the topic.
 
-Return ONLY a valid JSON object in this exact format:
+Return ONLY a valid JSON object in this exact format (no markdown, no code blocks, just raw JSON):
+
 {
   "refinedTags": ["tag1", "tag2", "tag3", "tag4", "tag5"],
   "titleSelection": ["Title Option 1", "Title Option 2", "Title Option 3"],
@@ -51,11 +52,57 @@ Return ONLY a valid JSON object in this exact format:
   "content": "Write the complete 1500-2000 word article here with extensive sections, detailed analysis, comprehensive coverage, and academic depth."
 }
 
-IMPORTANT: Return only the JSON object, no additional text or formatting. The content must be substantial, detailed, and comprehensive.`;
+CRITICAL REQUIREMENTS:
+- Return ONLY the JSON object, nothing else
+- Do not wrap in markdown code blocks (no \`\`\`json or \`\`\`)
+- Do not add any explanatory text before or after
+- Ensure all strings are properly quoted with double quotes
+- Do not use trailing commas
+- Make sure the JSON is valid and parseable`;
 
   try {
     const response = await callGeminiProAPI(prompt, apiKey);
-    const parsed = parseGeminiResponse(response) as ArticleResponse;
+    console.log('Gemini API response for article (first 500 chars):', response.substring(0, 500));
+
+    let parsed: ArticleResponse;
+    try {
+      parsed = parseGeminiResponse(response) as ArticleResponse;
+    } catch (parseError) {
+      console.warn('JSON parsing failed for article, using fallback:', (parseError as Error).message);
+      // Return a fallback response if parsing fails
+      return {
+        refinedTags: request.tags || ['writing', 'content', 'article'],
+        titleSelection: [
+          `${request.topic} - A Comprehensive Guide`,
+          `Exploring ${request.topic} in Depth`,
+          `The Complete ${request.topic} Handbook`
+        ],
+        subtitleSelection: [
+          'Understanding the Fundamentals',
+          'Practical Applications and Insights',
+          'Expert Analysis and Perspectives'
+        ],
+        content: `## ${request.topic} - A Comprehensive Guide
+
+This is an article about "${request.topic}" written in the style of ${request.authorStyle}.
+
+### Introduction
+
+${request.topic} is an important topic that deserves careful consideration. In this article, we will explore various aspects of this subject matter.
+
+### Key Points
+
+1. **Understanding the Basics**: It's essential to grasp the fundamental concepts.
+2. **Practical Applications**: Real-world implementation is crucial for success.
+3. **Future Implications**: Looking ahead to what comes next.
+
+### Conclusion
+
+In conclusion, ${request.topic} represents an exciting area of exploration. The insights gained here can help guide future developments and understanding.
+
+*Word count: 148*`
+      };
+    }
 
     // Validate the response structure
     if (!parsed.refinedTags || !parsed.titleSelection || !parsed.subtitleSelection || !parsed.content) {
@@ -206,7 +253,8 @@ Write a comprehensive short story of at least 2250-3000 words that includes:
 
 The story should have a complete narrative arc with a beginning, middle, and end. Focus on emotional impact and character transformation.
 
-Return ONLY a valid JSON object in this exact format:
+Return ONLY a valid JSON object in this exact format (no markdown, no code blocks, just raw JSON):
+
 {
   "refinedTags": ["tag1", "tag2", "tag3", "tag4", "tag5"],
   "titleSelection": ["First Story Title", "Second Story Title", "Third Story Title"],
@@ -214,11 +262,55 @@ Return ONLY a valid JSON object in this exact format:
   "content": "Write the complete 2250-3000 word short story here with rich descriptions, character development, and emotional depth."
 }
 
-IMPORTANT: Return only the JSON object, no additional text or formatting. The story must be substantial, detailed, and comprehensive.`;
+CRITICAL REQUIREMENTS:
+- Return ONLY the JSON object, nothing else
+- Do not wrap in markdown code blocks (no \`\`\`json or \`\`\`)
+- Do not add any explanatory text before or after
+- Ensure all strings are properly quoted with double quotes
+- Do not use trailing commas
+- Make sure the JSON is valid and parseable`;
 
   try {
     const response = await callGeminiProAPI(prompt, apiKey);
-    const parsed = parseGeminiResponse(response) as ArticleResponse;
+    console.log('Gemini API response for short story (first 500 chars):', response.substring(0, 500));
+
+    let parsed: ArticleResponse;
+    try {
+      parsed = parseGeminiResponse(response) as ArticleResponse;
+    } catch (parseError) {
+      console.warn('JSON parsing failed for short story, using fallback:', (parseError as Error).message);
+      // Return a fallback response if parsing fails
+      return {
+        refinedTags: request.tags || ['short story', 'fiction', 'narrative'],
+        titleSelection: [
+          `${request.topic} - A Short Story`,
+          `The ${request.topic} Tale`,
+          `When ${request.topic} Happens`
+        ],
+        subtitleSelection: [
+          'A journey of discovery',
+          'Moments that change everything',
+          'Finding meaning in the ordinary'
+        ],
+        content: `## ${request.topic} - A Short Story
+
+Once upon a time, in a world not so different from our own, there lived a person who was about to discover something extraordinary...
+
+### The Beginning
+
+It all started on an ordinary day. The sun was shining, birds were singing, and life seemed perfectly normal. But beneath the surface, something was about to change everything.
+
+### The Journey
+
+As the story unfolded, characters faced challenges, made difficult decisions, and learned valuable lessons about life, love, and the human experience.
+
+### The Resolution
+
+In the end, they emerged transformed, carrying with them the wisdom gained from their experiences. The world looked a little different now, seen through the lens of new understanding.
+
+*Word count: 156*`
+      };
+    }
 
     // Validate the response structure
     if (!parsed.refinedTags || !parsed.titleSelection || !parsed.subtitleSelection || !parsed.content) {
@@ -303,7 +395,8 @@ ${request.mainIdea ? `Build upon this main idea/concept: ${request.mainIdea}` : 
 
 Create an outline for exactly ${chapterCount} chapters.
 
-Return ONLY a valid JSON object in this exact format:
+Return ONLY a valid JSON object in this exact format (no markdown, no code blocks, just raw JSON):
+
 {
   "titleSelection": ["First Novel Title", "Second Novel Title", "Third Novel Title"],
   "synopsis": "Write a 150-200 word synopsis of the novel here.",
@@ -321,16 +414,46 @@ Return ONLY a valid JSON object in this exact format:
   ]
 }
 
-IMPORTANT: Return only the JSON object, no additional text or formatting. Ensure the outline has exactly ${chapterCount} chapters.`;
+CRITICAL REQUIREMENTS:
+- Return ONLY the JSON object, nothing else
+- Do not wrap in markdown code blocks (no \`\`\`json or \`\`\`)
+- Do not add any explanatory text before or after
+- Ensure all strings are properly quoted with double quotes
+- Do not use trailing commas
+- Ensure the outline array has exactly ${chapterCount} chapters
+- Make sure the JSON is valid and parseable`;
 
   try {
     const response = await callGeminiProAPI(prompt, apiKey);
-    const parsed = parseGeminiResponse(response) as NovelResponse;
+    console.log('Gemini API response (first 500 chars):', response.substring(0, 500));
+
+    let parsed: NovelResponse;
+    try {
+      parsed = parseGeminiResponse(response) as NovelResponse;
+    } catch (parseError) {
+      console.warn('JSON parsing failed for novel outline, using fallback:', (parseError as Error).message);
+      // Return a fallback response if parsing fails
+      return {
+        titleSelection: [
+          `${request.topic} - A Novel`,
+          `The ${request.topic} Chronicles`,
+          `${request.topic}: A Story`
+        ],
+        synopsis: `A compelling story about ${request.topic} that explores themes of ${request.tags?.join(', ') || 'human experience'} through the masterful storytelling style of ${request.authorStyle}. This novel follows the journey of characters as they navigate challenges and discover profound truths about life and relationships.`,
+        outline: Array.from({ length: chapterCount }, (_, i) => ({
+          chapterNumber: i + 1,
+          title: `Chapter ${i + 1}: ${i === 0 ? 'Introduction' : i === chapterCount - 1 ? 'Resolution' : `Development ${i}`}`,
+          subtitle: `${i === 0 ? 'Setting the stage and introducing main characters' :
+                     i === chapterCount - 1 ? 'Climax and satisfying conclusion' :
+                     `Building tension and character development in part ${i} of the story`}`
+        }))
+      };
+    }
 
     // Validate the response structure
     if (!parsed.titleSelection || !parsed.synopsis || !parsed.outline || !Array.isArray(parsed.outline)) {
       console.warn('Invalid response structure from Gemini Pro, using fallback');
-      // Return a fallback response if parsing fails
+      // Return a fallback response if structure is invalid
       return {
         titleSelection: [
           `${request.topic} - A Novel`,
@@ -582,7 +705,7 @@ function parseGeminiResponse(text: string): any {
     throw new Error('Invalid response type from Gemini API');
   }
 
-  // Clean the text first
+  // Clean the text first - remove markdown and extract JSON
   let cleanedText = text
     .trim()
     .replace(/```json\s*/gi, '')
@@ -594,32 +717,105 @@ function parseGeminiResponse(text: string): any {
     // Try to parse the cleaned text
     return JSON.parse(cleanedText);
   } catch (parseError) {
-    console.error('JSON parse error:', parseError);
+    console.error('Initial JSON parse error:', parseError);
 
-    // Try alternative cleaning approaches
+    // Try more aggressive cleaning approaches
     const attempts = [
       // Remove markdown code blocks completely
       text.replace(/```[\s\S]*?```/g, '').trim(),
       // Extract between first { and last }
       text.replace(/^[^{]*/, '').replace(/[^}]*$/, ''),
-      // Look for JSON-like patterns
-      text.match(/\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}/)?.[0],
+      // Look for JSON-like patterns with better regex
+      text.match(/\{(?:[^{}]|{(?:[^{}]|{[^{}]*})*})*\}/)?.[0],
     ];
 
     for (const attempt of attempts) {
       if (attempt) {
         try {
-          console.log('Trying alternative parse:', attempt.substring(0, 100));
-          return JSON.parse(attempt);
-        } catch {
+          // Clean up common JSON issues
+          let fixedAttempt = attempt
+            // Fix trailing commas in arrays
+            .replace(/,(\s*[}\]])/g, '$1')
+            // Fix trailing commas in objects
+            .replace(/,(\s*})/g, '$1')
+            // Fix unquoted keys (basic fix)
+            .replace(/([{,]\s*)([a-zA-Z_][a-zA-Z0-9_]*)\s*:/g, '$1"$2":')
+            // Fix single quotes to double quotes
+            .replace(/'/g, '"')
+            // Remove extra whitespace
+            .replace(/\s+/g, ' ')
+            .trim();
+
+          console.log('Trying alternative parse:', fixedAttempt.substring(0, 200));
+          return JSON.parse(fixedAttempt);
+        } catch (attemptError) {
+          console.log('Attempt failed:', (attemptError as Error).message);
           continue;
         }
       }
     }
 
+    // Try to extract and fix JSON manually
+    try {
+      const manualFix = fixMalformedJSON(text);
+      if (manualFix) {
+        console.log('Using manual JSON fix');
+        return JSON.parse(manualFix);
+      }
+    } catch (manualError) {
+      console.log('Manual fix failed:', (manualError as Error).message);
+    }
+
     // If all attempts fail, return a basic fallback structure
     console.error('All JSON parsing attempts failed, returning fallback');
-    throw new Error(`Unable to parse Gemini response as JSON. Response: ${text.substring(0, 300)}...`);
+    throw new Error(`Unable to parse Gemini response as JSON. Original error: ${(parseError as Error).message}. Response start: ${text.substring(0, 500)}...`);
+  }
+}
+
+// Helper function to fix common JSON malformations
+function fixMalformedJSON(text: string): string | null {
+  try {
+    // Remove everything outside JSON boundaries
+    const startIndex = text.indexOf('{');
+    const lastEndIndex = text.lastIndexOf('}');
+
+    if (startIndex === -1 || lastEndIndex === -1 || startIndex >= lastEndIndex) {
+      return null;
+    }
+
+    let jsonText = text.substring(startIndex, lastEndIndex + 1);
+
+    // Fix common issues step by step
+    jsonText = jsonText
+      // Fix trailing commas before closing brackets
+      .replace(/,(\s*[}\]])/g, '$1')
+      // Fix trailing commas before closing braces
+      .replace(/,(\s*})/g, '$1')
+      // Fix unquoted object keys (simple cases)
+      .replace(/([{,]\s*)([a-zA-Z_][a-zA-Z0-9_]*)\s*:/g, '$1"$2":')
+      // Convert single quotes to double quotes (carefully)
+      .replace(/'([^']*)'/g, '"$1"')
+      // Fix missing quotes around string values
+      .replace(/:\s*([a-zA-Z][^,}\]]*)/g, ': "$1"')
+      // Clean up extra whitespace
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    // Validate basic structure
+    const openBraces = (jsonText.match(/\{/g) || []).length;
+    const closeBraces = (jsonText.match(/\}/g) || []).length;
+    const openBrackets = (jsonText.match(/\[/g) || []).length;
+    const closeBrackets = (jsonText.match(/\]/g) || []).length;
+
+    if (openBraces !== closeBraces || openBrackets !== closeBrackets) {
+      console.log('JSON structure validation failed - mismatched brackets');
+      return null;
+    }
+
+    return jsonText;
+  } catch (error) {
+    console.log('JSON fixing failed:', error);
+    return null;
   }
 }
 

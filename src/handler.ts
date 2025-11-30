@@ -450,12 +450,48 @@ async function serveStatic(request: Request): Promise<Response> {
             transform: none;
         }
 
+        .button-group {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .reset-btn {
+            background: linear-gradient(45deg, #ff6b6b, #ff4757);
+            color: #ffffff;
+            border: none;
+            padding: 16px 24px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .reset-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 107, 107, 0.3);
+        }
+
+        .reset-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
         /* Mobile button improvements */
         @media (max-width: 480px) {
-            .generate-btn {
+            .button-group {
+                flex-direction: column;
+                gap: 12px;
+                width: 100%;
+            }
+
+            .generate-btn, .reset-btn {
                 padding: 14px 24px;
                 font-size: 15px;
-                margin-top: 15px;
+                width: 100%;
             }
         }
 
@@ -949,9 +985,14 @@ async function serveStatic(request: Request): Promise<Response> {
                 </div>
             </div>
 
-            <button type="submit" class="generate-btn" id="generateBtn">
-                Generate Content
-            </button>
+            <div class="button-group">
+                <button type="submit" class="generate-btn" id="generateBtn">
+                    Generate Content
+                </button>
+                <button type="button" class="reset-btn" id="resetBtn">
+                    Reset All
+                </button>
+            </div>
         </form>
 
         <div class="loading" id="loading">
@@ -995,6 +1036,8 @@ async function serveStatic(request: Request): Promise<Response> {
                 mainIdeaLabel: 'Main Idea/Plot',
                 mainIdeaPlaceholder: 'Describe your main idea, plot, or concept that you want the AI to build upon. This will help generate content that aligns with your specific vision.',
                 generateButton: 'Generate Content',
+                resetButton: 'Reset All',
+                resetConfirmMessage: 'Are you sure you want to reset all data? This will clear your form and generated content.',
                 generating: 'Generating your content with AI...',
                 loadingFacts: [
                     'Did you know? The quill pen was invented in the 6th century...',
@@ -1086,6 +1129,8 @@ async function serveStatic(request: Request): Promise<Response> {
                 mainIdeaLabel: 'Ide Utama/Alur',
                 mainIdeaPlaceholder: 'Jelaskan ide utama, alur, atau konsep yang ingin Anda bangun oleh AI. Ini akan membantu menghasilkan konten yang selaras dengan visi spesifik Anda.',
                 generateButton: 'Hasilkan Konten',
+                resetButton: 'Reset Semua',
+                resetConfirmMessage: 'Apakah Anda yakin ingin mereset semua data? Ini akan menghapus formulir dan konten yang dihasilkan.',
                 generating: 'Menghasilkan konten Anda dengan AI...',
                 loadingFacts: [
                     'Tahukah Anda? Pena quill ditemukan pada abad ke-6...',
@@ -1195,6 +1240,7 @@ async function serveStatic(request: Request): Promise<Response> {
                 document.querySelector('label[for="mainIdea"]').textContent = texts.mainIdeaLabel;
                 document.querySelector('#mainIdea').placeholder = texts.mainIdeaPlaceholder;
                 document.querySelector('#generateBtn').textContent = texts.generateButton;
+                document.querySelector('#resetBtn').textContent = texts.resetButton;
                 // Only update loading text if not currently cycling through facts
                 if (!loadingInterval) {
                     document.querySelector('#loading p').textContent = texts.generating;
@@ -1313,6 +1359,110 @@ async function serveStatic(request: Request): Promise<Response> {
             setupTagSystem('tagInput', 'tagsContainer', tags, 'addTagBtn');
             setupTagSystem('keywordInput', 'keywordsContainer', keywords, 'addKeywordBtn');
 
+            // Persistence functions
+            function saveFormData() {
+                const formData = {
+                    topic: document.getElementById('topic').value,
+                    authorStyle: document.getElementById('authorStyle').value,
+                    customAuthorStyle: document.getElementById('customAuthorStyle').value,
+                    type: document.getElementById('type').value,
+                    language: document.getElementById('language').value,
+                    chapterCount: document.getElementById('chapterCount').value,
+                    mainIdea: document.getElementById('mainIdea').value,
+                    tags: tags,
+                    keywords: keywords
+                };
+                localStorage.setItem('quillFormData', JSON.stringify(formData));
+            }
+
+            function loadFormData() {
+                const savedData = localStorage.getItem('quillFormData');
+                if (savedData) {
+                    const formData = JSON.parse(savedData);
+
+                    document.getElementById('topic').value = formData.topic || '';
+                    document.getElementById('authorStyle').value = formData.authorStyle || '';
+                    document.getElementById('customAuthorStyle').value = formData.customAuthorStyle || '';
+                    document.getElementById('type').value = formData.type || '';
+                    document.getElementById('language').value = formData.language || '';
+                    document.getElementById('chapterCount').value = formData.chapterCount || '';
+                    document.getElementById('mainIdea').value = formData.mainIdea || '';
+
+                    // Restore tags and keywords
+                    if (formData.tags) {
+                        tags.length = 0;
+                        tags.push(...formData.tags);
+                    }
+                    if (formData.keywords) {
+                        keywords.length = 0;
+                        keywords.push(...formData.keywords);
+                    }
+
+                    // Update UI for tags and keywords
+                    setupTagSystem('tagInput', 'tagsContainer', tags, 'addTagBtn');
+                    setupTagSystem('keywordInput', 'keywordsContainer', keywords, 'addKeywordBtn');
+
+                    // Show/hide chapter count group based on type
+                    const chapterCountGroup = document.getElementById('chapterCountGroup');
+                    if (formData.type === 'novel') {
+                        chapterCountGroup.classList.add('show');
+                    } else {
+                        chapterCountGroup.classList.remove('show');
+                    }
+
+                    // Show/hide custom author style
+                    const customAuthorStyle = document.getElementById('customAuthorStyle');
+                    if (formData.authorStyle === 'custom') {
+                        customAuthorStyle.style.display = 'block';
+                        customAuthorStyle.required = true;
+                    } else {
+                        customAuthorStyle.style.display = 'none';
+                        customAuthorStyle.required = false;
+                    }
+                }
+            }
+
+            function saveResults(result, type) {
+                const resultsData = {
+                    result: result,
+                    type: type,
+                    timestamp: Date.now()
+                };
+                localStorage.setItem('quillResults', JSON.stringify(resultsData));
+            }
+
+            function loadResults() {
+                const savedResults = localStorage.getItem('quillResults');
+                if (savedResults) {
+                    const resultsData = JSON.parse(savedResults);
+                    displayResults(resultsData.result, resultsData.type);
+                }
+            }
+
+            function clearAllData() {
+                localStorage.removeItem('quillFormData');
+                localStorage.removeItem('quillResults');
+
+                // Clear form
+                document.getElementById('articleForm').reset();
+                tags.length = 0;
+                keywords.length = 0;
+
+                // Clear UI
+                document.getElementById('tagsContainer').innerHTML = '';
+                document.getElementById('keywordsContainer').innerHTML = '';
+                document.getElementById('chapterCountGroup').classList.remove('show');
+                document.getElementById('customAuthorStyle').style.display = 'none';
+                document.getElementById('customAuthorStyle').required = false;
+
+                // Clear results
+                document.getElementById('resultContainer').innerHTML = '';
+                document.getElementById('resultContainer').style.display = 'none';
+
+                // Clear error messages
+                document.getElementById('errorMessage').style.display = 'none';
+            }
+
             // Type selection handling
             typeSelect.addEventListener('change', function() {
                 if (this.value === 'novel') {
@@ -1330,6 +1480,33 @@ async function serveStatic(request: Request): Promise<Response> {
                 } else {
                     customAuthorStyle.style.display = 'none';
                     customAuthorStyle.required = false;
+                }
+                saveFormData();
+            });
+
+            // Type selection handling
+            typeSelect.addEventListener('change', function() {
+                if (this.value === 'novel') {
+                    chapterCountGroup.classList.add('show');
+                } else {
+                    chapterCountGroup.classList.remove('show');
+                }
+                saveFormData();
+            });
+
+            // Add auto-save functionality to all form inputs
+            const formInputs = document.querySelectorAll('input, select, textarea');
+            formInputs.forEach(input => {
+                input.addEventListener('input', saveFormData);
+                input.addEventListener('change', saveFormData);
+            });
+
+            // Reset button functionality
+            document.getElementById('resetBtn').addEventListener('click', function() {
+                const currentLang = localStorage.getItem('uiLanguage') || 'english';
+                const texts = uiLanguages[currentLang];
+                if (confirm(texts.resetConfirmMessage)) {
+                    clearAllData();
                 }
             });
 
@@ -1389,6 +1566,7 @@ async function serveStatic(request: Request): Promise<Response> {
                     }
 
                     displayResults(result, data.type);
+                    saveResults(result, data.type);
                 } catch (error) {
                     showError(error.message);
                 } finally {
@@ -1593,6 +1771,10 @@ async function serveStatic(request: Request): Promise<Response> {
 
                 resultContainer.innerHTML = html;
             }
+
+            // Load saved data on page load
+            loadFormData();
+            loadResults();
         });
 
         function selectOption(element, type, index) {
