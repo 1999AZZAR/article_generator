@@ -71,12 +71,54 @@ A web-based AI-powered article and novel outline generator built with TypeScript
 3. **Development**
    ```bash
    npm run dev
+   # Open http://localhost:8787 in your browser
    ```
 
-4. **Deploy**
+4. **Build for Production**
    ```bash
-   npm run deploy
+   npm run build
    ```
+
+## 🚀 Deployment
+
+### Cloudflare Workers Deployment
+
+1. **Install Wrangler CLI:**
+   ```bash
+   npm install -g wrangler
+   ```
+
+2. **Authenticate with Cloudflare:**
+   ```bash
+   wrangler auth login
+   ```
+
+3. **Set your Gemini API key:**
+   ```bash
+   wrangler secret put GEMINI_API_KEY
+   # Paste your API key when prompted
+   ```
+
+4. **Deploy to Cloudflare:**
+   ```bash
+   wrangler deploy
+   ```
+
+5. **Your app will be live at the URL provided by Wrangler**
+
+### GitHub Repository Setup
+
+1. **Create a new repository on GitHub**
+
+2. **Push your code:**
+   ```bash
+   git remote add origin <your-github-repo-url>
+   git push -u origin main
+   ```
+
+3. **Optional: Add GitHub Actions for automated deployment**
+   - Create `.github/workflows/deploy.yml` for CI/CD
+   - Automatically deploy on push to main branch
 
 ## Technology Stack
 
