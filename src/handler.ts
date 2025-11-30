@@ -899,7 +899,28 @@ async function serveStatic(request: Request): Promise<Response> {
                     'Polishing your words with intelligent algorithms...',
                     'Quill pens can write up to 10,000 words per day...',
                     'Transforming ideas into beautiful prose...',
-                    'The quill revolutionized writing in medieval Europe...'
+                    'The quill revolutionized writing in medieval Europe...',
+                    'Shakespeare wrote 37 plays and 154 sonnets...',
+                    'The typewriter was invented in 1868...',
+                    'AI is learning from millions of literary masterpieces...',
+                    'The longest novel ever written is 9,609,000 words...',
+                    'Famous authors like Hemingway wrote standing up...',
+                    'The first computer novel was written in 1952...',
+                    'AI can analyze writing styles of any author...',
+                    'The quill pen was used for over 1,000 years...',
+                    'Jane Austen wrote her novels in the 19th century...',
+                    'Digital writing tools have evolved rapidly...',
+                    'The art of storytelling dates back to ancient caves...',
+                    'AI helps writers overcome creative blocks...',
+                    'The first fountain pen was invented in 1884...',
+                    'Literature has shaped human culture for millennia...',
+                    'Modern AI continues the tradition of great storytellers...',
+                    'Writing by hand improves memory and creativity...',
+                    'The ballpoint pen was invented in 1938...',
+                    'AI analyzes themes, plots, and character development...',
+                    'The printing press revolutionized knowledge sharing...',
+                    'Every great writer started as a beginner...',
+                    'AI preserves writing traditions while innovating...'
                 ],
                 apiKeyRequired: 'Please set your Gemini API key in Settings first.',
                 missingFields: 'Missing required fields',
@@ -963,7 +984,28 @@ async function serveStatic(request: Request): Promise<Response> {
                     'Memoles kata-kata Anda dengan algoritma cerdas...',
                     'Pena quill dapat menulis hingga 10.000 kata per hari...',
                     'Mengubah ide menjadi prosa yang indah...',
-                    'Quill merevolusi penulisan di Eropa abad pertengahan...'
+                    'Quill merevolusi penulisan di Eropa abad pertengahan...',
+                    'Shakespeare menulis 37 drama dan 154 soneta...',
+                    'Mesin tik ditemukan pada tahun 1868...',
+                    'AI belajar dari jutaan karya sastra masterpiece...',
+                    'Novel terpanjang pernah ditulis berjumlah 9,609,000 kata...',
+                    'Penulis terkenal seperti Hemingway menulis sambil berdiri...',
+                    'Novel komputer pertama ditulis pada tahun 1952...',
+                    'AI dapat menganalisis gaya tulisan penulis mana pun...',
+                    'Pena quill digunakan selama lebih dari 1.000 tahun...',
+                    'Jane Austen menulis novelnya pada abad ke-19...',
+                    'Alat tulis digital berkembang dengan pesat...',
+                    'Seni bercerita dimulai sejak gua-gua kuno...',
+                    'AI membantu penulis mengatasi blok kreatif...',
+                    'Pena fountain pertama ditemukan pada tahun 1884...',
+                    'Sastra telah membentuk budaya manusia selama ribuan tahun...',
+                    'AI modern melanjutkan tradisi pencerita hebat...',
+                    'Menulis dengan tangan meningkatkan memori dan kreativitas...',
+                    'Pena ballpoint ditemukan pada tahun 1938...',
+                    'AI menganalisis tema, plot, dan perkembangan karakter...',
+                    'Mesin cetak merevolusi berbagi pengetahuan...',
+                    'Setiap penulis hebat pernah menjadi pemula...',
+                    'AI melestarikan tradisi tulis sambil berinovasi...'
                 ],
                 apiKeyRequired: 'Silakan atur kunci API Gemini Anda di Pengaturan terlebih dahulu.',
                 missingFields: 'Kolom yang diperlukan tidak lengkap',
@@ -1046,22 +1088,36 @@ async function serveStatic(request: Request): Promise<Response> {
 
             // Loading text cycling functionality
             let loadingInterval;
+            let shuffledFacts = [];
             let currentFactIndex = 0;
+
+            function shuffleArray(array) {
+                const shuffled = [...array];
+                for (let i = shuffled.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+                }
+                return shuffled;
+            }
 
             function startLoadingFacts(lang) {
                 const texts = uiLanguages[lang];
                 const facts = texts.loadingFacts;
                 if (!facts || facts.length === 0) return;
 
-                // Reset to first fact
+                // Shuffle facts for random order each time
+                shuffledFacts = shuffleArray(facts);
                 currentFactIndex = 0;
                 const loadingTextElement = document.querySelector('#loading p');
 
-                // Start cycling through facts every 3 seconds
+                // Show first fact immediately
+                loadingTextElement.textContent = shuffledFacts[0];
+
+                // Start cycling through shuffled facts with varied timing
                 loadingInterval = setInterval(() => {
-                    currentFactIndex = (currentFactIndex + 1) % facts.length;
-                    loadingTextElement.textContent = facts[currentFactIndex];
-                }, 3000);
+                    currentFactIndex = (currentFactIndex + 1) % shuffledFacts.length;
+                    loadingTextElement.textContent = shuffledFacts[currentFactIndex];
+                }, 2800 + Math.random() * 800); // Random timing between 2.8-3.6 seconds
             }
 
             function stopLoadingFacts() {
