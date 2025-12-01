@@ -901,7 +901,7 @@ async function serveStatic(request: Request): Promise<Response> {
 <body>
     <div class="container">
         <div class="header">
-            <a href="/settings" class="settings-link">⚙️ Settings</a>
+            <a href="/settings" class="settings-link">Settings</a>
             <h1><a href="https://azzar.netlify.app" target="_blank" style="color: inherit; text-decoration: none;">Quill™</a></h1>
             <p>AI-powered writing assistant for articles and novels</p>
         </div>
@@ -1217,7 +1217,7 @@ async function serveStatic(request: Request): Promise<Response> {
                 const texts = uiLanguages[lang];
                 document.querySelector('h1').textContent = texts.title;
                 document.querySelector('p').textContent = texts.subtitle;
-                document.querySelector('.settings-link').textContent = '⚙️ ' + texts.settings;
+                document.querySelector('.settings-link').textContent = texts.settings;
                 document.querySelector('label[for="topic"]').textContent = texts.topicLabel;
                 document.querySelector('#topic').placeholder = texts.topicPlaceholder;
                 document.querySelector('label[for="tags"]').textContent = texts.tagsLabel;
