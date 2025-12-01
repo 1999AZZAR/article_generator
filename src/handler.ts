@@ -289,7 +289,7 @@ async function serveStatic(request: Request): Promise<Response> {
             position: absolute;
             top: 0;
             right: 0;
-            color: #00d4ff;
+            color: \\#00d4ff;
             text-decoration: none;
             padding: 10px 20px;
             border-radius: 8px;
@@ -352,7 +352,7 @@ async function serveStatic(request: Request): Promise<Response> {
             display: block;
             margin-bottom: 8px;
             font-weight: 500;
-            color: #00d4ff;
+            color: \\#00d4ff;
         }
 
         input, select, textarea {
@@ -392,7 +392,7 @@ async function serveStatic(request: Request): Promise<Response> {
             background: rgba(0, 212, 255, 0.2);
             border: 1px solid #00d4ff;
             border-radius: 8px;
-            color: #00d4ff;
+            color: \\#00d4ff;
             cursor: pointer;
             transition: all 0.3s ease;
         }
@@ -454,15 +454,17 @@ async function serveStatic(request: Request): Promise<Response> {
             display: flex;
             gap: 15px;
             align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
         }
 
         .reset-btn {
             background: linear-gradient(45deg, #ff6b6b, #ff4757);
             color: #ffffff;
             border: none;
-            padding: 16px 24px;
+            padding: 16px 32px;
             border-radius: 12px;
-            font-size: 14px;
+            font-size: 16px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
@@ -480,6 +482,10 @@ async function serveStatic(request: Request): Promise<Response> {
             transform: none;
         }
 
+        .reset-btn.hidden {
+            display: none;
+        }
+
         /* Mobile button improvements */
         @media (max-width: 480px) {
             .button-group {
@@ -489,7 +495,7 @@ async function serveStatic(request: Request): Promise<Response> {
             }
 
             .generate-btn, .reset-btn {
-                padding: 14px 24px;
+                padding: 14px 32px;
                 font-size: 15px;
                 width: 100%;
             }
@@ -687,8 +693,16 @@ async function serveStatic(request: Request): Promise<Response> {
         .chapter-item {
             background: rgba(255, 255, 255, 0.08);
             border-radius: 12px;
-            padding: 15px;
+            padding: 18px;
             border-left: 4px solid #00d4ff;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .chapter-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(2px);
         }
 
         .chapter-header {
@@ -707,22 +721,30 @@ async function serveStatic(request: Request): Promise<Response> {
         .chapter-number {
             color: #00d4ff;
             font-weight: 600;
-            margin-bottom: 5px;
+            margin-bottom: 8px;
+            font-size: 16px;
         }
 
         .chapter-toggle {
             color: #00d4ff;
-            font-size: 18px;
+            font-size: 16px;
             font-weight: bold;
-            transition: transform 0.3s ease;
-            margin-left: 10px;
-            width: 24px;
-            height: 24px;
+            transition: all 0.3s ease;
+            margin-left: 12px;
+            width: 28px;
+            height: 28px;
             display: flex;
             align-items: center;
             justify-content: center;
             border-radius: 50%;
             background: rgba(0, 212, 255, 0.1);
+            cursor: pointer;
+            border: 1px solid rgba(0, 212, 255, 0.3);
+        }
+
+        .chapter-toggle:hover {
+            background: rgba(0, 212, 255, 0.2);
+            transform: scale(1.1);
         }
 
         .chapter-toggle.collapsed {
@@ -736,11 +758,16 @@ async function serveStatic(request: Request): Promise<Response> {
         .chapter-content-section {
             max-height: 0;
             overflow: hidden;
-            transition: max-height 0.3s ease;
+            opacity: 0;
+            transform: scaleY(0);
+            transform-origin: top;
+            transition: all 0.4s ease;
         }
 
         .chapter-content-section.expanded {
-            max-height: 2000px; /* Large enough for long content */
+            max-height: none;
+            opacity: 1;
+            transform: scaleY(1);
         }
 
         .chapter-details {
@@ -837,8 +864,15 @@ async function serveStatic(request: Request): Promise<Response> {
         }
 
         .chapter-loading {
-            margin-top: 10px;
+            margin-top: 15px;
             color: #00ff88;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px;
+            background: rgba(0, 255, 136, 0.1);
+            border-radius: 8px;
+            border: 1px solid rgba(0, 255, 136, 0.3);
         }
 
         .chapter-progress-bar {
@@ -867,13 +901,16 @@ async function serveStatic(request: Request): Promise<Response> {
 
         .chapter-content {
             margin-top: 15px;
-            padding: 15px;
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: 8px;
-            border-left: 3px solid #00ff88;
-            white-space: pre-wrap;
-            line-height: 1.6;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            border-left: 4px solid #00ff88;
+            line-height: 1.7;
             font-size: 14px;
+            color: #e0e0e0;
+            font-family: 'Georgia', serif;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
         }
 
         .error-message {
@@ -989,7 +1026,7 @@ async function serveStatic(request: Request): Promise<Response> {
                 <button type="submit" class="generate-btn" id="generateBtn">
                     Generate Content
                 </button>
-                <button type="button" class="reset-btn" id="resetBtn">
+                <button type="button" class="reset-btn hidden" id="resetBtn">
                     Reset All
                 </button>
             </div>
@@ -1436,6 +1473,8 @@ async function serveStatic(request: Request): Promise<Response> {
                 if (savedResults) {
                     const resultsData = JSON.parse(savedResults);
                     displayResults(resultsData.result, resultsData.type);
+                    // Show reset button when results are loaded
+                    document.getElementById('resetBtn').classList.remove('hidden');
                 }
             }
 
@@ -1461,6 +1500,9 @@ async function serveStatic(request: Request): Promise<Response> {
 
                 // Clear error messages
                 document.getElementById('errorMessage').style.display = 'none';
+
+                // Hide reset button
+                document.getElementById('resetBtn').classList.add('hidden');
             }
 
             // Type selection handling
@@ -1567,6 +1609,9 @@ async function serveStatic(request: Request): Promise<Response> {
 
                     displayResults(result, data.type);
                     saveResults(result, data.type);
+
+                    // Show reset button when content is generated
+                    document.getElementById('resetBtn').classList.remove('hidden');
                 } catch (error) {
                     showError(error.message);
                 } finally {
@@ -1722,18 +1767,18 @@ async function serveStatic(request: Request): Promise<Response> {
                                                 <div class="chapter-actions">
                                                     <button class="generate-chapter-btn"
                                                             data-chapter-number="\${chapter.chapterNumber}"
-                                                            data-chapter-title="\${chapter.title.replace(/"/g, '&quot;')}"
-                                                            data-chapter-subtitle="\${chapter.subtitle.replace(/"/g, '&quot;')}"
-                                                            data-novel-title="\${result.titleSelection ? result.titleSelection[0].replace(/"/g, '&quot;') : ''}"
-                                                            data-novel-synopsis="\${result.synopsis ? result.synopsis.substring(0, 100).replace(/"/g, '&quot;') : ''}"
+                                                            data-chapter-title="\${chapter.title.split('"').join('&quot;')}"
+                                                            data-chapter-subtitle="\${chapter.subtitle.split('"').join('&quot;')}"
+                                                            data-novel-title="\${result.titleSelection ? result.titleSelection[0].split('"').join('&quot;') : ''}"
+                                                            data-novel-synopsis="\${result.synopsis ? result.synopsis.substring(0, 100).split('"').join('&quot;') : ''}"
                                                             onclick="generateChapter(this)">
                                                         \${texts.generateChapter}
                                                     </button>
                                                     <button class="export-chapter-btn"
                                                             id="export-chapter-\${chapter.chapterNumber}-btn"
                                                             data-chapter-number="\${chapter.chapterNumber}"
-                                                            data-chapter-title="\${chapter.title.replace(/"/g, '&quot;')}"
-                                                            data-chapter-subtitle="\${chapter.subtitle.replace(/"/g, '&quot;')}"
+                                                            data-chapter-title="\${chapter.title.split('"').join('&quot;')}"
+                                                            data-chapter-subtitle="\${chapter.subtitle.split('"').join('&quot;')}"
                                                             onclick="exportChapter(this)"
                                                             style="display: none;">
                                                         📄 \${texts.exportChapter}
@@ -1818,7 +1863,7 @@ async function serveStatic(request: Request): Promise<Response> {
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = \`\${selectedTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.md\`;
+            a.download = \`\${selectedTitle.replace(/[^a-z0-9]/g, '_').toLowerCase()}.md\`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
@@ -1894,7 +1939,7 @@ async function serveStatic(request: Request): Promise<Response> {
                 // Hide loading, show content
                 loadingDiv.style.display = 'none';
                 contentDiv.style.display = 'block';
-                contentDiv.textContent = result.content;
+                contentDiv.innerHTML = result.content.replace(new RegExp('\\n', 'g'), '<br>');
 
                 // Show export button
                 const exportBtn = document.getElementById(\`export-chapter-\${chapterNumber}-btn\`);
@@ -1902,12 +1947,14 @@ async function serveStatic(request: Request): Promise<Response> {
                     exportBtn.style.display = 'inline-flex';
                 }
 
-                // Auto-expand the chapter to show the generated content
-                const contentSection = document.getElementById(\`chapter-content-section-\${chapterNumber}\`);
-                const toggleButton = document.getElementById(\`chapter-toggle-\${chapterNumber}\`);
-                if (!contentSection.classList.contains('expanded')) {
-                    toggleChapter(chapterNumber);
-                }
+                // Auto-expand the chapter to show the generated content with a small delay for smooth animation
+                setTimeout(() => {
+                    const contentSection = document.getElementById(\`chapter-content-section-\${chapterNumber}\`);
+                    const toggleButton = document.getElementById(\`chapter-toggle-\${chapterNumber}\`);
+                    if (!contentSection.classList.contains('expanded')) {
+                        toggleChapter(chapterNumber);
+                    }
+                }, 100);
 
                 // Update button
                 const currentLang = localStorage.getItem('uiLanguage') || 'english';
@@ -1949,7 +1996,7 @@ async function serveStatic(request: Request): Promise<Response> {
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = \`\${chapterTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_chapter_\${chapterNumber}.md\`;
+            a.download = \`\${chapterTitle.replace(/[^a-z0-9]/g, '_').toLowerCase()}_chapter_\${chapterNumber}.md\`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
@@ -2001,12 +2048,29 @@ async function serveStatic(request: Request): Promise<Response> {
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = \`\${selectedTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.md\`;
+            a.download = \`\${selectedTitle.replace(/[^a-z0-9]/g, '_').toLowerCase()}.md\`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
         }
+
+        // Footer
+        const footer = document.createElement('footer');
+        footer.style.position = 'fixed';
+        footer.style.bottom = '0';
+        footer.style.left = '0';
+        footer.style.right = '0';
+        footer.style.background = 'rgba(0, 0, 0, 0.8)';
+        footer.style.color = '#00d4ff';
+        footer.style.textAlign = 'center';
+        footer.style.padding = '10px';
+        footer.style.fontSize = '12px';
+        footer.style.borderTop = '1px solid rgba(0, 212, 255, 0.3)';
+        footer.style.backdropFilter = 'blur(5px)';
+        footer.style.zIndex = '1000';
+        footer.innerHTML = 'Quill™ by <a href="https://azzar.netlify.app/porto" target="_blank" style="color: #00ff88; text-decoration: none;">LilyOpenCMS</a>';
+        document.body.appendChild(footer);
 
     </script>
 </body>
@@ -2073,7 +2137,7 @@ async function serveStatic(request: Request): Promise<Response> {
         }
 
         .nav a {
-            color: #00d4ff;
+            color: \\#00d4ff;
             text-decoration: none;
             padding: 10px 20px;
             border-radius: 8px;
@@ -2154,7 +2218,7 @@ async function serveStatic(request: Request): Promise<Response> {
             display: block;
             margin-bottom: 8px;
             font-weight: 500;
-            color: #00d4ff;
+            color: \\#00d4ff;
         }
 
         input[type="password"], input[type="text"] {
@@ -2227,7 +2291,7 @@ async function serveStatic(request: Request): Promise<Response> {
         }
 
         .info-box h4 {
-            color: #00d4ff;
+            color: \\#00d4ff;
             margin-bottom: 10px;
         }
 
@@ -2439,6 +2503,24 @@ async function serveStatic(request: Request): Promise<Response> {
                 }, 5000);
             }
         });
+
+        // Footer
+        const footer = document.createElement('footer');
+        footer.style.position = 'fixed';
+        footer.style.bottom = '0';
+        footer.style.left = '0';
+        footer.style.right = '0';
+        footer.style.background = 'rgba(0, 0, 0, 0.8)';
+        footer.style.color = '#00d4ff';
+        footer.style.textAlign = 'center';
+        footer.style.padding = '10px';
+        footer.style.fontSize = '12px';
+        footer.style.borderTop = '1px solid rgba(0, 212, 255, 0.3)';
+        footer.style.backdropFilter = 'blur(5px)';
+        footer.style.zIndex = '1000';
+        footer.innerHTML = 'Quill™ by <a href="https://azzar.netlify.app/porto" target="_blank" style="color: #00ff88; text-decoration: none;">LilyOpenCMS</a>';
+        document.body.appendChild(footer);
+
     </script>
 </body>
 </html>`;
