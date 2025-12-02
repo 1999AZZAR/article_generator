@@ -224,6 +224,7 @@ async function serveStatic(request: Request): Promise<Response> {
             color: #e0e0e0;
             min-height: 100vh;
             padding: 20px;
+            padding-bottom: 50px; /* Space for footer */
         }
 
         .container {
@@ -320,6 +321,7 @@ async function serveStatic(request: Request): Promise<Response> {
         @media (max-width: 768px) {
             .form-container {
                 padding: 20px;
+            padding-bottom: 50px; /* Space for footer */
                 border-radius: 15px;
             }
 
@@ -547,6 +549,7 @@ async function serveStatic(request: Request): Promise<Response> {
         @media (max-width: 768px) {
             .result-container {
                 padding: 20px;
+            padding-bottom: 50px; /* Space for footer */
                 border-radius: 15px;
             }
         }
@@ -571,6 +574,7 @@ async function serveStatic(request: Request): Promise<Response> {
             background: rgba(255, 255, 255, 0.08);
             border-radius: 15px;
             padding: 20px;
+            padding-bottom: 50px; /* Space for footer */
             margin-top: 20px;
             border: 1px solid rgba(255, 255, 255, 0.2);
         }
@@ -680,6 +684,7 @@ async function serveStatic(request: Request): Promise<Response> {
             background: rgba(255, 255, 255, 0.03);
             border-radius: 12px;
             padding: 20px;
+            padding-bottom: 50px; /* Space for footer */
             white-space: pre-wrap;
             line-height: 1.6;
             font-family: 'Georgia', serif;
@@ -902,6 +907,7 @@ async function serveStatic(request: Request): Promise<Response> {
         .chapter-content {
             margin-top: 15px;
             padding: 20px;
+            padding-bottom: 50px; /* Space for footer */
             background: rgba(255, 255, 255, 0.05);
             border-radius: 12px;
             border-left: 4px solid #00ff88;
@@ -1023,9 +1029,9 @@ async function serveStatic(request: Request): Promise<Response> {
             </div>
 
             <div class="button-group">
-                <button type="submit" class="generate-btn" id="generateBtn">
-                    Generate Content
-                </button>
+            <button type="submit" class="generate-btn" id="generateBtn">
+                Generate Content
+            </button>
                 <button type="button" class="reset-btn hidden" id="resetBtn">
                     Reset All
                 </button>
@@ -1106,7 +1112,47 @@ async function serveStatic(request: Request): Promise<Response> {
                     'AI analyzes themes, plots, and character development...',
                     'The printing press revolutionized knowledge sharing...',
                     'Every great writer started as a beginner...',
-                    'AI preserves writing traditions while innovating...'
+                    'AI preserves writing traditions while innovating...',
+                    'The first writing system was cuneiform, invented by Sumerians around 3500 BCE...',
+                    'Shakespeare created 1,700+ new words still used in modern English...',
+                    'The novel form emerged in 18th century England with works like Robinson Crusoe...',
+                    'Hieroglyphs were used for over 3,000 years in ancient Egypt...',
+                    'The first dictionary was compiled by Robert Cawdrey in 1604...',
+                    'The Rosetta Stone helped decipher Egyptian hieroglyphs in 1799...',
+                    'All languages share universal grammar patterns according to linguistic research...',
+                    'The first programming language was created in 1883 by Ada Lovelace...',
+                    'AI language models can now translate between over 100 languages...',
+                    'The Oxford English Dictionary contains 600,000+ words and phrases...',
+                    'Edgar Allan Poe invented the modern detective story genre...',
+                    'The quill pen was used for over 1,000 years, from ancient times to the 19th century...',
+                    'Monastic scribes preserved ancient texts through the European Dark Ages...',
+                    'The first newspaper was published in Strasbourg in 1605...',
+                    'Dante Alighieri chose to write The Divine Comedy in Italian instead of Latin...',
+                    'The first typewriter patent was granted to Henry Mill in 1714...',
+                    'AI can now detect writing styles with over 95% accuracy...',
+                    'The oldest surviving printed book is the Diamond Sutra from 868 CE...',
+                    'Writing systems evolved independently in at least 4 ancient civilizations...',
+                    'The first e-book was created by Michael Hart in 1971...',
+                    'AI language models are trained on billions of text samples from human writing...',
+                    'Writing systems developed independently in China, Mesopotamia, Egypt, and Mesoamerica...',
+                    'The invention of paper by the Chinese revolutionized global communication...',
+                    'Calligraphy became a highly respected art form in many Asian cultures...',
+                    'The first printing press was invented by Johannes Gutenberg in 1450...',
+                    'Literature has been used as propaganda since ancient Roman times...',
+                    'The shortest story ever written is just six words long...',
+                    'Writing on clay tablets began over 5,000 years ago...',
+                    'The first modern novel is considered to be Don Quixote by Cervantes...',
+                    'Writing helped preserve oral traditions and cultural histories...',
+                    'The first encyclopedia was published in China during the Ming Dynasty...',
+                    'Typography evolved from handwritten scripts to digital fonts...',
+                    'Writing systems use between 20 to 100 symbols for complete communication...',
+                    'The first copyright law was established in Britain in 1710...',
+                    'Literature reflects the social and political climate of its era...',
+                    'Writing tools evolved from stone styluses to computer keyboards...',
+                    'The first newspaper was published in Germany in 1609...',
+                    'Fairy tales were originally oral stories before being written down...',
+                    'Writing enables time travel through preserved human thoughts...',
+                    'The first public library was established in ancient Nineveh...'
                 ],
                 apiKeyRequired: 'Please set your Gemini API key in Settings first.',
                 missingFields: 'Missing required fields',
@@ -1199,7 +1245,49 @@ async function serveStatic(request: Request): Promise<Response> {
                     'AI menganalisis tema, plot, dan perkembangan karakter...',
                     'Mesin cetak merevolusi berbagi pengetahuan...',
                     'Setiap penulis hebat pernah menjadi pemula...',
-                    'AI melestarikan tradisi tulis sambil berinovasi...'
+                    'AI melestarikan tradisi tulis sambil berinovasi...',
+                    'Sistem tulis pertama adalah kuneiform, ditemukan bangsa Sumeria sekitar 3500 SM...',
+                    'Shakespeare menciptakan 1.700+ kata baru yang masih digunakan dalam bahasa Inggris modern...',
+                    'Bentuk novel muncul di Inggris abad ke-18 dengan karya seperti Robinson Crusoe...',
+                    'Hieroglif digunakan selama lebih dari 3.000 tahun di Mesir kuno...',
+                    'Kamus pertama disusun oleh Robert Cawdrey pada tahun 1604...',
+                    'Sanskerta adalah bahasa tertua yang masih terus digunakan di dunia...',
+                    'Batu Rosetta membantu memecahkan hieroglif Mesir pada tahun 1799...',
+                    'Semua bahasa memiliki pola tata bahasa universal menurut penelitian linguistik...',
+                    'Bahasa pemrograman pertama dibuat pada tahun 1883 oleh Ada Lovelace...',
+                    'Model bahasa AI kini dapat menerjemahkan antara lebih dari 100 bahasa...',
+                    'Kamus Bahasa Inggris Oxford berisi 600.000+ kata dan frasa...',
+                    'Edgar Allan Poe menciptakan genre cerita detektif modern...',
+                    'Frankenstein (1818) karya Mary Shelley dianggap sebagai novel fiksi ilmiah pertama...',
+                    'Pena quill digunakan selama lebih dari 1.000 tahun, dari zaman kuno hingga abad ke-19...',
+                    'Para penulis biara melestarikan teks kuno melalui Abad Kegelapan Eropa...',
+                    'Surat kabar pertama diterbitkan di Strasbourg pada tahun 1605...',
+                    'Dante Alighieri memilih menulis The Divine Comedy dalam bahasa Italia bukan Latin...',
+                    'Paten mesin tik pertama diberikan kepada Henry Mill pada tahun 1714...',
+                    'AI kini dapat mendeteksi gaya tulisan dengan akurasi lebih dari 95%...',
+                    'Buku cetak tertua yang masih ada adalah Diamond Sutra dari tahun 868 M...',
+                    'Sistem tulis berevolusi secara independen di setidaknya 4 peradaban kuno...',
+                    'E-book pertama dibuat oleh Michael Hart pada tahun 1971...',
+                    'Model bahasa AI dilatih dengan miliaran sampel teks dari tulisan manusia...',
+                    'Sistem tulis berkembang secara independen di Cina, Mesopotamia, Mesir, dan Mesoamerika...',
+                    'Penemuan kertas oleh bangsa Cina merevolusi komunikasi global...',
+                    'Kaligrafi menjadi bentuk seni yang sangat dihormati di banyak budaya Asia...',
+                    'Mesin cetak pertama ditemukan oleh Johannes Gutenberg pada tahun 1450...',
+                    'Sastra telah digunakan sebagai propaganda sejak zaman Romawi kuno...',
+                    'Cerita terpendek yang pernah ditulis hanya terdiri dari enam kata...',
+                    'Penulisan di atas tablet tanah liat dimulai lebih dari 5.000 tahun yang lalu...',
+                    'Novel modern pertama dianggap sebagai Don Quixote karya Cervantes...',
+                    'Penulisan membantu melestarikan tradisi lisan dan sejarah budaya...',
+                    'Ensiklopedia pertama diterbitkan di Cina selama Dinasti Ming...',
+                    'Tipografi berkembang dari naskah tulisan tangan ke font digital...',
+                    'Sistem tulis menggunakan antara 20 hingga 100 simbol untuk komunikasi lengkap...',
+                    'Hukum hak cipta pertama didirikan di Inggris pada tahun 1710...',
+                    'Sastra mencerminkan iklim sosial dan politik zamannya...',
+                    'Alat tulis berkembang dari stylus batu ke keyboard komputer...',
+                    'Surat kabar pertama diterbitkan di Jerman pada tahun 1609...',
+                    'Dongeng awalnya adalah cerita lisan sebelum ditulis...',
+                    'Penulisan memungkinkan perjalanan waktu melalui pikiran manusia yang terlestarikan...',
+                    'Perpustakaan umum pertama didirikan di Nineveh kuno...'
                 ],
                 apiKeyRequired: 'Silakan atur kunci API Gemini Anda di Pengaturan terlebih dahulu.',
                 missingFields: 'Kolom yang diperlukan tidak lengkap',
@@ -1949,11 +2037,11 @@ async function serveStatic(request: Request): Promise<Response> {
 
                 // Auto-expand the chapter to show the generated content with a small delay for smooth animation
                 setTimeout(() => {
-                    const contentSection = document.getElementById(\`chapter-content-section-\${chapterNumber}\`);
-                    const toggleButton = document.getElementById(\`chapter-toggle-\${chapterNumber}\`);
-                    if (!contentSection.classList.contains('expanded')) {
-                        toggleChapter(chapterNumber);
-                    }
+                const contentSection = document.getElementById(\`chapter-content-section-\${chapterNumber}\`);
+                const toggleButton = document.getElementById(\`chapter-toggle-\${chapterNumber}\`);
+                if (!contentSection.classList.contains('expanded')) {
+                    toggleChapter(chapterNumber);
+                }
                 }, 100);
 
                 // Update button
@@ -2069,7 +2157,8 @@ async function serveStatic(request: Request): Promise<Response> {
         footer.style.borderTop = '1px solid rgba(0, 212, 255, 0.3)';
         footer.style.backdropFilter = 'blur(5px)';
         footer.style.zIndex = '1000';
-        footer.innerHTML = 'Quill™ by <a href="https://azzar.netlify.app/porto" target="_blank" style="color: #00ff88; text-decoration: none;">LilyOpenCMS</a>';
+        footer.style.pointerEvents = 'none';
+        footer.innerHTML = 'Quill™ by <a href="https://azzar.netlify.app/porto" target="_blank" style="color: #00ff88; text-decoration: none; pointer-events: auto;">LilyOpenCMS</a>';
         document.body.appendChild(footer);
 
     </script>
@@ -2104,6 +2193,7 @@ async function serveStatic(request: Request): Promise<Response> {
             color: #e0e0e0;
             min-height: 100vh;
             padding: 20px;
+            padding-bottom: 50px; /* Space for footer */
         }
 
         .container {
@@ -2170,6 +2260,7 @@ async function serveStatic(request: Request): Promise<Response> {
         @media (max-width: 768px) {
             .settings-container {
                 padding: 20px;
+            padding-bottom: 50px; /* Space for footer */
                 border-radius: 15px;
             }
 
@@ -2286,6 +2377,7 @@ async function serveStatic(request: Request): Promise<Response> {
             background: rgba(255, 255, 255, 0.03);
             border-radius: 12px;
             padding: 20px;
+            padding-bottom: 50px; /* Space for footer */
             margin-bottom: 20px;
             border-left: 4px solid #00d4ff;
         }
@@ -2518,7 +2610,8 @@ async function serveStatic(request: Request): Promise<Response> {
         footer.style.borderTop = '1px solid rgba(0, 212, 255, 0.3)';
         footer.style.backdropFilter = 'blur(5px)';
         footer.style.zIndex = '1000';
-        footer.innerHTML = 'Quill™ by <a href="https://azzar.netlify.app/porto" target="_blank" style="color: #00ff88; text-decoration: none;">LilyOpenCMS</a>';
+        footer.style.pointerEvents = 'none';
+        footer.innerHTML = 'Quill™ by <a href="https://azzar.netlify.app/porto" target="_blank" style="color: #00ff88; text-decoration: none; pointer-events: auto;">LilyOpenCMS</a>';
         document.body.appendChild(footer);
 
     </script>
