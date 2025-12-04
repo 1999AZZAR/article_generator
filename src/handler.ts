@@ -939,6 +939,153 @@ async function serveStatic(request: Request): Promise<Response> {
         .chapter-count-group.show {
             display: block;
         }
+
+        /* Modal/Popup Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .modal-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(240, 240, 240, 0.95) 100%);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transform: scale(0.9) translateY(20px);
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .modal-overlay.show .modal-content {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-title {
+            color: #1a1a1a;
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            background: linear-gradient(45deg, #00d4ff, #00ff88);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .modal-message {
+            color: #555;
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 30px;
+            font-weight: 400;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .modal-btn {
+            padding: 14px 28px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 120px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .modal-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .modal-btn:hover::before {
+            left: 100%;
+        }
+
+        .modal-btn-cancel {
+            background: linear-gradient(45deg, #f8f9fa, #e9ecef);
+            color: #6c757d;
+            border: 2px solid #dee2e6;
+        }
+
+        .modal-btn-cancel:hover {
+            background: linear-gradient(45deg, #e9ecef, #dee2e6);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(108, 117, 125, 0.2);
+        }
+
+        .modal-btn-confirm {
+            background: linear-gradient(45deg, #ff4757, #ff3838);
+            color: white;
+            border: 2px solid rgba(255, 71, 87, 0.3);
+        }
+
+        .modal-btn-confirm:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 71, 87, 0.4);
+            background: linear-gradient(45deg, #ff3838, #ff2828);
+        }
+
+        /* Mobile responsiveness for modal */
+        @media (max-width: 480px) {
+            .modal-content {
+                padding: 25px 20px;
+                margin: 20px;
+                max-width: none;
+                width: calc(100vw - 40px);
+            }
+
+            .modal-title {
+                font-size: 20px;
+            }
+
+            .modal-message {
+                font-size: 15px;
+                margin-bottom: 25px;
+            }
+
+            .modal-buttons {
+                gap: 12px;
+            }
+
+            .modal-btn {
+                padding: 12px 24px;
+                font-size: 15px;
+                min-width: 110px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1048,6 +1195,18 @@ async function serveStatic(request: Request): Promise<Response> {
         <div class="result-container" id="resultContainer">
             <!-- Results will be dynamically inserted here -->
         </div>
+
+        <!-- Modal for confirmations -->
+        <div class="modal-overlay" id="confirmationModal">
+            <div class="modal-content">
+                <h3 class="modal-title" id="modalTitle">Reset All Data</h3>
+                <p class="modal-message" id="modalMessage">Are you sure you want to reset all data?</p>
+                <div class="modal-buttons">
+                    <button class="modal-btn modal-btn-cancel" id="modalCancel">Cancel</button>
+                    <button class="modal-btn modal-btn-confirm" id="modalConfirm">Reset</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -1080,6 +1239,7 @@ async function serveStatic(request: Request): Promise<Response> {
                 mainIdeaPlaceholder: 'Describe your main idea, plot, or concept that you want the AI to build upon. This will help generate content that aligns with your specific vision.',
                 generateButton: 'Generate Content',
                 resetButton: 'Reset All',
+                resetConfirmTitle: 'Reset All Data',
                 resetConfirmMessage: 'Are you sure you want to reset all data? This will clear your form and generated content.',
                 generating: 'Generating your content with AI...',
                 loadingFacts: [
@@ -1180,6 +1340,7 @@ async function serveStatic(request: Request): Promise<Response> {
                 apiKeyLabel: 'Gemini API Key *',
                 apiKeyPlaceholder: 'Enter your Gemini API key',
                 saveApiKey: 'Save API Key',
+                removeApiKey: 'Remove API Key',
                 apiKeySaved: 'API key saved successfully!',
                 apiKeyVerified: 'API key verified and saved successfully!',
                 apiKeyVerificationFailed: 'API key saved but verification failed: ',
@@ -1213,6 +1374,7 @@ async function serveStatic(request: Request): Promise<Response> {
                 mainIdeaPlaceholder: 'Jelaskan ide utama, alur, atau konsep yang ingin Anda bangun oleh AI. Ini akan membantu menghasilkan konten yang selaras dengan visi spesifik Anda.',
                 generateButton: 'Hasilkan Konten',
                 resetButton: 'Reset Semua',
+                resetConfirmTitle: 'Reset Semua Data',
                 resetConfirmMessage: 'Apakah Anda yakin ingin mereset semua data? Ini akan menghapus formulir dan konten yang dihasilkan.',
                 generating: 'Menghasilkan konten Anda dengan AI...',
                 loadingFacts: [
@@ -1334,6 +1496,11 @@ async function serveStatic(request: Request): Promise<Response> {
             const loading = document.getElementById('loading');
             const errorMessage = document.getElementById('errorMessage');
             const resultContainer = document.getElementById('resultContainer');
+            const modal = document.getElementById('confirmationModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalMessage = document.getElementById('modalMessage');
+            const modalCancel = document.getElementById('modalCancel');
+            const modalConfirm = document.getElementById('modalConfirm');
             // Load saved language preference
             const savedLanguage = localStorage.getItem('uiLanguage') || 'english';
 
@@ -1631,13 +1798,49 @@ async function serveStatic(request: Request): Promise<Response> {
                 input.addEventListener('change', saveFormData);
             });
 
+            // Modal functionality
+            function showModal(title, message, onConfirm) {
+                modalTitle.textContent = title;
+                modalMessage.textContent = message;
+                modal.classList.add('show');
+
+                function closeModal() {
+                    modal.classList.remove('show');
+                }
+
+                modalCancel.onclick = closeModal;
+
+                modalConfirm.onclick = function() {
+                    closeModal();
+                    onConfirm();
+                };
+
+                // Close on overlay click
+                modal.onclick = function(e) {
+                    if (e.target === modal) {
+                        closeModal();
+                    }
+                };
+
+                // Close on Escape key
+                document.addEventListener('keydown', function escHandler(e) {
+                    if (e.key === 'Escape') {
+                        closeModal();
+                        document.removeEventListener('keydown', escHandler);
+                    }
+                });
+            }
+
             // Reset button functionality
             document.getElementById('resetBtn').addEventListener('click', function() {
                 const currentLang = localStorage.getItem('uiLanguage') || 'english';
                 const texts = uiLanguages[currentLang];
-                if (confirm(texts.resetConfirmMessage)) {
+
+                showModal(texts.resetConfirmTitle || 'Reset All Data',
+                         texts.resetConfirmMessage,
+                         function() {
                     clearAllData();
-                }
+                });
             });
 
             function showError(message) {
@@ -2354,6 +2557,31 @@ async function serveStatic(request: Request): Promise<Response> {
             transform: none;
         }
 
+        .remove-btn {
+            background: linear-gradient(45deg, #ff4757, #ff3838);
+            color: #ffffff;
+            border: none;
+            padding: 16px 32px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .remove-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 71, 87, 0.3);
+        }
+
+        .remove-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
         .status-message {
             margin-top: 15px;
             padding: 12px;
@@ -2404,6 +2632,153 @@ async function serveStatic(request: Request): Promise<Response> {
                 padding: 12px;
             }
         }
+
+        /* Modal/Popup Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .modal-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(240, 240, 240, 0.95) 100%);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transform: scale(0.9) translateY(20px);
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .modal-overlay.show .modal-content {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-title {
+            color: #1a1a1a;
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            background: linear-gradient(45deg, #00d4ff, #00ff88);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .modal-message {
+            color: #555;
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 30px;
+            font-weight: 400;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .modal-btn {
+            padding: 14px 28px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 120px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .modal-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .modal-btn:hover::before {
+            left: 100%;
+        }
+
+        .modal-btn-cancel {
+            background: linear-gradient(45deg, #f8f9fa, #e9ecef);
+            color: #6c757d;
+            border: 2px solid #dee2e6;
+        }
+
+        .modal-btn-cancel:hover {
+            background: linear-gradient(45deg, #e9ecef, #dee2e6);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(108, 117, 125, 0.2);
+        }
+
+        .modal-btn-confirm {
+            background: linear-gradient(45deg, #ff4757, #ff3838);
+            color: white;
+            border: 2px solid rgba(255, 71, 87, 0.3);
+        }
+
+        .modal-btn-confirm:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 71, 87, 0.4);
+            background: linear-gradient(45deg, #ff3838, #ff2828);
+        }
+
+        /* Mobile responsiveness for modal */
+        @media (max-width: 480px) {
+            .modal-content {
+                padding: 25px 20px;
+                margin: 20px;
+                max-width: none;
+                width: calc(100vw - 40px);
+            }
+
+            .modal-title {
+                font-size: 20px;
+            }
+
+            .modal-message {
+                font-size: 15px;
+                margin-bottom: 25px;
+            }
+
+            .modal-buttons {
+                gap: 12px;
+            }
+
+            .modal-btn {
+                padding: 12px 24px;
+                font-size: 15px;
+                min-width: 110px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -2451,9 +2826,24 @@ async function serveStatic(request: Request): Promise<Response> {
                     <button type="submit" class="save-btn" id="saveBtn">
                         Save API Key
                     </button>
+                    <button type="button" class="remove-btn" id="removeBtn">
+                        Remove API Key
+                    </button>
                 </form>
 
                 <div class="status-message" id="statusMessage"></div>
+            </div>
+
+            <!-- Modal for confirmations -->
+            <div class="modal-overlay" id="confirmationModal">
+                <div class="modal-content">
+                    <h3 class="modal-title" id="modalTitle">Remove API Key</h3>
+                    <p class="modal-message" id="modalMessage">Are you sure you want to remove your API key?</p>
+                    <div class="modal-buttons">
+                        <button class="modal-btn modal-btn-cancel" id="modalCancel">Cancel</button>
+                        <button class="modal-btn modal-btn-confirm" id="modalConfirm">Remove</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -2463,8 +2853,14 @@ async function serveStatic(request: Request): Promise<Response> {
             const apiKeyForm = document.getElementById('apiKeyForm');
             const apiKeyInput = document.getElementById('apiKey');
             const saveBtn = document.getElementById('saveBtn');
+            const removeBtn = document.getElementById('removeBtn');
             const statusMessage = document.getElementById('statusMessage');
             const languageSelect = document.getElementById('uiLanguage');
+            const modal = document.getElementById('confirmationModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalMessage = document.getElementById('modalMessage');
+            const modalCancel = document.getElementById('modalCancel');
+            const modalConfirm = document.getElementById('modalConfirm');
 
             // Language strings
             const languages = {
@@ -2481,6 +2877,7 @@ async function serveStatic(request: Request): Promise<Response> {
                     apiKeyLabel: 'Gemini API Key *',
                     apiKeyPlaceholder: 'Enter your Gemini API key',
                     saveButton: 'Save API Key',
+                removeButton: 'Remove API Key',
                     apiKeySaved: 'API key saved successfully!',
                     apiKeyVerified: 'API key verified and saved successfully!',
                     apiKeyVerificationFailed: 'API key saved but verification failed: ',
@@ -2512,11 +2909,61 @@ async function serveStatic(request: Request): Promise<Response> {
             const savedLanguage = localStorage.getItem('uiLanguage') || 'english';
             languageSelect.value = savedLanguage;
 
+            // Modal functionality
+            function showModal(title, message, onConfirm) {
+                modalTitle.textContent = title;
+                modalMessage.textContent = message;
+                modal.classList.add('show');
+
+                function closeModal() {
+                    modal.classList.remove('show');
+                }
+
+                modalCancel.onclick = closeModal;
+
+                modalConfirm.onclick = function() {
+                    closeModal();
+                    onConfirm();
+                };
+
+                // Close on overlay click
+                modal.onclick = function(e) {
+                    if (e.target === modal) {
+                        closeModal();
+                    }
+                };
+
+                // Close on Escape key
+                document.addEventListener('keydown', function escHandler(e) {
+                    if (e.key === 'Escape') {
+                        closeModal();
+                        document.removeEventListener('keydown', escHandler);
+                    }
+                });
+            }
+
             // Load saved API key
             const savedApiKey = localStorage.getItem('geminiApiKey');
             if (savedApiKey) {
                 apiKeyInput.value = savedApiKey;
+                // Show remove button if API key exists
+                removeBtn.style.display = 'inline-block';
+            } else {
+                removeBtn.style.display = 'none';
             }
+
+            // Remove API key functionality
+            removeBtn.addEventListener('click', function() {
+                const currentLang = localStorage.getItem('uiLanguage') || 'english';
+                const texts = languages[currentLang];
+
+                showModal(texts.removeConfirmTitle, texts.removeConfirmMessage, function() {
+                    localStorage.removeItem('geminiApiKey');
+                    apiKeyInput.value = '';
+                    removeBtn.style.display = 'none';
+                    showStatus(texts.apiKeyRemoved || 'API key removed successfully.', 'success');
+                });
+            });
 
             // Function to update UI language
             function updateLanguage(lang) {
@@ -2547,6 +2994,19 @@ async function serveStatic(request: Request): Promise<Response> {
                 updateLanguage(this.value);
             });
 
+            // Remove API key functionality
+            removeBtn.addEventListener('click', function() {
+                const currentLang = localStorage.getItem('uiLanguage') || 'english';
+                const texts = languages[currentLang];
+
+                showModal(texts.removeConfirmTitle, texts.removeConfirmMessage, function() {
+                    localStorage.removeItem('geminiApiKey');
+                    apiKeyInput.value = '';
+                    removeBtn.style.display = 'none';
+                    showStatus(texts.apiKeyRemoved || 'API key removed successfully.', 'success');
+                });
+            });
+
             // Save API key
             apiKeyForm.addEventListener('submit', async function(e) {
                 e.preventDefault();
@@ -2563,6 +3023,10 @@ async function serveStatic(request: Request): Promise<Response> {
                 // Save to localStorage
                 localStorage.setItem('geminiApiKey', apiKey);
                 showStatus(texts.apiKeySaved, 'success');
+
+                // Show remove button
+                removeBtn.style.display = 'inline-block';
+                removeBtn.textContent = texts.removeButton;
 
                 // Test the API key
                 try {
