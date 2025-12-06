@@ -7,6 +7,7 @@ export interface GenerateRequest {
   keywords?: string[];
   authorStyle: string;
   type: 'article' | 'shortstory' | 'novel' | 'news';
+  newspaperStyle?: string;
   chapterCount?: number;
   language: 'english' | 'indonesian';
   mainIdea?: string;

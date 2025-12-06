@@ -927,6 +927,25 @@ export function generateMainPageHTML(): string {
                     </select>
                 </div>
 
+                <div class="form-group newspaper-style-group" id="newspaperStyleGroup" style="display: none;">
+                    <label for="newspaperStyle">Newspaper Style *</label>
+                    <select id="newspaperStyle" name="newspaperStyle">
+                        <option value="">Select newspaper style</option>
+                        <option value="The New York Times">The New York Times</option>
+                        <option value="The Washington Post">The Washington Post</option>
+                        <option value="BBC News">BBC News</option>
+                        <option value="CNN">CNN</option>
+                        <option value="Reuters">Reuters</option>
+                        <option value="Associated Press">Associated Press</option>
+                        <option value="The Guardian">The Guardian</option>
+                        <option value="The Wall Street Journal">The Wall Street Journal</option>
+                        <option value="Fox News">Fox News</option>
+                        <option value="Al Jazeera">Al Jazeera</option>
+                        <option value="custom">Custom (enter below)</option>
+                    </select>
+                    <input type="text" id="customNewspaperStyle" name="customNewspaperStyle" placeholder="Enter custom newspaper style" style="margin-top: 10px; display: none;">
+                </div>
+
                 <div class="form-group">
                     <label for="language">Language *</label>
                     <select id="language" name="language" required>
@@ -1016,6 +1035,9 @@ export function generateMainPageHTML(): string {
                 authorStyleLabel: 'Author Style *',
                 selectAuthor: 'Select an author',
                 customAuthorPlaceholder: 'Enter custom author name',
+                newspaperStyleLabel: 'Newspaper Style *',
+                selectNewspaper: 'Select newspaper style',
+                customNewspaperPlaceholder: 'Enter custom newspaper style',
                 selectLanguage: 'Select language',
                 addButton: 'Add',
                 chapterCountPlaceholder: 'e.g. 10',
@@ -1154,6 +1176,9 @@ export function generateMainPageHTML(): string {
                 authorStyleLabel: 'Gaya Penulis *',
                 selectAuthor: 'Pilih penulis',
                 customAuthorPlaceholder: 'Masukkan nama penulis kustom',
+                newspaperStyleLabel: 'Gaya Koran *',
+                selectNewspaper: 'Pilih gaya koran',
+                customNewspaperPlaceholder: 'Masukkan gaya koran kustom',
                 selectLanguage: 'Pilih bahasa',
                 addButton: 'Tambah',
                 chapterCountPlaceholder: 'contoh: 10',
@@ -1286,6 +1311,9 @@ export function generateMainPageHTML(): string {
             const chapterCountGroup = document.getElementById('chapterCountGroup');
             const authorStyleSelect = document.getElementById('authorStyle');
             const customAuthorStyle = document.getElementById('customAuthorStyle');
+            const newspaperStyleGroup = document.getElementById('newspaperStyleGroup');
+            const newspaperStyleSelect = document.getElementById('newspaperStyle');
+            const customNewspaperStyle = document.getElementById('customNewspaperStyle');
             const generateBtn = document.getElementById('generateBtn');
             const loading = document.getElementById('loading');
             const errorMessage = document.getElementById('errorMessage');
@@ -1315,6 +1343,9 @@ export function generateMainPageHTML(): string {
                 document.querySelector('label[for="authorStyle"]').textContent = texts.authorStyleLabel;
                 document.querySelector('#authorStyle option[value=""]').textContent = texts.selectAuthor;
                 document.querySelector('#customAuthorStyle').placeholder = texts.customAuthorPlaceholder;
+                document.querySelector('label[for="newspaperStyle"]').textContent = texts.newspaperStyleLabel;
+                document.querySelector('#newspaperStyle option[value=""]').textContent = texts.selectNewspaper;
+                document.querySelector('#customNewspaperStyle').placeholder = texts.customNewspaperPlaceholder;
                 document.querySelector('label[for="type"]').textContent = texts.typeLabel;
                 document.querySelector('#type option[value="article"]').textContent = texts.typeArticle;
                 document.querySelector('#type option[value="shortstory"]').textContent = texts.typeShortStory;
@@ -1453,6 +1484,8 @@ export function generateMainPageHTML(): string {
                     authorStyle: document.getElementById('authorStyle').value,
                     customAuthorStyle: document.getElementById('customAuthorStyle').value,
                     type: document.getElementById('type').value,
+                    newspaperStyle: document.getElementById('newspaperStyle').value,
+                    customNewspaperStyle: document.getElementById('customNewspaperStyle').value,
                     language: document.getElementById('language').value,
                     chapterCount: document.getElementById('chapterCount').value,
                     mainIdea: document.getElementById('mainIdea').value,
@@ -1471,6 +1504,8 @@ export function generateMainPageHTML(): string {
                     document.getElementById('authorStyle').value = formData.authorStyle || '';
                     document.getElementById('customAuthorStyle').value = formData.customAuthorStyle || '';
                     document.getElementById('type').value = formData.type || '';
+                    document.getElementById('newspaperStyle').value = formData.newspaperStyle || '';
+                    document.getElementById('customNewspaperStyle').value = formData.customNewspaperStyle || '';
                     document.getElementById('language').value = formData.language || '';
                     document.getElementById('chapterCount').value = formData.chapterCount || '';
                     document.getElementById('mainIdea').value = formData.mainIdea || '';
@@ -1505,6 +1540,26 @@ export function generateMainPageHTML(): string {
                     } else {
                         customAuthorStyle.style.display = 'none';
                         customAuthorStyle.required = false;
+                    }
+
+                    // Show/hide newspaper style group based on type
+                    const newspaperStyleGroup = document.getElementById('newspaperStyleGroup');
+                    if (formData.type === 'news') {
+                        newspaperStyleGroup.style.display = 'block';
+                        document.getElementById('newspaperStyle').required = true;
+                    } else {
+                        newspaperStyleGroup.style.display = 'none';
+                        document.getElementById('newspaperStyle').required = false;
+                    }
+
+                    // Show/hide custom newspaper style
+                    const customNewspaperStyle = document.getElementById('customNewspaperStyle');
+                    if (formData.newspaperStyle === 'custom') {
+                        customNewspaperStyle.style.display = 'block';
+                        customNewspaperStyle.required = true;
+                    } else {
+                        customNewspaperStyle.style.display = 'none';
+                        customNewspaperStyle.required = false;
                     }
                 }
             }
@@ -1543,6 +1598,10 @@ export function generateMainPageHTML(): string {
                 document.getElementById('chapterCountGroup').classList.remove('show');
                 document.getElementById('customAuthorStyle').style.display = 'none';
                 document.getElementById('customAuthorStyle').required = false;
+                document.getElementById('newspaperStyleGroup').style.display = 'none';
+                document.getElementById('newspaperStyle').required = false;
+                document.getElementById('customNewspaperStyle').style.display = 'none';
+                document.getElementById('customNewspaperStyle').required = false;
 
                 // Clear results
                 document.getElementById('resultContainer').innerHTML = '';
@@ -1562,6 +1621,14 @@ export function generateMainPageHTML(): string {
                 } else {
                     chapterCountGroup.classList.remove('show');
                 }
+
+                if (this.value === 'news') {
+                    newspaperStyleGroup.style.display = 'block';
+                    document.getElementById('newspaperStyle').required = true;
+                } else {
+                    newspaperStyleGroup.style.display = 'none';
+                    document.getElementById('newspaperStyle').required = false;
+                }
             });
 
             // Author style handling
@@ -1572,6 +1639,18 @@ export function generateMainPageHTML(): string {
                 } else {
                     customAuthorStyle.style.display = 'none';
                     customAuthorStyle.required = false;
+                }
+                saveFormData();
+            });
+
+            // Newspaper style handling
+            newspaperStyleSelect.addEventListener('change', function() {
+                if (this.value === 'custom') {
+                    customNewspaperStyle.style.display = 'block';
+                    customNewspaperStyle.required = true;
+                } else {
+                    customNewspaperStyle.style.display = 'none';
+                    customNewspaperStyle.required = false;
                 }
                 saveFormData();
             });
@@ -1662,6 +1741,7 @@ export function generateMainPageHTML(): string {
                     keywords: keywords.length > 0 ? keywords : undefined,
                     authorStyle: authorStyleSelect.value === 'custom' ? customAuthorStyle.value : authorStyleSelect.value,
                     type: formData.get('type'),
+                    newspaperStyle: newspaperStyleSelect.value === 'custom' ? customNewspaperStyle.value : newspaperStyleSelect.value,
                     chapterCount: formData.get('chapterCount') ? parseInt(formData.get('chapterCount')) : undefined,
                     language: formData.get('language'),
                     mainIdea: formData.get('mainIdea') || undefined,

@@ -386,7 +386,7 @@ Please try again with a different topic or simplified request.
 export async function generateNews(request: GenerateRequest, apiKey: string): Promise<ArticleResponse> {
   const language = request.language === 'indonesian' ? 'Indonesian (Bahasa Indonesia)' : 'English';
 
-  const prompt = `You are a professional news journalist. Create a comprehensive news article of at least 1200-1800 words in ${language} about "${request.topic}" in the writing style of ${request.authorStyle}.
+  const prompt = `You are a professional news journalist. Create a comprehensive news article of at least 1200-1800 words in ${language} about "${request.topic}" in the writing style of ${request.newspaperStyle || request.authorStyle}.
 
 ${request.tags ? `Include these themes and tags: ${request.tags.join(', ')}` : ''}
 ${request.keywords ? `Incorporate these keywords naturally throughout: ${request.keywords.join(', ')}` : ''}
