@@ -334,6 +334,7 @@
                         <option value="">Select type</option>
                         <option value="article">Article/Chapter</option>
                         <option value="shortstory">Short Story/Cerpen</option>
+                        <option value="news">News Article</option>
                         <option value="novel">Novel Outline</option>
                     </select>
                 </div>
@@ -521,7 +522,7 @@
             function displayResults(result, type) {
                 resultContainer.innerHTML = '';
 
-                if (type === 'article') {
+                if (type === 'article' || type === 'shortstory' || type === 'news') {
                     displayArticleResults(result);
                 } else {
                     displayNovelResults(result);
