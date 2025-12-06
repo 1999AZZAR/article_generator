@@ -889,7 +889,7 @@ export function generateMainPageHTML(): string {
             <div class="form-grid">
                 <div class="form-group">
                     <label for="topic">Topic *</label>
-                    <input type="text" id="topic" name="topic" required placeholder="e.g. romance, horror, philosophy">
+                    <input type="text" id="topic" name="topic" required placeholder="">
                 </div>
 
                 <div class="form-group">
@@ -913,7 +913,7 @@ export function generateMainPageHTML(): string {
                         <option value="Leila S. Chudori">Leila S. Chudori</option>
                         <option value="custom">Custom (enter below)</option>
                     </select>
-                    <input type="text" id="customAuthorStyle" name="customAuthorStyle" placeholder="Enter custom author style" style="margin-top: 10px; display: none;">
+                    <input type="text" id="customAuthorStyle" name="customAuthorStyle" placeholder="" style="margin-top: 10px; display: none;">
                 </div>
 
                 <div class="form-group">
@@ -943,7 +943,7 @@ export function generateMainPageHTML(): string {
                         <option value="Al Jazeera">Al Jazeera</option>
                         <option value="custom">Custom (enter below)</option>
                     </select>
-                    <input type="text" id="customNewspaperStyle" name="customNewspaperStyle" placeholder="Enter custom newspaper style" style="margin-top: 10px; display: none;">
+                    <input type="text" id="customNewspaperStyle" name="customNewspaperStyle" placeholder="" style="margin-top: 10px; display: none;">
                 </div>
 
                 <div class="form-group">
@@ -957,13 +957,13 @@ export function generateMainPageHTML(): string {
 
                 <div class="form-group chapter-count-group" id="chapterCountGroup">
                     <label for="chapterCount">Number of Chapters *</label>
-                    <input type="number" id="chapterCount" name="chapterCount" min="1" max="50" placeholder="e.g. 10">
+                    <input type="number" id="chapterCount" name="chapterCount" min="1" max="50" placeholder="">
                 </div>
 
                 <div class="form-group">
                     <label for="tags">Tags</label>
                     <div class="tag-input-container">
-                        <input type="text" id="tagInput" placeholder="Add a tag and press Enter">
+                        <input type="text" id="tagInput" placeholder="">
                         <button type="button" class="add-tag-btn" id="addTagBtn">Add</button>
                     </div>
                     <div class="tags-container" id="tagsContainer"></div>
@@ -972,15 +972,15 @@ export function generateMainPageHTML(): string {
                 <div class="form-group">
                     <label for="keywords">Keywords</label>
                     <div class="tag-input-container">
-                        <input type="text" id="keywordInput" placeholder="Add a keyword and press Enter">
-                        <button type="button" class="addKeywordBtn" id="addKeywordBtn">Add</button>
+                        <input type="text" id="keywordInput" placeholder="">
+                        <button type="button" class="add-tag-btn" id="addKeywordBtn">Add</button>
                     </div>
                     <div class="tags-container" id="keywordsContainer"></div>
                 </div>
 
                 <div class="form-group">
                     <label for="mainIdea">Main Idea/Plot</label>
-                    <textarea id="mainIdea" name="mainIdea" rows="4" placeholder="Describe your main idea, plot, or concept that you want the AI to build upon. This will help generate content that aligns with your specific vision."></textarea>
+                    <textarea id="mainIdea" name="mainIdea" rows="4" placeholder=""></textarea>
                 </div>
             </div>
 
@@ -1011,8 +1011,8 @@ export function generateMainPageHTML(): string {
                 <h3 class="modal-title" id="modalTitle">Reset All Data</h3>
                 <p class="modal-message" id="modalMessage">Are you sure you want to reset all data?</p>
                 <div class="modal-buttons">
-                    <button class="modal-btn modal-btn-cancel" id="modalCancel">Cancel</button>
-                    <button class="modal-btn modal-btn-confirm" id="modalConfirm">Reset</button>
+                    <button class="modal-btn modal-btn-cancel" id="modalCancel"></button>
+                    <button class="modal-btn modal-btn-confirm" id="modalConfirm"></button>
                 </div>
             </div>
         </div>
@@ -1054,6 +1054,8 @@ export function generateMainPageHTML(): string {
                 resetButton: 'Reset All',
                 resetConfirmTitle: 'Reset All Data',
                 resetConfirmMessage: 'Are you sure you want to reset all data? This will clear your form and generated content.',
+                cancelButton: 'Cancel',
+                resetModalButton: 'Reset',
                 generating: 'Generating your content with AI...',
                 loadingFacts: [
                     'Did you know? The quill pen was invented in the 6th century...',
@@ -1195,6 +1197,8 @@ export function generateMainPageHTML(): string {
                 resetButton: 'Reset Semua',
                 resetConfirmTitle: 'Reset Semua Data',
                 resetConfirmMessage: 'Apakah Anda yakin ingin mereset semua data? Ini akan menghapus formulir dan konten yang dihasilkan.',
+                cancelButton: 'Batal',
+                resetModalButton: 'Reset',
                 generating: 'Menghasilkan konten Anda dengan AI...',
                 loadingFacts: [
                     'Tahukah Anda? Pena quill ditemukan pada abad ke-6...',
@@ -1714,7 +1718,7 @@ export function generateMainPageHTML(): string {
                          texts.resetConfirmMessage,
                          function() {
                     clearAllData();
-                });
+                }, texts.cancelButton || 'Cancel', texts.resetModalButton || 'Reset');
             });
 
             function showError(message) {
@@ -2275,6 +2279,21 @@ export function generateSettingsPageHTML(): string {
         .header {
             text-align: center;
             margin-bottom: 40px;
+            position: relative;
+        }
+
+        .settings-link {
+            position: absolute;
+            top: 0;
+            right: 0;
+            color: #00d4ff;
+            text-decoration: none;
+            font-size: 16px;
+            transition: color 0.3s ease;
+        }
+
+        .settings-link:hover {
+            color: #00ff88;
         }
 
         .header h1 {
@@ -2686,7 +2705,7 @@ export function generateSettingsPageHTML(): string {
                 <form id="apiKeyForm">
                     <div class="form-group">
                         <label for="apiKey">Gemini API Key *</label>
-                        <input type="password" id="apiKey" placeholder="Enter your Gemini API key" required>
+                        <input type="password" id="apiKey" placeholder="" required>
                     </div>
 
                     <button type="submit" class="save-btn" id="saveBtn">
@@ -2706,8 +2725,8 @@ export function generateSettingsPageHTML(): string {
                     <h3 class="modal-title" id="modalTitle">Remove API Key</h3>
                     <p class="modal-message" id="modalMessage">Are you sure you want to remove your API key?</p>
                     <div class="modal-buttons">
-                        <button class="modal-btn modal-btn-cancel" id="modalCancel">Cancel</button>
-                        <button class="modal-btn modal-btn-confirm" id="modalConfirm">Remove</button>
+                        <button class="modal-btn modal-btn-cancel" id="modalCancel"></button>
+                        <button class="modal-btn modal-btn-confirm" id="modalConfirm"></button>
                     </div>
                 </div>
             </div>
@@ -2744,6 +2763,10 @@ export function generateSettingsPageHTML(): string {
                     apiKeyPlaceholder: 'Enter your Gemini API key',
                     saveButton: 'Save API Key',
                     removeButton: 'Remove API Key',
+                    removeConfirmTitle: 'Remove API Key',
+                    removeConfirmMessage: 'Are you sure you want to remove the API key?',
+                    cancelButton: 'Cancel',
+                    removeModalButton: 'Remove',
                     apiKeySaved: 'API key saved successfully!',
                     apiKeyVerified: 'API key verified and saved successfully!',
                     apiKeyVerificationFailed: 'API key saved but verification failed: ',
@@ -2763,6 +2786,11 @@ export function generateSettingsPageHTML(): string {
                     apiKeyLabel: 'Kunci API Gemini *',
                     apiKeyPlaceholder: 'Masukkan kunci API Gemini Anda',
                     saveButton: 'Simpan Kunci API',
+                    removeButton: 'Hapus Kunci API',
+                    removeConfirmTitle: 'Hapus Kunci API',
+                    removeConfirmMessage: 'Apakah Anda yakin ingin menghapus kunci API?',
+                    cancelButton: 'Batal',
+                    removeModalButton: 'Hapus',
                     apiKeySaved: 'Kunci API berhasil disimpan!',
                     apiKeyVerified: 'Kunci API diverifikasi dan berhasil disimpan!',
                     apiKeyVerificationFailed: 'Kunci API disimpan tetapi verifikasi gagal: ',
@@ -2776,9 +2804,11 @@ export function generateSettingsPageHTML(): string {
             languageSelect.value = savedLanguage;
 
             // Modal functionality
-            function showModal(title, message, onConfirm) {
+            function showModal(title, message, onConfirm, cancelText = 'Cancel', confirmText = 'Confirm') {
                 modalTitle.textContent = title;
                 modalMessage.textContent = message;
+                modalCancel.textContent = cancelText;
+                modalConfirm.textContent = confirmText;
                 modal.classList.add('show');
 
                 function closeModal() {
@@ -2828,7 +2858,7 @@ export function generateSettingsPageHTML(): string {
                     apiKeyInput.value = '';
                     removeBtn.style.display = 'none';
                     showStatus(texts.apiKeyRemoved || 'API key removed successfully.', 'success');
-                });
+                }, texts.cancelButton || 'Cancel', texts.removeModalButton || 'Remove');
             });
 
             // Function to update UI language
@@ -2870,7 +2900,7 @@ export function generateSettingsPageHTML(): string {
                     apiKeyInput.value = '';
                     removeBtn.style.display = 'none';
                     showStatus(texts.apiKeyRemoved || 'API key removed successfully.', 'success');
-                });
+                }, texts.cancelButton || 'Cancel', texts.removeModalButton || 'Remove');
             });
 
             // Save API key

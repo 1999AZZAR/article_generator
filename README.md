@@ -361,8 +361,7 @@ article_generator/
 │   ├── index.ts           # Cloudflare Worker entry point
 │   ├── handler.ts         # HTTP request handling and UI
 │   ├── gemini.ts          # AI integration and content generation
-│   └── pages/
-│       └── index.html     # HTML template
+│   └── ui.ts              # HTML generation and UI components
 ├── .gitignore             # Version control exclusions
 ├── package.json           # Project dependencies and scripts
 ├── tsconfig.json          # TypeScript configuration
@@ -388,8 +387,7 @@ article_generator/
 │   ├── index.ts
 │   ├── handler.ts
 │   ├── gemini.ts
-│   └── pages/
-│       └── index.html
+│   └── ui.ts
 ├── .gitignore
 ├── LICENSE
 ├── package.json
