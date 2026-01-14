@@ -1,12 +1,31 @@
 import type { GenerateRequest, ArticleResponse, NovelResponse } from './handler';
 
-// Gemini API endpoints - use Flash for testing (faster/cheaper), Pro for content generation
+// Gemini API endpoints
 const GEMINI_FLASH_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
 const GEMINI_PRO_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent';
 
-// Retry configuration
-const MAX_RETRIES = 3;
-const RETRY_DELAY = 1000; // 1 second
+// Enhanced retry and circuit breaker configuration
+const MAX_RETRIES = 5;
+const BASE_RETRY_DELAY = 1000; // 1 second
+const MAX_RETRY_DELAY = 30000; // 30 seconds
+const CIRCUIT_BREAKER_THRESHOLD = 3; // Failures before opening circuit
+const CIRCUIT_BREAKER_TIMEOUT = 60000; // 1 minute before trying again
+const ADAPTIVE_TIMEOUT_BASE = 30000; // 30 seconds base timeout
+const ADAPTIVE_TIMEOUT_MAX = 120000; // 2 minutes max timeout
+
+// Circuit breaker state
+let circuitBreakerFailures = 0;
+let circuitBreakerLastFailure = 0;
+let circuitBreakerState: 'closed' | 'open' | 'half-open' = 'closed';
+
+// Request deduplication cache
+const requestCache = new Map<string, { response: string; timestamp: number }>();
+const CACHE_TTL = 300000; // 5 minutes
+
+// Delay utility function
+function delay(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 interface GeminiResponse {
   candidates?: Array<{
@@ -21,6 +40,159 @@ interface GeminiResponse {
     code?: number;
     message?: string;
   };
+}
+
+// Error classification types
+enum ErrorType {
+  RETRYABLE = 'retryable',
+  NON_RETRYABLE = 'non_retryable',
+  QUOTA_EXCEEDED = 'quota_exceeded',
+  CIRCUIT_OPEN = 'circuit_open'
+}
+
+interface ClassifiedError {
+  type: ErrorType;
+  message: string;
+  retryAfter?: number;
+}
+
+// Circuit breaker helper functions
+function isCircuitBreakerOpen(): boolean {
+  if (circuitBreakerState === 'open') {
+    const now = Date.now();
+    if (now - circuitBreakerLastFailure > CIRCUIT_BREAKER_TIMEOUT) {
+      circuitBreakerState = 'half-open';
+      return false;
+    }
+    return true;
+  }
+  return false;
+}
+
+function recordCircuitBreakerFailure(): void {
+  circuitBreakerFailures++;
+  circuitBreakerLastFailure = Date.now();
+
+  if (circuitBreakerFailures >= CIRCUIT_BREAKER_THRESHOLD) {
+    circuitBreakerState = 'open';
+    console.warn(`Circuit breaker opened after ${circuitBreakerFailures} failures`);
+  }
+}
+
+function recordCircuitBreakerSuccess(): void {
+  if (circuitBreakerState === 'half-open') {
+    circuitBreakerState = 'closed';
+    circuitBreakerFailures = 0;
+    console.log('Circuit breaker closed - service recovered');
+  }
+}
+
+// Error classification function
+function classifyError(error: any): ClassifiedError {
+  const errorMessage = error.message || String(error);
+  const errorName = error.name || '';
+
+  // Quota exceeded errors
+  if (errorMessage.includes('quota exceeded') || errorMessage.includes('429')) {
+    return {
+      type: ErrorType.QUOTA_EXCEEDED,
+      message: 'API quota exceeded. Please upgrade your plan or wait for quota reset.',
+      retryAfter: 60000 // 1 minute
+    };
+  }
+
+  // Rate limiting
+  if (errorMessage.includes('429') || errorMessage.includes('rate limit')) {
+    return {
+      type: ErrorType.RETRYABLE,
+      message: 'Rate limit exceeded. Retrying with backoff.',
+      retryAfter: 5000 // 5 seconds
+    };
+  }
+
+  // Service unavailable or overloaded
+  if (errorMessage.includes('503') || errorMessage.includes('overloaded') || errorMessage.includes('UNAVAILABLE')) {
+    return {
+      type: ErrorType.RETRYABLE,
+      message: 'Service temporarily unavailable. Retrying.',
+      retryAfter: 10000 // 10 seconds
+    };
+  }
+
+  // Timeout errors
+  if (errorName === 'AbortError' || errorMessage.includes('aborted') || errorMessage.includes('timeout')) {
+    return {
+      type: ErrorType.RETRYABLE,
+      message: 'Request timed out. Retrying.',
+      retryAfter: 2000 // 2 seconds
+    };
+  }
+
+  // Network errors
+  if (errorMessage.includes('fetch') || errorMessage.includes('network') || errorMessage.includes('ECONNRESET')) {
+    return {
+      type: ErrorType.RETRYABLE,
+      message: 'Network error. Retrying.',
+      retryAfter: 3000 // 3 seconds
+    };
+  }
+
+  // Authentication errors
+  if (errorMessage.includes('403') || errorMessage.includes('access denied') || errorMessage.includes('unauthorized')) {
+    return {
+      type: ErrorType.NON_RETRYABLE,
+      message: 'Authentication failed. Please check your API key.'
+    };
+  }
+
+  // Safety filter errors
+  if (errorMessage.includes('safety') || errorMessage.includes('blocked')) {
+    return {
+      type: ErrorType.NON_RETRYABLE,
+      message: 'Content blocked by safety filters. Please modify your request.'
+    };
+  }
+
+  // Default to retryable for unknown errors
+  return {
+    type: ErrorType.RETRYABLE,
+    message: `Unknown error: ${errorMessage}`,
+    retryAfter: 1000 // 1 second
+  };
+}
+
+// Calculate exponential backoff with jitter
+function calculateRetryDelay(attempt: number, baseDelay: number = BASE_RETRY_DELAY): number {
+  const exponentialDelay = baseDelay * Math.pow(2, attempt);
+  const jitter = Math.random() * 0.1 * exponentialDelay; // 10% jitter
+  return Math.min(exponentialDelay + jitter, MAX_RETRY_DELAY);
+}
+
+// Adaptive timeout based on request complexity
+function calculateAdaptiveTimeout(prompt: string): number {
+  const wordCount = prompt.split(/\s+/).length;
+  const complexityFactor = Math.min(wordCount / 1000, 3); // Max 3x base timeout
+  return Math.min(ADAPTIVE_TIMEOUT_BASE * (1 + complexityFactor), ADAPTIVE_TIMEOUT_MAX);
+}
+
+// Request deduplication
+function getCacheKey(prompt: string, model: string): string {
+  return `${model}:${prompt.slice(0, 100)}:${prompt.length}`;
+}
+
+function getCachedResponse(cacheKey: string): string | null {
+  const cached = requestCache.get(cacheKey);
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+    return cached.response;
+  }
+  if (cached) {
+    requestCache.delete(cacheKey); // Remove expired cache
+  }
+  return null;
+}
+
+function setCachedResponse(cacheKey: string, response: string): void {
+  requestCache.set(cacheKey, { response, timestamp: Date.now() });
 }
 
 export async function generateArticle(request: GenerateRequest, apiKey: string): Promise<ArticleResponse> {
@@ -61,8 +233,14 @@ CRITICAL REQUIREMENTS:
 - Make sure the JSON is valid and parseable`;
 
   try {
-    const response = await callGeminiProAPI(prompt, apiKey);
-    console.log('Gemini API response for article (first 500 chars):', response.substring(0, 500));
+    // Use Flash for shorter articles, Pro for comprehensive long-form content
+    const useProModel = request.type === 'article' || (request.mainIdea && request.mainIdea.length > 200);
+
+    const response = useProModel
+      ? await callGeminiProAPI(prompt, apiKey)
+      : await callGeminiFlashAPI(prompt, apiKey);
+
+    console.log(`Gemini API response for article using ${useProModel ? 'Pro' : 'Flash'} (first 500 chars):`, response.substring(0, 500));
 
     let parsed: ArticleResponse;
     try {
@@ -196,7 +374,7 @@ Focus on this specific chapter's events, character development, and plot progres
 Return only the chapter content without any JSON formatting or additional text.`;
 
   try {
-    const response = await callGeminiProAPI(prompt, apiKey);
+    const response = await callGeminiFlashAPI(prompt, apiKey);
 
     // For chapter generation, return the raw response since we want the actual chapter text
     // Clean up any unwanted prefixes
@@ -271,7 +449,7 @@ CRITICAL REQUIREMENTS:
 - Make sure the JSON is valid and parseable`;
 
   try {
-    const response = await callGeminiProAPI(prompt, apiKey);
+    const response = await callGeminiFlashAPI(prompt, apiKey);
     console.log('Gemini API response for short story (first 500 chars):', response.substring(0, 500));
 
     let parsed: ArticleResponse;
@@ -422,7 +600,7 @@ CRITICAL REQUIREMENTS:
 - Make sure the JSON is valid and parseable`;
 
   try {
-    const response = await callGeminiProAPI(prompt, apiKey);
+    const response = await callGeminiFlashAPI(prompt, apiKey);
     console.log('Gemini API response for news article (first 500 chars):', response.substring(0, 500));
 
     let parsed: ArticleResponse;
@@ -729,98 +907,91 @@ export async function testGeminiAPIKey(apiKey: string): Promise<boolean> {
   }
 }
 
-// Utility function for delays
-function delay(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
 
 // Core Gemini API call with retry logic
-async function callGeminiAPIWithRetry(prompt: string, apiKey: string, retryCount = 0): Promise<string> {
+async function callGeminiAPIWithRetry(
+  prompt: string,
+  apiKey: string,
+  modelUrl: string,
+  retryCount = 0,
+  useHeaderAuth = true
+): Promise<string> {
+  // Check circuit breaker
+  if (isCircuitBreakerOpen()) {
+    throw new Error('Circuit breaker is open - service temporarily unavailable');
+  }
+
+  // Check cache for duplicate requests
+  const cacheKey = getCacheKey(prompt, modelUrl);
+  const cachedResponse = getCachedResponse(cacheKey);
+  if (cachedResponse) {
+    console.log('Using cached response for duplicate request');
+    return cachedResponse;
+  }
+
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+    const adaptiveTimeout = calculateAdaptiveTimeout(prompt);
+    const timeoutId = setTimeout(() => controller.abort(), adaptiveTimeout);
 
     let response: Response;
 
+    const requestBody = {
+      contents: [{
+        parts: [{
+          text: prompt
+        }]
+      }],
+      generationConfig: {
+        temperature: 0.7,
+        topK: 40,
+        topP: 0.95,
+        maxOutputTokens: modelUrl.includes('flash') ? 8192 : 16384, // Flash has lower limits
+      },
+      safetySettings: [
+        {
+          category: "HARM_CATEGORY_HARASSMENT",
+          threshold: "BLOCK_MEDIUM_AND_ABOVE"
+        },
+        {
+          category: "HARM_CATEGORY_HATE_SPEECH",
+          threshold: "BLOCK_MEDIUM_AND_ABOVE"
+        },
+        {
+          category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+          threshold: "BLOCK_MEDIUM_AND_ABOVE"
+        },
+        {
+          category: "HARM_CATEGORY_DANGEROUS_CONTENT",
+          threshold: "BLOCK_MEDIUM_AND_ABOVE"
+        }
+      ]
+    };
+
     try {
       // Method 1: Header authentication (preferred)
-      response = await fetch(GEMINI_FLASH_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-goog-api-key': apiKey,
-        },
-        body: JSON.stringify({
-          contents: [{
-            parts: [{
-              text: prompt
-            }]
-          }],
-          generationConfig: {
-            temperature: 0.7,
-            topK: 40,
-            topP: 0.95,
-            maxOutputTokens: 16384, // Increased for longer content generation,
+      if (useHeaderAuth) {
+        response = await fetch(modelUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-goog-api-key': apiKey,
           },
-          safetySettings: [
-            {
-              category: "HARM_CATEGORY_HARASSMENT",
-              threshold: "BLOCK_MEDIUM_AND_ABOVE"
-            },
-            {
-              category: "HARM_CATEGORY_HATE_SPEECH",
-              threshold: "BLOCK_MEDIUM_AND_ABOVE"
-            },
-            {
-              category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
-              threshold: "BLOCK_MEDIUM_AND_ABOVE"
-            },
-            {
-              category: "HARM_CATEGORY_DANGEROUS_CONTENT",
-              threshold: "BLOCK_MEDIUM_AND_ABOVE"
-            }
-          ]
-        }),
-        signal: controller.signal
-      });
+          body: JSON.stringify(requestBody),
+          signal: controller.signal
+        });
+      } else {
+        throw new Error('Fallback to query auth');
+      }
     } catch {
       // Method 2: Query parameter authentication (fallback)
-      response = await fetch(`${GEMINI_FLASH_URL}?key=${apiKey}`, {
+      console.log('Falling back to query parameter authentication');
+      response = await fetch(`${modelUrl}?key=${apiKey}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          contents: [{
-            parts: [{
-              text: prompt
-            }]
-          }],
-          generationConfig: {
-            temperature: 0.7,
-            topK: 40,
-            topP: 0.95,
-            maxOutputTokens: 16384, // Increased for longer content generation,
-          },
-          safetySettings: [
-            {
-              category: "HARM_CATEGORY_HARASSMENT",
-              threshold: "BLOCK_MEDIUM_AND_ABOVE"
-            },
-            {
-              category: "HARM_CATEGORY_HATE_SPEECH",
-              threshold: "BLOCK_MEDIUM_AND_ABOVE"
-            },
-            {
-              category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
-              threshold: "BLOCK_MEDIUM_AND_ABOVE"
-            },
-            {
-              category: "HARM_CATEGORY_DANGEROUS_CONTENT",
-              threshold: "BLOCK_MEDIUM_AND_ABOVE"
-            }
-          ]
-        }),
+        body: JSON.stringify(requestBody),
         signal: controller.signal
       });
     }
@@ -829,20 +1000,33 @@ async function callGeminiAPIWithRetry(prompt: string, apiKey: string, retryCount
 
     if (!response.ok) {
       const errorText = await response.text().catch(() => 'Unknown error');
+      let errorMessage = `Gemini API error: ${response.status} ${response.statusText}`;
+
       if (response.status === 429) {
-        throw new Error(`API quota exceeded. You've reached your free tier limit. Please upgrade your plan or wait for quota reset.`);
+        errorMessage = 'API quota exceeded. You\'ve reached your free tier limit. Please upgrade your plan or wait for quota reset.';
+      } else if (response.status === 403) {
+        errorMessage = 'API access denied. Please check that your API key has Gemini API enabled.';
+      } else if (response.status === 503) {
+        errorMessage = 'The model is overloaded. Please try again later.';
       }
-      if (response.status === 403) {
-        throw new Error(`API access denied. Please check that your API key has Gemini API enabled.`);
-      }
-      throw new Error(`Gemini API error: ${response.status} ${response.statusText} - ${errorText}`);
+
+      throw new Error(`${errorMessage} - ${errorText}`);
     }
 
     const data: GeminiResponse = await response.json();
 
-    // Check for API errors
+    // Check for API errors in response body
     if (data.error) {
-      throw new Error(`Gemini API error: ${data.error.message || 'Unknown API error'}`);
+      const errorCode = data.error.code;
+      let errorMessage = `Gemini API error: ${data.error.message || 'Unknown API error'}`;
+
+      if (errorCode === 503) {
+        errorMessage = 'The model is overloaded. Please try again later.';
+      } else if (errorCode === 429) {
+        errorMessage = 'API quota exceeded. You\'ve reached your free tier limit. Please upgrade your plan or wait for quota reset.';
+      }
+
+      throw new Error(errorMessage);
     }
 
     // Validate response structure
@@ -861,19 +1045,46 @@ async function callGeminiAPIWithRetry(prompt: string, apiKey: string, retryCount
       throw new Error('Empty response from Gemini API');
     }
 
-    return candidate.content.parts[0].text;
+    const result = candidate.content.parts[0].text;
+
+    // Cache successful response
+    setCachedResponse(cacheKey, result);
+
+    // Record circuit breaker success
+    recordCircuitBreakerSuccess();
+
+    return result;
 
   } catch (error) {
     console.error(`Gemini API call attempt ${retryCount + 1} failed:`, error);
 
-    // Retry logic
-    if (retryCount < MAX_RETRIES) {
-      console.log(`Retrying in ${RETRY_DELAY}ms...`);
-      await delay(RETRY_DELAY * (retryCount + 1)); // Exponential backoff
-      return callGeminiAPIWithRetry(prompt, apiKey, retryCount + 1);
+    const classifiedError = classifyError(error);
+
+    // Record circuit breaker failure for retryable errors
+    if (classifiedError.type === ErrorType.RETRYABLE) {
+      recordCircuitBreakerFailure();
     }
 
-    throw error;
+    // Handle different error types
+    switch (classifiedError.type) {
+      case ErrorType.NON_RETRYABLE:
+      case ErrorType.QUOTA_EXCEEDED:
+        throw new Error(classifiedError.message);
+
+      case ErrorType.CIRCUIT_OPEN:
+        throw new Error('Service temporarily unavailable due to repeated failures');
+
+      case ErrorType.RETRYABLE:
+        // Retry logic with exponential backoff
+        if (retryCount < MAX_RETRIES) {
+          const retryDelay = classifiedError.retryAfter || calculateRetryDelay(retryCount);
+          console.log(`Retrying in ${Math.round(retryDelay)}ms... (${classifiedError.message})`);
+
+          await delay(retryDelay);
+          return callGeminiAPIWithRetry(prompt, apiKey, modelUrl, retryCount + 1, useHeaderAuth);
+        }
+        throw new Error(`Max retries exceeded: ${classifiedError.message}`);
+    }
   }
 }
 
@@ -1000,147 +1211,69 @@ function fixMalformedJSON(text: string): string | null {
 
 // Call Gemini Pro for content generation (higher quality)
 async function callGeminiProAPI(prompt: string, apiKey: string): Promise<string> {
+  console.log('Attempting Gemini Pro API call...');
+
   try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 120000); // 120 second timeout for Pro (longer content)
-
-    let response: Response;
-
-    try {
-      // Method 1: Header authentication (preferred)
-      response = await fetch(GEMINI_PRO_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-goog-api-key': apiKey,
-        },
-        body: JSON.stringify({
-          contents: [{
-            parts: [{
-              text: prompt
-            }]
-          }],
-          generationConfig: {
-            temperature: 0.7,
-            topK: 40,
-            topP: 0.95,
-            maxOutputTokens: 16384, // Increased for longer content generation
-          },
-          safetySettings: [
-            {
-              category: "HARM_CATEGORY_HARASSMENT",
-              threshold: "BLOCK_MEDIUM_AND_ABOVE"
-            },
-            {
-              category: "HARM_CATEGORY_HATE_SPEECH",
-              threshold: "BLOCK_MEDIUM_AND_ABOVE"
-            },
-            {
-              category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
-              threshold: "BLOCK_MEDIUM_AND_ABOVE"
-            },
-            {
-              category: "HARM_CATEGORY_DANGEROUS_CONTENT",
-              threshold: "BLOCK_MEDIUM_AND_ABOVE"
-            }
-          ]
-        }),
-        signal: controller.signal
-      });
-    } catch {
-      // Method 2: Query parameter authentication (fallback)
-      response = await fetch(`${GEMINI_PRO_URL}?key=${apiKey}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          contents: [{
-            parts: [{
-              text: prompt
-            }]
-          }],
-          generationConfig: {
-            temperature: 0.7,
-            topK: 40,
-            topP: 0.95,
-            maxOutputTokens: 16384, // Increased for longer content generation,
-          },
-          safetySettings: [
-            {
-              category: "HARM_CATEGORY_HARASSMENT",
-              threshold: "BLOCK_MEDIUM_AND_ABOVE"
-            },
-            {
-              category: "HARM_CATEGORY_HATE_SPEECH",
-              threshold: "BLOCK_MEDIUM_AND_ABOVE"
-            },
-            {
-              category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
-              threshold: "BLOCK_MEDIUM_AND_ABOVE"
-            },
-            {
-              category: "HARM_CATEGORY_DANGEROUS_CONTENT",
-              threshold: "BLOCK_MEDIUM_AND_ABOVE"
-            }
-          ]
-        }),
-        signal: controller.signal
-      });
-    }
-
-    clearTimeout(timeoutId);
-
-    if (!response.ok) {
-      const errorText = await response.text().catch(() => 'Unknown error');
-      if (response.status === 429) {
-        throw new Error(`API quota exceeded. You've reached your free tier limit. Please upgrade your plan or wait for quota reset.`);
-      }
-      if (response.status === 403) {
-        throw new Error(`API access denied. Please check that your API key has Gemini API enabled.`);
-      }
-      throw new Error(`Gemini Pro API error: ${response.status} ${response.statusText} - ${errorText}`);
-    }
-
-    const data: GeminiResponse = await response.json();
-
-    // Check for API errors
-    if (data.error) {
-      throw new Error(`Gemini Pro API error: ${data.error.message || 'Unknown API error'}`);
-    }
-
-    // Validate response structure
-    if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
-      throw new Error('Invalid response structure from Gemini Pro API');
-    }
-
-    const candidate = data.candidates[0];
-
-    // Check if the response was blocked or incomplete
-    if (candidate.finishReason === 'SAFETY' || candidate.finishReason === 'RECITATION') {
-      throw new Error('Response was blocked by safety filters. Please try a different prompt.');
-    }
-
-    if (!candidate.content || !candidate.content.parts || !candidate.content.parts[0] || !candidate.content.parts[0].text) {
-      throw new Error('Empty response from Gemini Pro API');
-    }
-
-    return candidate.content.parts[0].text;
-
+    // Try Pro first for complex content
+    return await callGeminiAPIWithRetry(prompt, apiKey, GEMINI_PRO_URL);
   } catch (error) {
     console.error('Gemini Pro API call failed:', error);
-    // If Pro fails, try Flash as fallback
+
+    const classifiedError = classifyError(error);
+
+    // For quota exceeded, don't try fallback
+    if (classifiedError.type === ErrorType.QUOTA_EXCEEDED) {
+      throw error;
+    }
+
+    // Try Flash as first fallback
     try {
       console.log('Falling back to Gemini Flash...');
-      return await callGeminiAPIWithRetry(prompt, apiKey);
+      return await callGeminiAPIWithRetry(prompt, apiKey, GEMINI_FLASH_URL);
+    } catch (flashError) {
+      console.error('Gemini Flash fallback failed:', flashError);
+
+      // Try Flash with query parameter auth as second fallback
+      try {
+        console.log('Trying Flash with query parameter authentication...');
+        return await callGeminiAPIWithRetry(prompt, apiKey, GEMINI_FLASH_URL, 0, false);
+      } catch (finalFallbackError) {
+        console.error('All fallback attempts failed:', finalFallbackError);
+        throw error; // Throw original error with best error message
+      }
+    }
+  }
+}
+
+// Enhanced Flash API call with better defaults for simpler content
+async function callGeminiFlashAPI(prompt: string, apiKey: string): Promise<string> {
+  console.log('Attempting Gemini Flash API call...');
+
+  try {
+    // Use Flash directly for faster, cheaper responses
+    return await callGeminiAPIWithRetry(prompt, apiKey, GEMINI_FLASH_URL);
+  } catch (error) {
+    console.error('Gemini Flash API call failed:', error);
+
+    const classifiedError = classifyError(error);
+
+    // For quota exceeded, don't try fallback
+    if (classifiedError.type === ErrorType.QUOTA_EXCEEDED) {
+      throw error;
+    }
+
+    // Try with query parameter auth as fallback
+    try {
+      console.log('Trying Flash with query parameter authentication...');
+      return await callGeminiAPIWithRetry(prompt, apiKey, GEMINI_FLASH_URL, 0, false);
     } catch (fallbackError) {
-      console.error('Fallback also failed:', fallbackError);
-      throw error; // Throw original error
+      console.error('Flash fallback failed:', fallbackError);
+      throw error;
     }
   }
 }
 
 export async function callGeminiAPI(prompt: string, apiKey: string): Promise<string> {
-  const rawResponse = await callGeminiAPIWithRetry(prompt, apiKey);
+  const rawResponse = await callGeminiAPIWithRetry(prompt, apiKey, GEMINI_FLASH_URL);
   return parseGeminiResponse(rawResponse);
 }

@@ -911,6 +911,11 @@ export function generateMainPageHTML(): string {
                         <option value="Pramoedya Ananta Toer">Pramoedya Ananta Toer</option>
                         <option value="Goenawan Mohamad">Goenawan Mohamad</option>
                         <option value="Leila S. Chudori">Leila S. Chudori</option>
+                        <option value="Stephen King">Stephen King</option>
+                        <option value="Agatha Christie">Agatha Christie</option>
+                        <option value="Gabriel García Márquez">Gabriel García Márquez</option>
+                        <option value="Zadie Smith">Zadie Smith</option>
+                        <option value="Yuval Noah Harari">Yuval Noah Harari</option>
                         <option value="custom">Custom (enter below)</option>
                     </select>
                     <input type="text" id="customAuthorStyle" name="customAuthorStyle" placeholder="" style="margin-top: 10px; display: none;">
@@ -1129,7 +1134,12 @@ export function generateMainPageHTML(): string {
                     'The first newspaper was published in Germany in 1609...',
                     'Fairy tales were originally oral stories before being written down...',
                     'Writing enables time travel through preserved human thoughts...',
-                    'The first public library was established in ancient Nineveh...'
+                    'The first public library was established in ancient Nineveh...',
+                    'Emily Dickinson wrote over 1,800 poems, mostly discovered after her death...',
+                    'The word "novel" comes from Italian "novella" meaning "new story"...',
+                    'Mark Twain was the first author to submit a typewritten manuscript...',
+                    'The Great Wall of China was built using written construction plans...',
+                    'Virginia Woolf revolutionized stream-of-consciousness writing...'
                 ],
                 apiKeyRequired: 'Please set your Gemini API key in Settings first.',
                 missingFields: 'Missing required fields',
@@ -1741,8 +1751,8 @@ export function generateMainPageHTML(): string {
 
                 const data = {
                     topic: formData.get('topic'),
-                    tags: tags.length > 0 ? tags : undefined,
-                    keywords: keywords.length > 0 ? keywords : undefined,
+                    tags: tags.length > 0 ? tags : ['writing', 'content', 'creative'],
+                    keywords: keywords.length > 0 ? keywords : ['writing', 'content', 'creation'],
                     authorStyle: authorStyleSelect.value === 'custom' ? customAuthorStyle.value : authorStyleSelect.value,
                     type: formData.get('type'),
                     newspaperStyle: newspaperStyleSelect.value === 'custom' ? customNewspaperStyle.value : newspaperStyleSelect.value,
