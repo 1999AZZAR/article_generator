@@ -24,6 +24,7 @@ AI-powered writing assistant for creating professional articles and novel outlin
 - **Short Stories**: Complete narrative fiction (2250-3000 words) - 1.5x longer than articles
 - **Novel Outlines**: Detailed chapter structures with synopsis
 - **Individual Chapters**: Content generation for novel chapters (2000-3000 words each)
+- **Chapter Continuity**: Intelligent story flow that maintains narrative consistency across chapters
 - Multi-language support (English and Indonesian)
 - User-guided content creation with main idea/plot input
 
@@ -57,6 +58,7 @@ AI-powered writing assistant for creating professional articles and novel outlin
 - Improved JSON parsing with fallback mechanisms
 - Adaptive timeouts based on content complexity
 - Multi-model fallback system for quota resilience (Gemini 3 → 1.5 → Legacy models)
+- Chapter continuity system that maintains narrative flow across novel chapters
 - Smart circuit breaker that distinguishes between service outages and model availability
 - Graceful degradation when models are unavailable or quota-exceeded
 
@@ -229,6 +231,14 @@ Generates content for individual novel chapters.
   "chapterSubtitle": "string",
   "novelTitle": "string",
   "novelSynopsis": "string",
+  "previousChapters": [
+    {
+      "chapterNumber": number,
+      "title": "string",
+      "content": "string",
+      "keyEvents": ["string"]
+    }
+  ],
   "apiKey": "string"
 }
 ```

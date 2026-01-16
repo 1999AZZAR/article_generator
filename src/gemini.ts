@@ -363,21 +363,51 @@ export async function generateChapterContent(chapter: {
   chapterSubtitle: string;
   novelTitle: string;
   novelSynopsis: string;
+  previousChapters?: Array<{
+    chapterNumber: number;
+    title: string;
+    content: string;
+    keyEvents?: string[];
+  }>;
 }, apiKey: string): Promise<string> {
+  // Build context from previous chapters
+  let previousContext = '';
+  if (chapter.previousChapters && chapter.previousChapters.length > 0) {
+    previousContext = `\n\nPREVIOUS CHAPTERS CONTEXT:\n`;
+    chapter.previousChapters.forEach(prevChapter => {
+      previousContext += `Chapter ${prevChapter.chapterNumber} "${prevChapter.title}": ${prevChapter.content.substring(0, 500)}...\n`;
+      if (prevChapter.keyEvents && prevChapter.keyEvents.length > 0) {
+        previousContext += `Key events: ${prevChapter.keyEvents.join(', ')}\n`;
+      }
+      previousContext += `---\n`;
+    });
+    previousContext += `\nCRITICAL: Ensure this chapter continues the story naturally from the previous chapters. Reference previous events, maintain character development arcs, and advance the overall plot. Do NOT contradict or ignore previous chapter content.\n`;
+  }
+
   const prompt = `Write a detailed chapter for the novel "${chapter.novelTitle}".
 
-Novel Synopsis: ${chapter.novelSynopsis}
+Novel Synopsis: ${chapter.novelSynopsis}${previousContext}
 
 Chapter ${chapter.chapterNumber}: "${chapter.chapterTitle}"
 Chapter Description: ${chapter.chapterSubtitle}
 
 Write a comprehensive chapter of 2000-3000 words that:
-- Advances the plot in a meaningful way
-- Develops characters and relationships
+- Advances the plot in a meaningful way from previous chapters
+- Continues character development arcs established earlier
+- References and builds upon previous events and relationships
 - Includes vivid descriptions and dialogue
 - Maintains consistency with the novel's tone and style
 - Builds tension or provides important revelations
 - Ends in a way that leads naturally to the next chapter
+- Shows clear narrative progression and character growth
+
+IMPORTANT CONTINUITY REQUIREMENTS:
+- Acknowledge and reference events from previous chapters
+- Show how characters have changed or grown since earlier chapters
+- Advance the main plot while maintaining subplots
+- Avoid contradicting established facts or character traits
+- Build upon existing relationships and conflicts
+- Ensure the story flows logically from chapter ${chapter.chapterNumber - 1} to chapter ${chapter.chapterNumber}
 
 Focus on this specific chapter's events, character development, and plot progression. Make it engaging and well-written.
 

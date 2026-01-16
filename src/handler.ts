@@ -59,6 +59,12 @@ export async function handleRequest(request: Request, env: { GEMINI_API_KEY: str
         chapterSubtitle: string;
         novelTitle: string;
         novelSynopsis: string;
+        previousChapters?: Array<{
+          chapterNumber: number;
+          title: string;
+          content: string;
+          keyEvents?: string[];
+        }>;
         apiKey?: string;
       } = await request.json();
 
@@ -75,7 +81,8 @@ export async function handleRequest(request: Request, env: { GEMINI_API_KEY: str
         chapterTitle: body.chapterTitle,
         chapterSubtitle: body.chapterSubtitle,
         novelTitle: body.novelTitle,
-        novelSynopsis: body.novelSynopsis
+        novelSynopsis: body.novelSynopsis,
+        previousChapters: body.previousChapters
       }, apiKey);
 
       return new Response(JSON.stringify({ content: chapterContent }), {

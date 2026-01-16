@@ -2186,6 +2186,9 @@ export function generateMainPageHTML(): string {
             loadingDiv.style.display = 'flex';
 
             try {
+                // Collect previous chapters data for context
+                const previousChapters = collectPreviousChapters(chapterNumber);
+
                 const response = await fetch('/api/generate-chapter', {
                     method: 'POST',
                     headers: {
@@ -2197,6 +2200,7 @@ export function generateMainPageHTML(): string {
                         chapterSubtitle: chapterSubtitle,
                         novelTitle: novelTitle,
                         novelSynopsis: novelSynopsis,
+                        previousChapters: previousChapters,
                         apiKey: apiKey
                     })
                 });
@@ -2211,6 +2215,9 @@ export function generateMainPageHTML(): string {
                 loadingDiv.style.display = 'none';
                 contentDiv.style.display = 'block';
                 contentDiv.innerHTML = result.content.replace(new RegExp('\\n', 'g'), '<br>');
+
+                // Store chapter content for future context
+                storeChapterContent(chapterNumber, chapterTitle, result.content);
 
                 // Show export button
                 const exportBtn = document.getElementById(\`export-chapter-\${chapterNumber}-btn\`);
@@ -2244,6 +2251,80 @@ export function generateMainPageHTML(): string {
                 button.textContent = texts.generateChapter;
                 loadingDiv.style.display = 'none';
             }
+        }
+
+        // Helper functions for chapter context management
+        function collectPreviousChapters(currentChapterNumber) {
+            const previousChapters = [];
+
+            // Get all chapter items
+            const chapterItems = document.querySelectorAll('.chapter-item');
+            chapterItems.forEach((item, index) => {
+                const chapterNum = index + 1;
+                if (chapterNum < currentChapterNumber) {
+                    const chapterTitleElement = item.querySelector('.chapter-number');
+                    const chapterTitle = (chapterTitleElement && chapterTitleElement.textContent) ? chapterTitleElement.textContent : 'Chapter ' + chapterNum;
+                    const contentElement = document.getElementById('chapter-' + chapterNum + '-content');
+
+                    if (contentElement && contentElement.style.display !== 'none') {
+                        const content = contentElement.textContent || contentElement.innerText;
+                        if (content && content.length > 50) { // Only include substantial content
+                            // Extract key events from the chapter content
+                            const keyEvents = extractKeyEvents(content);
+
+                            previousChapters.push({
+                                chapterNumber: chapterNum,
+                                title: chapterTitle,
+                                content: content,
+                                keyEvents: keyEvents
+                            });
+                        }
+                    }
+                }
+            });
+
+            return previousChapters;
+        }
+
+        function storeChapterContent(chapterNumber, chapterTitle, content) {
+            // Store in localStorage with novel context
+            const novelKey = 'novel_' + Date.now(); // Use timestamp as novel identifier
+            const chapterKey = novelKey + '_chapter_' + chapterNumber;
+
+            const chapterData = {
+                chapterNumber: chapterNumber,
+                title: chapterTitle,
+                content: content,
+                timestamp: Date.now()
+            };
+
+            localStorage.setItem(chapterKey, JSON.stringify(chapterData));
+        }
+
+        function extractKeyEvents(content) {
+            // Simple extraction of potential key events from chapter content
+            const sentences = content.split(/[.!?]+/).filter(s => s.trim().length > 20);
+            const keyEvents = [];
+
+            // Look for sentences that might indicate plot progression
+            sentences.forEach(sentence => {
+                const trimmed = sentence.trim();
+                // Look for action-oriented sentences or revelations
+                if (trimmed.length > 30 && (
+                    trimmed.includes('discovered') ||
+                    trimmed.includes('revealed') ||
+                    trimmed.includes('realized') ||
+                    trimmed.includes('decided') ||
+                    trimmed.includes('confronted') ||
+                    trimmed.includes('arrived') ||
+                    trimmed.includes('found') ||
+                    trimmed.includes('learned')
+                )) {
+                    keyEvents.push(trimmed.substring(0, 200) + (trimmed.length > 200 ? '...' : ''));
+                }
+            });
+
+            return keyEvents.slice(0, 5); // Limit to 5 key events per chapter
         }
 
         async function exportChapterMarkdown(button) {
