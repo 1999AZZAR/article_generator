@@ -33,10 +33,11 @@ AI-powered writing assistant for creating professional articles and novel outlin
 - Consistent writing style maintenance throughout content
 
 ### Export Functionality
-- Markdown format export for documentation and version control
-- Rich Text Format (RTF) export compatible with word processors
-- Individual chapter export capability
-- Complete novel compilation export
+- **Markdown Export**: Clean text format for documentation and version control
+- **Rich Text Format (RTF) Export**: Word processor compatible with formatting preserved
+- **Article Export**: Full articles with title, subtitle, and formatted content
+- **Chapter Export**: Individual novel chapters with proper chapter formatting
+- **Multi-format Support**: Both Markdown and RTF options for all content types
 
 ### User Interface
 - Responsive design for desktop, tablet, and mobile devices
@@ -258,9 +259,9 @@ Validates the provided Gemini API key.
 }
 ```
 
-### POST `/api/export-docx`
+### POST `/api/export-rtf`
 
-Exports content as an RTF file.
+Exports article content as an RTF file compatible with word processors like Microsoft Word.
 
 **Request Body:**
 ```json
@@ -271,11 +272,11 @@ Exports content as an RTF file.
 }
 ```
 
-**Response:** RTF file download
+**Response:** RTF file download with proper formatting (headers, paragraphs, bullet points)
 
-### POST `/api/export-chapter`
+### POST `/api/export-chapter-rtf`
 
-Exports individual chapter content as an RTF file.
+Exports individual novel chapter content as an RTF file with chapter-specific formatting.
 
 **Request Body:**
 ```json
@@ -287,7 +288,7 @@ Exports individual chapter content as an RTF file.
 }
 ```
 
-**Response:** RTF file download
+**Response:** RTF file download with chapter header, separator, and page break formatting
 
 ## Deployment
 

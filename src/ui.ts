@@ -640,6 +640,12 @@ export function generateMainPageHTML(): string {
             transform: none;
         }
 
+        .export-chapter-buttons {
+            display: flex;
+            gap: 5px;
+            margin-left: 5px;
+        }
+
         .export-chapter-btn {
             background: linear-gradient(45deg, #ff6b6b, #ffa500);
             color: #ffffff;
@@ -1145,6 +1151,7 @@ export function generateMainPageHTML(): string {
                 missingFields: 'Missing required fields',
                 tagsRequired: 'Please add at least one tag',
                 exportMarkdown: 'Export as Markdown',
+                exportRTF: 'Export as RTF',
                 generateChapter: 'Generate Chapter Content',
                 generatingChapter: 'Generating...',
                 regenerateChapter: 'Regenerate Chapter',
@@ -1291,6 +1298,7 @@ export function generateMainPageHTML(): string {
                 missingFields: 'Kolom yang diperlukan tidak lengkap',
                 tagsRequired: 'Silakan tambahkan setidaknya satu tag',
                 exportMarkdown: 'Ekspor sebagai Markdown',
+                exportRTF: 'Ekspor sebagai RTF',
                 generateChapter: 'Hasilkan Konten Bab',
                 generatingChapter: 'Menghasilkan...',
                 regenerateChapter: 'Hasilkan Ulang Bab',
@@ -1909,6 +1917,9 @@ export function generateMainPageHTML(): string {
                                 <button class="export-btn" onclick="exportAsMarkdown()">
                                     📄 \${texts.exportMarkdown}
                                 </button>
+                                <button class="export-btn" onclick="exportAsRTF()">
+                                    📝 \${texts.exportRTF || 'Export as RTF'}
+                                </button>
                             </div>
                         </div>
                     \`;
@@ -1973,15 +1984,22 @@ export function generateMainPageHTML(): string {
                                                             onclick="generateChapter(this)">
                                                         \${texts.generateChapter}
                                                     </button>
-                                                    <button class="export-chapter-btn"
-                                                            id="export-chapter-\${chapter.chapterNumber}-btn"
+                                                    <div class="export-chapter-buttons" id="export-chapter-\${chapter.chapterNumber}-btn" style="display: none;">
+                                                        <button class="export-chapter-btn"
                                                             data-chapter-number="\${chapter.chapterNumber}"
                                                             data-chapter-title="\${chapter.title.split('"').join('&quot;')}"
                                                             data-chapter-subtitle="\${chapter.subtitle.split('"').join('&quot;')}"
-                                                            onclick="exportChapter(this)"
-                                                            style="display: none;">
-                                                        📄 \${texts.exportChapter}
-                                                    </button>
+                                                            onclick="exportChapterMarkdown(this)">
+                                                            📄 MD
+                                                        </button>
+                                                        <button class="export-chapter-btn"
+                                                            data-chapter-number="\${chapter.chapterNumber}"
+                                                            data-chapter-title="\${chapter.title.split('"').join('&quot;')}"
+                                                            data-chapter-subtitle="\${chapter.subtitle.split('"').join('&quot;')}"
+                                                            onclick="exportChapterRTF(this)">
+                                                            📝 RTF
+                                                        </button>
+                                                    </div>
                                                 </div>
                                                 <div class="chapter-loading" id="chapter-\${chapter.chapterNumber}-loading" style="display: none;">
                                                     <div class="chapter-progress-bar"></div>
@@ -2067,6 +2085,60 @@ export function generateMainPageHTML(): string {
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
+        }
+
+        async function exportAsRTF() {
+            const selectedTitle = document.getElementById('selectedTitle').value;
+            const selectedSubtitle = document.getElementById('selectedSubtitle').value;
+
+            if (!selectedTitle) {
+                const currentLang = localStorage.getItem('uiLanguage') || 'english';
+                const texts = uiLanguages[currentLang];
+                alert(texts.selectTitle || 'Please select a title first.');
+                return;
+            }
+
+            // Get the content from the result
+            const contentElement = document.querySelector('.content-display');
+            if (!contentElement) {
+                alert('No content found to export.');
+                return;
+            }
+
+            const content = contentElement.textContent || contentElement.innerText;
+
+            try {
+                const response = await fetch('/api/export-rtf', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        title: selectedTitle,
+                        subtitle: selectedSubtitle || '',
+                        content: content
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Export failed');
+                }
+
+                // Create download link for RTF file
+                const blob = await response.blob();
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = \`\${selectedTitle.replace(/[^a-z0-9]/g, '_').toLowerCase()}.rtf\`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+
+            } catch (error) {
+                console.error('RTF export error:', error);
+                alert('RTF export failed. Please try again.');
+            }
         }
 
 
@@ -2174,7 +2246,7 @@ export function generateMainPageHTML(): string {
             }
         }
 
-        async function exportChapter(button) {
+        async function exportChapterMarkdown(button) {
             const chapterNumber = parseInt(button.getAttribute('data-chapter-number'));
             const chapterTitle = button.getAttribute('data-chapter-title');
             const chapterSubtitle = button.getAttribute('data-chapter-subtitle');
@@ -2182,7 +2254,9 @@ export function generateMainPageHTML(): string {
             const contentElement = document.getElementById(\`chapter-\${chapterNumber}-content\`);
 
             if (!contentElement || contentElement.style.display === 'none') {
-                alert('No chapter content found to export. Please generate the chapter first.');
+                const currentLang = localStorage.getItem('uiLanguage') || 'english';
+                const texts = uiLanguages[currentLang];
+                alert(texts.chapterNotGenerated || 'No chapter content found to export. Please generate the chapter first.');
                 return;
             }
 
@@ -2200,6 +2274,57 @@ export function generateMainPageHTML(): string {
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
+        }
+
+        async function exportChapterRTF(button) {
+            const chapterNumber = parseInt(button.getAttribute('data-chapter-number'));
+            const chapterTitle = button.getAttribute('data-chapter-title');
+            const chapterSubtitle = button.getAttribute('data-chapter-subtitle');
+
+            const contentElement = document.getElementById(\`chapter-\${chapterNumber}-content\`);
+
+            if (!contentElement || contentElement.style.display === 'none') {
+                const currentLang = localStorage.getItem('uiLanguage') || 'english';
+                const texts = uiLanguages[currentLang];
+                alert(texts.chapterNotGenerated || 'No chapter content found to export. Please generate the chapter first.');
+                return;
+            }
+
+            const content = contentElement.textContent || contentElement.innerText;
+
+            try {
+                const response = await fetch('/api/export-chapter-rtf', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        chapterNumber: chapterNumber,
+                        chapterTitle: chapterTitle,
+                        chapterSubtitle: chapterSubtitle,
+                        content: content
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Chapter RTF export failed');
+                }
+
+                // Create download link for RTF file
+                const blob = await response.blob();
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = \`\${chapterTitle.replace(/[^a-z0-9]/g, '_').toLowerCase()}_chapter_\${chapterNumber}.rtf\`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+
+            } catch (error) {
+                console.error('Chapter RTF export error:', error);
+                alert('Chapter RTF export failed. Please try again.');
+            }
         }
 
         function exportNovelAsMarkdown() {
