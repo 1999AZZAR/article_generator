@@ -1,8 +1,13 @@
 import type { GenerateRequest, ArticleResponse, NovelResponse } from './handler';
 
 // Gemini API endpoints
-const GEMINI_FLASH_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
-const GEMINI_PRO_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent';
+const GEMINI_FLASH_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent';
+const GEMINI_PRO_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-preview:generateContent';
+
+// Fallback model URLs for better quota resilience
+const GEMINI_FALLBACK_PRO_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent';
+const GEMINI_FALLBACK_FLASH_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+const GEMINI_LEGACY_PRO_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent';
 
 // Enhanced retry and circuit breaker configuration
 const MAX_RETRIES = 5;
@@ -54,6 +59,7 @@ interface ClassifiedError {
   type: ErrorType;
   message: string;
   retryAfter?: number;
+  modelNotFound?: boolean;
 }
 
 // Circuit breaker helper functions
@@ -137,6 +143,15 @@ function classifyError(error: any): ClassifiedError {
     };
   }
 
+  // Model not found errors (404)
+  if (errorMessage.includes('404') || errorMessage.includes('not found') || errorMessage.includes('is not found')) {
+    return {
+      type: ErrorType.NON_RETRYABLE,
+      message: 'Model not available. Trying fallback model.',
+      modelNotFound: true // Special flag for model availability issues
+    };
+  }
+
   // Authentication errors
   if (errorMessage.includes('403') || errorMessage.includes('access denied') || errorMessage.includes('unauthorized')) {
     return {
@@ -215,8 +230,9 @@ Make the article thorough and detailed with:
 
 The article should be academic/research-quality with substantial depth and comprehensive coverage of the topic.
 
-Return ONLY a valid JSON object in this exact format (no markdown, no code blocks, just raw JSON):
+You must respond with ONLY a valid JSON object. Start your response with { and end with }. No explanations, no markdown, no code blocks.
 
+Required JSON format:
 {
   "refinedTags": ["tag1", "tag2", "tag3", "tag4", "tag5"],
   "titleSelection": ["Title Option 1", "Title Option 2", "Title Option 3"],
@@ -224,13 +240,7 @@ Return ONLY a valid JSON object in this exact format (no markdown, no code block
   "content": "Write the complete 1500-2000 word article here with extensive sections, detailed analysis, comprehensive coverage, and academic depth."
 }
 
-CRITICAL REQUIREMENTS:
-- Return ONLY the JSON object, nothing else
-- Do not wrap in markdown code blocks (no \`\`\`json or \`\`\`)
-- Do not add any explanatory text before or after
-- Ensure all strings are properly quoted with double quotes
-- Do not use trailing commas
-- Make sure the JSON is valid and parseable`;
+IMPORTANT: Your entire response must be parseable JSON. Nothing else.`;
 
   try {
     // Use Flash for shorter articles, Pro for comprehensive long-form content
@@ -431,8 +441,9 @@ Write a comprehensive short story of at least 2250-3000 words that includes:
 
 The story should have a complete narrative arc with a beginning, middle, and end. Focus on emotional impact and character transformation.
 
-Return ONLY a valid JSON object in this exact format (no markdown, no code blocks, just raw JSON):
+You must respond with ONLY a valid JSON object. Start your response with { and end with }. No explanations, no markdown, no code blocks.
 
+Required JSON format:
 {
   "refinedTags": ["tag1", "tag2", "tag3", "tag4", "tag5"],
   "titleSelection": ["First Story Title", "Second Story Title", "Third Story Title"],
@@ -440,13 +451,7 @@ Return ONLY a valid JSON object in this exact format (no markdown, no code block
   "content": "Write the complete 2250-3000 word short story here with rich descriptions, character development, and emotional depth."
 }
 
-CRITICAL REQUIREMENTS:
-- Return ONLY the JSON object, nothing else
-- Do not wrap in markdown code blocks (no \`\`\`json or \`\`\`)
-- Do not add any explanatory text before or after
-- Ensure all strings are properly quoted with double quotes
-- Do not use trailing commas
-- Make sure the JSON is valid and parseable`;
+IMPORTANT: Your entire response must be parseable JSON. Nothing else.`;
 
   try {
     const response = await callGeminiFlashAPI(prompt, apiKey);
@@ -582,8 +587,9 @@ Write a news article that includes:
 
 The article should be journalistic, objective, and well-researched with substantial depth and comprehensive coverage of the news topic.
 
-Return ONLY a valid JSON object in this exact format (no markdown, no code blocks, just raw JSON):
+You must respond with ONLY a valid JSON object. Start your response with { and end with }. No explanations, no markdown, no code blocks.
 
+Required JSON format:
 {
   "refinedTags": ["tag1", "tag2", "tag3", "tag4", "tag5"],
   "titleSelection": ["News Headline Option 1", "News Headline Option 2", "News Headline Option 3"],
@@ -591,13 +597,7 @@ Return ONLY a valid JSON object in this exact format (no markdown, no code block
   "content": "Write the complete 1200-1800 word news article here with comprehensive coverage, multiple sources, and journalistic depth."
 }
 
-CRITICAL REQUIREMENTS:
-- Return ONLY the JSON object, nothing else
-- Do not wrap in markdown code blocks (no \`\`\`json or \`\`\`)
-- Do not add any explanatory text before or after
-- Ensure all strings are properly quoted with double quotes
-- Do not use trailing commas
-- Make sure the JSON is valid and parseable`;
+IMPORTANT: Your entire response must be parseable JSON. Nothing else.`;
 
   try {
     const response = await callGeminiFlashAPI(prompt, apiKey);
@@ -752,8 +752,9 @@ ${request.mainIdea ? `Build upon this main idea/concept: ${request.mainIdea}` : 
 
 Create an outline for exactly ${chapterCount} chapters.
 
-Return ONLY a valid JSON object in this exact format (no markdown, no code blocks, just raw JSON):
+You must respond with ONLY a valid JSON object. Start your response with { and end with }. No explanations, no markdown, no code blocks.
 
+Required JSON format:
 {
   "titleSelection": ["First Novel Title", "Second Novel Title", "Third Novel Title"],
   "synopsis": "Write a 150-200 word synopsis of the novel here.",
@@ -771,14 +772,7 @@ Return ONLY a valid JSON object in this exact format (no markdown, no code block
   ]
 }
 
-CRITICAL REQUIREMENTS:
-- Return ONLY the JSON object, nothing else
-- Do not wrap in markdown code blocks (no \`\`\`json or \`\`\`)
-- Do not add any explanatory text before or after
-- Ensure all strings are properly quoted with double quotes
-- Do not use trailing commas
-- Ensure the outline array has exactly ${chapterCount} chapters
-- Make sure the JSON is valid and parseable`;
+IMPORTANT: Your entire response must be parseable JSON. The outline array must have exactly ${chapterCount} chapters. Nothing else.`;
 
   try {
     const response = await callGeminiProAPI(prompt, apiKey);
@@ -1060,8 +1054,8 @@ async function callGeminiAPIWithRetry(
 
     const classifiedError = classifyError(error);
 
-    // Record circuit breaker failure for retryable errors
-    if (classifiedError.type === ErrorType.RETRYABLE) {
+    // Record circuit breaker failure for retryable errors, but not for model-not-found errors
+    if (classifiedError.type === ErrorType.RETRYABLE && !classifiedError.modelNotFound) {
       recordCircuitBreakerFailure();
     }
 
@@ -1088,189 +1082,160 @@ async function callGeminiAPIWithRetry(
   }
 }
 
-// Parse JSON response with better error handling
+// Parse JSON response with improved reliability
 function parseGeminiResponse(text: string): any {
   // Ensure text is actually a string
   if (typeof text !== 'string') {
     throw new Error('Invalid response type from Gemini API');
   }
 
-  // Clean the text first - remove markdown and extract JSON
-  let cleanedText = text
-    .trim()
-    .replace(/```json\s*/gi, '')
-    .replace(/```\s*$/gi, '')
-    .replace(/^[\s\S]*?(\{)/, '$1')  // Remove everything before first {
-    .replace(/\}[\s\S]*$/, '}');     // Remove everything after last }
+  // Clean the text to extract JSON
+  let cleanedText = text.trim();
+
+  // Remove markdown code blocks if present
+  cleanedText = cleanedText.replace(/```(?:json)?\s*/gi, '').replace(/```\s*$/gi, '');
+
+  // Find the JSON object boundaries
+  const startBrace = cleanedText.indexOf('{');
+  const lastBrace = cleanedText.lastIndexOf('}');
+
+  if (startBrace === -1 || lastBrace === -1 || startBrace >= lastBrace) {
+    throw new Error('No valid JSON object found in response');
+  }
+
+  // Extract just the JSON part
+  cleanedText = cleanedText.substring(startBrace, lastBrace + 1);
 
   try {
-    // Try to parse the cleaned text
+    // Try direct parsing first
     return JSON.parse(cleanedText);
   } catch (parseError) {
-    console.error('Initial JSON parse error:', parseError);
+    console.warn('Direct JSON parse failed, attempting fixes:', (parseError as Error).message);
 
-    // Try more aggressive cleaning approaches
-    const attempts = [
-      // Remove markdown code blocks completely
-      text.replace(/```[\s\S]*?```/g, '').trim(),
-      // Extract between first { and last }
-      text.replace(/^[^{]*/, '').replace(/[^}]*$/, ''),
-      // Look for JSON-like patterns with better regex
-      text.match(/\{(?:[^{}]|{(?:[^{}]|{[^{}]*})*})*\}/)?.[0],
-    ];
-
-    for (const attempt of attempts) {
-      if (attempt) {
-        try {
-          // Clean up common JSON issues
-          let fixedAttempt = attempt
-            // Fix trailing commas in arrays
-            .replace(/,(\s*[}\]])/g, '$1')
-            // Fix trailing commas in objects
-            .replace(/,(\s*})/g, '$1')
-            // Fix unquoted keys (basic fix)
-            .replace(/([{,]\s*)([a-zA-Z_][a-zA-Z0-9_]*)\s*:/g, '$1"$2":')
-            // Fix single quotes to double quotes
-            .replace(/'/g, '"')
-            // Remove extra whitespace
-            .replace(/\s+/g, ' ')
-            .trim();
-
-          console.log('Trying alternative parse:', fixedAttempt.substring(0, 200));
-          return JSON.parse(fixedAttempt);
-        } catch (attemptError) {
-          console.log('Attempt failed:', (attemptError as Error).message);
-          continue;
-        }
-      }
-    }
-
-    // Try to extract and fix JSON manually
-    try {
-      const manualFix = fixMalformedJSON(text);
-      if (manualFix) {
-        console.log('Using manual JSON fix');
-        return JSON.parse(manualFix);
-      }
-    } catch (manualError) {
-      console.log('Manual fix failed:', (manualError as Error).message);
-    }
-
-    // If all attempts fail, return a basic fallback structure
-    console.error('All JSON parsing attempts failed, returning fallback');
-    throw new Error(`Unable to parse Gemini response as JSON. Original error: ${(parseError as Error).message}. Response start: ${text.substring(0, 500)}...`);
-  }
-}
-
-// Helper function to fix common JSON malformations
-function fixMalformedJSON(text: string): string | null {
-  try {
-    // Remove everything outside JSON boundaries
-    const startIndex = text.indexOf('{');
-    const lastEndIndex = text.lastIndexOf('}');
-
-    if (startIndex === -1 || lastEndIndex === -1 || startIndex >= lastEndIndex) {
-      return null;
-    }
-
-    let jsonText = text.substring(startIndex, lastEndIndex + 1);
-
-    // Fix common issues step by step
-    jsonText = jsonText
-      // Fix trailing commas before closing brackets
+    // Apply common JSON fixes
+    let fixedText = cleanedText
+      // Fix trailing commas
       .replace(/,(\s*[}\]])/g, '$1')
-      // Fix trailing commas before closing braces
-      .replace(/,(\s*})/g, '$1')
-      // Fix unquoted object keys (simple cases)
+      // Fix single quotes to double quotes (carefully)
+      .replace(/'([^']*)'/g, (match, content) => {
+        // Only replace single quotes around string values, not inside
+        if (content.includes('"')) return match; // Skip if already has double quotes
+        return `"${content}"`;
+      })
+      // Fix unquoted keys
       .replace(/([{,]\s*)([a-zA-Z_][a-zA-Z0-9_]*)\s*:/g, '$1"$2":')
-      // Convert single quotes to double quotes (carefully)
-      .replace(/'([^']*)'/g, '"$1"')
-      // Fix missing quotes around string values
-      .replace(/:\s*([a-zA-Z][^,}\]]*)/g, ': "$1"')
-      // Clean up extra whitespace
+      // Normalize whitespace
       .replace(/\s+/g, ' ')
       .trim();
 
-    // Validate basic structure
-    const openBraces = (jsonText.match(/\{/g) || []).length;
-    const closeBraces = (jsonText.match(/\}/g) || []).length;
-    const openBrackets = (jsonText.match(/\[/g) || []).length;
-    const closeBrackets = (jsonText.match(/\]/g) || []).length;
-
-    if (openBraces !== closeBraces || openBrackets !== closeBrackets) {
-      console.log('JSON structure validation failed - mismatched brackets');
-      return null;
+    try {
+      console.log('Attempting fixed parse:', fixedText.substring(0, 200));
+      return JSON.parse(fixedText);
+    } catch (fixedError) {
+      console.error('Fixed JSON parse also failed:', (fixedError as Error).message);
+      throw new Error(`Unable to parse Gemini response as JSON after fixes. Response: ${cleanedText.substring(0, 500)}...`);
     }
-
-    return jsonText;
-  } catch (error) {
-    console.log('JSON fixing failed:', error);
-    return null;
   }
 }
 
-// Call Gemini Pro for content generation (higher quality)
+
+// Call Gemini Pro for content generation (higher quality) with multiple fallback models
 async function callGeminiProAPI(prompt: string, apiKey: string): Promise<string> {
   console.log('Attempting Gemini Pro API call...');
 
-  try {
-    // Try Pro first for complex content
-    return await callGeminiAPIWithRetry(prompt, apiKey, GEMINI_PRO_URL);
-  } catch (error) {
-    console.error('Gemini Pro API call failed:', error);
+  const fallbackModels = [
+    { name: 'Gemini 3 Pro Preview', url: GEMINI_PRO_URL },
+    { name: 'Gemini 3 Flash Preview', url: GEMINI_FLASH_URL },
+    { name: 'Gemini 1.5 Flash', url: GEMINI_FALLBACK_FLASH_URL },
+    { name: 'Gemini Pro (Legacy)', url: GEMINI_LEGACY_PRO_URL }
+  ];
 
-    const classifiedError = classifyError(error);
+  for (let i = 0; i < fallbackModels.length; i++) {
+    const model = fallbackModels[i];
+    try {
+      console.log(`Trying ${model.name}...`);
+      return await callGeminiAPIWithRetry(prompt, apiKey, model.url);
+    } catch (error) {
+      console.warn(`${model.name} failed:`, (error as Error).message);
 
-    // For quota exceeded, don't try fallback
-    if (classifiedError.type === ErrorType.QUOTA_EXCEEDED) {
+      const classifiedError = classifyError(error);
+
+      // Model not found errors should not trigger circuit breaker - just skip to next model
+      if (classifiedError.modelNotFound) {
+        console.log(`${model.name} not available, trying next model...`);
+        continue;
+      }
+
+      // For quota exceeded, only try one more model before giving up
+      if (classifiedError.type === ErrorType.QUOTA_EXCEEDED) {
+        if (i === 0) {
+          console.log('Quota exceeded on primary model, trying one fallback...');
+          continue;
+        }
+        // If we've tried the primary + one fallback and still hitting quota, give up
+        throw error;
+      }
+
+      // For other retryable errors, continue to next model
+      if (classifiedError.type === ErrorType.RETRYABLE) {
+        continue;
+      }
+
+      // For non-retryable errors (like auth), throw immediately
       throw error;
     }
-
-    // Try Flash as first fallback
-    try {
-      console.log('Falling back to Gemini Flash...');
-      return await callGeminiAPIWithRetry(prompt, apiKey, GEMINI_FLASH_URL);
-    } catch (flashError) {
-      console.error('Gemini Flash fallback failed:', flashError);
-
-      // Try Flash with query parameter auth as second fallback
-      try {
-        console.log('Trying Flash with query parameter authentication...');
-        return await callGeminiAPIWithRetry(prompt, apiKey, GEMINI_FLASH_URL, 0, false);
-      } catch (finalFallbackError) {
-        console.error('All fallback attempts failed:', finalFallbackError);
-        throw error; // Throw original error with best error message
-      }
-    }
   }
+
+  throw new Error('All Gemini Pro fallback models failed');
 }
 
-// Enhanced Flash API call with better defaults for simpler content
+// Enhanced Flash API call with multiple fallback models for better resilience
 async function callGeminiFlashAPI(prompt: string, apiKey: string): Promise<string> {
   console.log('Attempting Gemini Flash API call...');
 
-  try {
-    // Use Flash directly for faster, cheaper responses
-    return await callGeminiAPIWithRetry(prompt, apiKey, GEMINI_FLASH_URL);
-  } catch (error) {
-    console.error('Gemini Flash API call failed:', error);
+  const fallbackModels = [
+    { name: 'Gemini 3 Flash Preview', url: GEMINI_FLASH_URL },
+    { name: 'Gemini 1.5 Flash', url: GEMINI_FALLBACK_FLASH_URL },
+    { name: 'Gemini Pro (Legacy)', url: GEMINI_LEGACY_PRO_URL }
+  ];
 
-    const classifiedError = classifyError(error);
-
-    // For quota exceeded, don't try fallback
-    if (classifiedError.type === ErrorType.QUOTA_EXCEEDED) {
-      throw error;
-    }
-
-    // Try with query parameter auth as fallback
+  for (let i = 0; i < fallbackModels.length; i++) {
+    const model = fallbackModels[i];
     try {
-      console.log('Trying Flash with query parameter authentication...');
-      return await callGeminiAPIWithRetry(prompt, apiKey, GEMINI_FLASH_URL, 0, false);
-    } catch (fallbackError) {
-      console.error('Flash fallback failed:', fallbackError);
+      console.log(`Trying ${model.name}...`);
+      return await callGeminiAPIWithRetry(prompt, apiKey, model.url);
+    } catch (error) {
+      console.warn(`${model.name} failed:`, (error as Error).message);
+
+      const classifiedError = classifyError(error);
+
+      // Model not found errors should not trigger circuit breaker - just skip to next model
+      if (classifiedError.modelNotFound) {
+        console.log(`${model.name} not available, trying next model...`);
+        continue;
+      }
+
+      // For quota exceeded, only try one more model before giving up
+      if (classifiedError.type === ErrorType.QUOTA_EXCEEDED) {
+        if (i === 0) {
+          console.log('Quota exceeded on primary model, trying one fallback...');
+          continue;
+        }
+        // If we've tried the primary + one fallback and still hitting quota, give up
+        throw error;
+      }
+
+      // For other retryable errors, continue to next model
+      if (classifiedError.type === ErrorType.RETRYABLE) {
+        continue;
+      }
+
+      // For non-retryable errors (like auth), throw immediately
       throw error;
     }
   }
+
+  throw new Error('All Gemini Flash fallback models failed');
 }
 
 export async function callGeminiAPI(prompt: string, apiKey: string): Promise<string> {

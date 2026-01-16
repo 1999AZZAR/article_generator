@@ -51,6 +51,13 @@ AI-powered writing assistant for creating professional articles and novel outlin
 - RESTful API design
 - Secure environment variable management
 - Edge computing for performance
+- Advanced error handling with circuit breaker pattern
+- Request deduplication and caching for performance
+- Improved JSON parsing with fallback mechanisms
+- Adaptive timeouts based on content complexity
+- Multi-model fallback system for quota resilience (Gemini 3 → 1.5 → Legacy models)
+- Smart circuit breaker that distinguishes between service outages and model availability
+- Graceful degradation when models are unavailable or quota-exceeded
 
 ## Prerequisites
 
@@ -354,15 +361,13 @@ Configure these secrets in your GitHub repository settings:
 ### Project Structure
 
 ```
-article_generator/
-├── .github/
-│   └── workflows/          # CI/CD configuration
+quill/
 ├── src/
 │   ├── index.ts           # Cloudflare Worker entry point
-│   ├── handler.ts         # HTTP request handling and UI
-│   ├── gemini.ts          # AI integration and content generation
-│   └── ui.ts              # HTML generation and UI components
-├── .gitignore             # Version control exclusions
+│   ├── handler.ts         # HTTP request handling and API routes
+│   ├── gemini.ts          # Google Gemini AI integration with latest models
+│   └── ui.ts              # HTML generation and responsive UI components
+├── public/                # Static assets
 ├── package.json           # Project dependencies and scripts
 ├── tsconfig.json          # TypeScript configuration
 ├── wrangler.toml          # Cloudflare Workers configuration

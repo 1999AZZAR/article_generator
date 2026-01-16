@@ -1172,6 +1172,9 @@ export function generateMainPageHTML(): string {
                 apiKeyVerified: 'API key verified and saved successfully!',
                 apiKeyVerificationFailed: 'API key saved but verification failed: ',
                 apiKeySaveError: 'API key saved but could not verify: ',
+                apiKeyQuotaExceeded: 'API quota exceeded. Please check your Gemini API billing/limits.',
+                apiKeyInvalid: 'Invalid API key. Please check that your Gemini API key is correct and enabled.',
+                networkError: 'Network error. Please check your internet connection and try again.',
                 pleaseEnterApiKey: 'Please enter an API key'
             },
             indonesian: {
@@ -1314,6 +1317,9 @@ export function generateMainPageHTML(): string {
                 apiKeyVerified: 'Kunci API diverifikasi dan berhasil disimpan!',
                 apiKeyVerificationFailed: 'Kunci API disimpan tetapi verifikasi gagal: ',
                 apiKeySaveError: 'Kunci API disimpan tetapi tidak dapat diverifikasi: ',
+                apiKeyQuotaExceeded: 'Kuota API terlampaui. Silakan periksa tagihan/batas Gemini API Anda.',
+                apiKeyInvalid: 'Kunci API tidak valid. Silakan periksa bahwa kunci API Gemini Anda benar dan diaktifkan.',
+                networkError: 'Kesalahan jaringan. Silakan periksa koneksi internet Anda dan coba lagi.',
                 pleaseEnterApiKey: 'Silakan masukkan kunci API'
             }
         };
@@ -1793,7 +1799,20 @@ export function generateMainPageHTML(): string {
                     // Show reset button when content is generated
                     document.getElementById('resetBtn').classList.remove('hidden');
                 } catch (error) {
-                    showError(error.message);
+                    const currentLang = localStorage.getItem('uiLanguage') || 'english';
+                    const texts = uiLanguages[currentLang];
+                    let errorMessage = error.message;
+
+                    // Provide more user-friendly error messages
+                    if (error.message.includes('quota exceeded') || error.message.includes('429')) {
+                        errorMessage = texts.apiKeyQuotaExceeded;
+                    } else if (error.message.includes('403') || error.message.includes('access denied') || error.message.includes('unauthorized')) {
+                        errorMessage = texts.apiKeyInvalid;
+                    } else if (error.message.includes('network') || error.message.includes('fetch')) {
+                        errorMessage = texts.networkError;
+                    }
+
+                    showError(errorMessage);
                 } finally {
                     loading.style.display = 'none';
                     generateBtn.disabled = false;
@@ -2948,10 +2967,26 @@ export function generateSettingsPageHTML(): string {
                         showStatus(texts.apiKeyVerified, 'success');
                     } else {
                         const result = await response.json();
-                        showStatus(texts.apiKeyVerificationFailed + (result.error || 'Unknown error'), 'error');
+                        let errorMessage = result.error || 'Unknown error';
+
+                        // Provide more user-friendly error messages
+                        if (errorMessage.includes('quota exceeded') || errorMessage.includes('429')) {
+                            errorMessage = texts.apiKeyQuotaExceeded;
+                        } else if (errorMessage.includes('403') || errorMessage.includes('access denied') || errorMessage.includes('unauthorized')) {
+                            errorMessage = texts.apiKeyInvalid;
+                        }
+
+                        showStatus(texts.apiKeyVerificationFailed + errorMessage, 'error');
                     }
                 } catch (error) {
-                    showStatus(texts.apiKeySaveError + error.message, 'error');
+                    let errorMessage = error.message;
+
+                    // Provide more user-friendly error messages for network issues
+                    if (error.message.includes('network') || error.message.includes('fetch')) {
+                        errorMessage = texts.networkError;
+                    }
+
+                    showStatus(texts.apiKeySaveError + errorMessage, 'error');
                 }
             });
 
