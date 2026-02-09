@@ -166,6 +166,21 @@ export function generateMainPageHTML(): string {
             transition: all 0.3s ease;
         }
 
+        /* Optgroup styling for better category visibility */
+        optgroup {
+            font-weight: 600;
+            font-size: 13px;
+            color: #00d4ff;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 8px 0;
+        }
+
+        optgroup option {
+            font-weight: 400;
+            color: #e0e0e0;
+            padding-left: 12px;
+        }
+
         input:focus, select:focus, textarea:focus {
             outline: none;
             border-color: #00d4ff;
@@ -968,27 +983,47 @@ export function generateMainPageHTML(): string {
                     <label for="authorStyle">Author Style to Copy *</label>
                     <select id="authorStyle" name="authorStyle" required>
                         <option value="">Select an author</option>
-                        <option value="J.K. Rowling">J.K. Rowling</option>
-                        <option value="George R.R. Martin">George R.R. Martin</option>
-                        <option value="Jane Austen">Jane Austen</option>
-                        <option value="Ernest Hemingway">Ernest Hemingway</option>
-                        <option value="Toni Morrison">Toni Morrison</option>
-                        <option value="Haruki Murakami">Haruki Murakami</option>
-                        <option value="Margaret Atwood">Margaret Atwood</option>
-                        <option value="Neil Gaiman">Neil Gaiman</option>
-                        <option value="Chimamanda Ngozi Adichie">Chimamanda Ngozi Adichie</option>
-                        <option value="Cormac McCarthy">Cormac McCarthy</option>
-                        <option value="Dee Lestari">Dee Lestari</option>
-                        <option value="Najwa Shihab">Najwa Shihab</option>
-                        <option value="Pramoedya Ananta Toer">Pramoedya Ananta Toer</option>
-                        <option value="Goenawan Mohamad">Goenawan Mohamad</option>
-                        <option value="Leila S. Chudori">Leila S. Chudori</option>
-                        <option value="Stephen King">Stephen King</option>
-                        <option value="Agatha Christie">Agatha Christie</option>
-                        <option value="Gabriel García Márquez">Gabriel García Márquez</option>
-                        <option value="Zadie Smith">Zadie Smith</option>
-                        <option value="Yuval Noah Harari">Yuval Noah Harari</option>
-                        <option value="custom">Custom (enter below)</option>
+                        
+                        <optgroup label="📚 Classic & Literary">
+                            <option value="Ernest Hemingway">Ernest Hemingway</option>
+                            <option value="Jane Austen">Jane Austen</option>
+                            <option value="Toni Morrison">Toni Morrison</option>
+                            <option value="Agatha Christie">Agatha Christie</option>
+                            <option value="Gabriel García Márquez">Gabriel García Márquez</option>
+                            <option value="Cormac McCarthy">Cormac McCarthy</option>
+                        </optgroup>
+                        
+                        <optgroup label="⚔️ Fantasy & Sci-Fi">
+                            <option value="J.R.R. Tolkien">J.R.R. Tolkien</option>
+                            <option value="George R.R. Martin">George R.R. Martin</option>
+                            <option value="J.K. Rowling">J.K. Rowling</option>
+                            <option value="Neil Gaiman">Neil Gaiman</option>
+                        </optgroup>
+                        
+                        <optgroup label="🌍 Contemporary & Thriller">
+                            <option value="Stephen King">Stephen King</option>
+                            <option value="Haruki Murakami">Haruki Murakami</option>
+                            <option value="Margaret Atwood">Margaret Atwood</option>
+                            <option value="Zadie Smith">Zadie Smith</option>
+                            <option value="Chimamanda Ngozi Adichie">Chimamanda Ngozi Adichie</option>
+                        </optgroup>
+                        
+                        <optgroup label="🇮🇩 Indonesian Authors">
+                            <option value="Pramoedya Ananta Toer">Pramoedya Ananta Toer</option>
+                            <option value="Dee Lestari">Dee Lestari</option>
+                            <option value="Andrea Hirata">Andrea Hirata</option>
+                            <option value="Goenawan Mohamad">Goenawan Mohamad</option>
+                            <option value="Leila S. Chudori">Leila S. Chudori</option>
+                            <option value="Najwa Shihab">Najwa Shihab</option>
+                        </optgroup>
+                        
+                        <optgroup label="📖 Non-Fiction">
+                            <option value="Yuval Noah Harari">Yuval Noah Harari</option>
+                        </optgroup>
+                        
+                        <optgroup label="✏️ Other">
+                            <option value="custom">Custom (enter below)</option>
+                        </optgroup>
                     </select>
                     <input type="text" id="customAuthorStyle" name="customAuthorStyle" placeholder="" style="margin-top: 10px; display: none;">
                 </div>
