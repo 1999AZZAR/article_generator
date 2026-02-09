@@ -216,16 +216,39 @@ function setCachedResponse(cacheKey: string, response: string): void {
 // Author style guide presets for better prompt precision
 function getAuthorStyleGuide(authorStyle: string): string {
   const styles: { [key: string]: string } = {
+    // Classic & Literary
     'Ernest Hemingway': 'Use short, declarative sentences. Minimal adjectives. Direct language. Iceberg theory (subtext).',
+    'Jane Austen': 'Wit and irony. Social commentary. Elegant, formal prose. Character-driven.',
+    'Virginia Woolf': 'Stream of consciousness. Interior monologue. Lyrical, impressionistic.',
+    'George Orwell': 'Clear, precise language. Political undertones. Direct critique.',
+    'Toni Morrison': 'Poetic, deeply emotional prose. Explores identity, race, trauma. Layered narratives.',
+    'Agatha Christie': 'Clever plotting. Red herrings. Crisp dialogue. Methodical mystery unraveling.',
+    'Gabriel García Márquez': 'Magical realism. Rich sensory details. Mythic storytelling. Cyclical time.',
+    'Cormac McCarthy': 'Sparse punctuation. Biblical cadence. Brutal imagery. Philosophical undercurrents.',
+    
+    // Fantasy & Sci-Fi
     'J.R.R. Tolkien': 'Rich, descriptive language. Epic tone. Deep world-building. Poetic prose.',
+    'George R.R. Martin': 'Complex characters. Political intrigue. Multiple POVs. Gritty realism in fantasy.',
+    'J.K. Rowling': 'Accessible, whimsical tone. Strong world-building. Coming-of-age themes.',
+    'Neil Gaiman': 'Mythic storytelling. Dark whimsy. Folklore elements. Genre-blending.',
+    
+    // Contemporary & Thriller
     'Stephen King': 'Conversational tone. Vivid imagery. Psychological depth. Building tension.',
     'Haruki Murakami': 'Surreal elements mixed with mundane details. Contemplative. Jazz-like rhythm.',
-    'Jane Austen': 'Wit and irony. Social commentary. Elegant, formal prose. Character-driven.',
-    'George Orwell': 'Clear, precise language. Political undertones. Direct critique.',
-    'Virginia Woolf': 'Stream of consciousness. Interior monologue. Lyrical, impressionistic.',
+    'Margaret Atwood': 'Feminist lens. Dystopian speculation. Sharp social commentary. Literary precision.',
+    'Zadie Smith': 'Multicultural narratives. Sharp wit. Contemporary social issues. Vibrant dialogue.',
+    'Chimamanda Ngozi Adichie': 'Nuanced cultural identity. Feminist themes. Clear, powerful prose.',
+    
+    // Indonesian Authors
     'Pramoedya Ananta Toer': 'Historical depth. Social justice themes. Narrative sweep. Indonesian context.',
+    'Dee Lestari': 'Philosophical depth. Contemporary Indonesian. Layered narratives. Emotional intelligence.',
     'Andrea Hirata': 'Poetic Indonesian prose. Emotional storytelling. Cultural richness.',
-    'Dee Lestari': 'Philosophical depth. Contemporary Indonesian. Layered narratives.'
+    'Goenawan Mohamad': 'Essayistic. Philosophical reflections. Cultural criticism. Poetic language.',
+    'Leila S. Chudori': 'Historical fiction. Diaspora themes. Political consciousness. Intimate family narratives.',
+    'Najwa Shihab': 'Journalistic clarity. Direct questioning. Social awareness. Conversational insight.',
+    
+    // Non-Fiction
+    'Yuval Noah Harari': 'Big-picture synthesis. Clear explanations of complex ideas. Historical sweep. Provocative questions.'
   };
   
   return styles[authorStyle] || '';
