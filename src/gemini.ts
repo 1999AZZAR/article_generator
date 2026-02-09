@@ -1,31 +1,58 @@
 import type { GenerateRequest, ArticleResponse, NovelResponse } from './handler';
 
-// Gemini API endpoints
+// Gemini API endpoints (Latest available models - Verified Feb 2026)
 const GEMINI_FLASH_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent';
 const GEMINI_PRO_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-preview:generateContent';
 
 // Fallback model URLs for better quota resilience
-const GEMINI_FALLBACK_PRO_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent';
-const GEMINI_FALLBACK_FLASH_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
-const GEMINI_LEGACY_PRO_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent';
+const GEMINI_FALLBACK_PRO_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent';
+const GEMINI_FALLBACK_FLASH_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
+const GEMINI_LEGACY_PRO_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
 
-// Enhanced retry and circuit breaker configuration
-const MAX_RETRIES = 5;
+// Enhanced retry configuration
+const MAX_RETRIES = 3; // Reduced from 5 (edge workers have time limits)
 const BASE_RETRY_DELAY = 1000; // 1 second
-const MAX_RETRY_DELAY = 30000; // 30 seconds
-const CIRCUIT_BREAKER_THRESHOLD = 3; // Failures before opening circuit
-const CIRCUIT_BREAKER_TIMEOUT = 60000; // 1 minute before trying again
+const MAX_RETRY_DELAY = 15000; // 15 seconds (reduced from 30s for edge)
 const ADAPTIVE_TIMEOUT_BASE = 30000; // 30 seconds base timeout
-const ADAPTIVE_TIMEOUT_MAX = 120000; // 2 minutes max timeout
+const ADAPTIVE_TIMEOUT_MAX = 90000; // 90 seconds max (reduced from 120s for edge)
 
-// Circuit breaker state
-let circuitBreakerFailures = 0;
-let circuitBreakerLastFailure = 0;
-let circuitBreakerState: 'closed' | 'open' | 'half-open' = 'closed';
-
-// Request deduplication cache
+// Request deduplication cache with cleanup
 const requestCache = new Map<string, { response: string; timestamp: number }>();
-const CACHE_TTL = 300000; // 5 minutes
+const CACHE_TTL = 180000; // 3 minutes (reduced from 5min)
+const CACHE_MAX_SIZE = 100; // Prevent memory bloat
+
+// Periodic cache cleanup (runs on first API call per isolate)
+let cacheCleanupScheduled = false;
+function scheduleCacheCleanup(): void {
+  if (!cacheCleanupScheduled) {
+    cacheCleanupScheduled = true;
+    // Cleanup on next tick to avoid blocking
+    setTimeout(() => cleanupExpiredCache(), 0);
+  }
+}
+
+function cleanupExpiredCache(): void {
+  const now = Date.now();
+  const toDelete: string[] = [];
+  
+  for (const [key, value] of requestCache.entries()) {
+    if (now - value.timestamp > CACHE_TTL) {
+      toDelete.push(key);
+    }
+  }
+  
+  toDelete.forEach(key => requestCache.delete(key));
+  
+  // If cache is still too large, remove oldest entries
+  if (requestCache.size > CACHE_MAX_SIZE) {
+    const entries = Array.from(requestCache.entries())
+      .sort((a, b) => a[1].timestamp - b[1].timestamp);
+    const toRemove = entries.slice(0, requestCache.size - CACHE_MAX_SIZE);
+    toRemove.forEach(([key]) => requestCache.delete(key));
+  }
+  
+  cacheCleanupScheduled = false;
+}
 
 // Delay utility function
 function delay(ms: number): Promise<void> {
@@ -51,8 +78,7 @@ interface GeminiResponse {
 enum ErrorType {
   RETRYABLE = 'retryable',
   NON_RETRYABLE = 'non_retryable',
-  QUOTA_EXCEEDED = 'quota_exceeded',
-  CIRCUIT_OPEN = 'circuit_open'
+  QUOTA_EXCEEDED = 'quota_exceeded'
 }
 
 interface ClassifiedError {
@@ -60,37 +86,6 @@ interface ClassifiedError {
   message: string;
   retryAfter?: number;
   modelNotFound?: boolean;
-}
-
-// Circuit breaker helper functions
-function isCircuitBreakerOpen(): boolean {
-  if (circuitBreakerState === 'open') {
-    const now = Date.now();
-    if (now - circuitBreakerLastFailure > CIRCUIT_BREAKER_TIMEOUT) {
-      circuitBreakerState = 'half-open';
-      return false;
-    }
-    return true;
-  }
-  return false;
-}
-
-function recordCircuitBreakerFailure(): void {
-  circuitBreakerFailures++;
-  circuitBreakerLastFailure = Date.now();
-
-  if (circuitBreakerFailures >= CIRCUIT_BREAKER_THRESHOLD) {
-    circuitBreakerState = 'open';
-    console.warn(`Circuit breaker opened after ${circuitBreakerFailures} failures`);
-  }
-}
-
-function recordCircuitBreakerSuccess(): void {
-  if (circuitBreakerState === 'half-open') {
-    circuitBreakerState = 'closed';
-    circuitBreakerFailures = 0;
-    console.log('Circuit breaker closed - service recovered');
-  }
 }
 
 // Error classification function
@@ -196,6 +191,8 @@ function getCacheKey(prompt: string, model: string): string {
 }
 
 function getCachedResponse(cacheKey: string): string | null {
+  scheduleCacheCleanup(); // Trigger cleanup check
+  
   const cached = requestCache.get(cacheKey);
   if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
     return cached.response;
@@ -207,40 +204,57 @@ function getCachedResponse(cacheKey: string): string | null {
 }
 
 function setCachedResponse(cacheKey: string, response: string): void {
+  // Enforce max cache size before adding
+  if (requestCache.size >= CACHE_MAX_SIZE) {
+    const oldestKey = Array.from(requestCache.entries())
+      .sort((a, b) => a[1].timestamp - b[1].timestamp)[0][0];
+    requestCache.delete(oldestKey);
+  }
   requestCache.set(cacheKey, { response, timestamp: Date.now() });
+}
+
+// Author style guide presets for better prompt precision
+function getAuthorStyleGuide(authorStyle: string): string {
+  const styles: { [key: string]: string } = {
+    'Ernest Hemingway': 'Use short, declarative sentences. Minimal adjectives. Direct language. Iceberg theory (subtext).',
+    'J.R.R. Tolkien': 'Rich, descriptive language. Epic tone. Deep world-building. Poetic prose.',
+    'Stephen King': 'Conversational tone. Vivid imagery. Psychological depth. Building tension.',
+    'Haruki Murakami': 'Surreal elements mixed with mundane details. Contemplative. Jazz-like rhythm.',
+    'Jane Austen': 'Wit and irony. Social commentary. Elegant, formal prose. Character-driven.',
+    'George Orwell': 'Clear, precise language. Political undertones. Direct critique.',
+    'Virginia Woolf': 'Stream of consciousness. Interior monologue. Lyrical, impressionistic.',
+    'Pramoedya Ananta Toer': 'Historical depth. Social justice themes. Narrative sweep. Indonesian context.',
+    'Andrea Hirata': 'Poetic Indonesian prose. Emotional storytelling. Cultural richness.',
+    'Dee Lestari': 'Philosophical depth. Contemporary Indonesian. Layered narratives.'
+  };
+  
+  return styles[authorStyle] || '';
 }
 
 export async function generateArticle(request: GenerateRequest, apiKey: string): Promise<ArticleResponse> {
   const language = request.language === 'indonesian' ? 'Indonesian (Bahasa Indonesia)' : 'English';
+  const styleGuide = getAuthorStyleGuide(request.authorStyle);
 
-  const prompt = `You are a professional writer. Create a comprehensive, in-depth article of at least 1500-2000 words in ${language} about "${request.topic}" in the writing style of ${request.authorStyle}.
+  const prompt = `You are a professional writer. Write a comprehensive article (EXACTLY 1800-2000 words) in ${language} about "${request.topic}" in the style of ${request.authorStyle}${styleGuide ? ` (${styleGuide})` : ''}.
 
-${request.tags ? `Include these themes and tags: ${request.tags.join(', ')}` : ''}
-${request.keywords ? `Incorporate these keywords naturally throughout: ${request.keywords.join(', ')}` : ''}
-${request.mainIdea ? `Build upon this main idea/concept: ${request.mainIdea}` : ''}
+${request.tags ? `Themes: ${request.tags.join(', ')}` : ''}
+${request.keywords ? `Keywords: ${request.keywords.join(', ')}` : ''}
+${request.mainIdea ? `Core idea: ${request.mainIdea}` : ''}
 
-Make the article thorough and detailed with:
-- Comprehensive introduction with historical/technical background
-- Multiple detailed main sections (at least 4-5 sections)
-- In-depth analysis with examples and case studies
-- Practical applications and real-world implications
-- Research-based insights and data where applicable
-- Detailed conclusion with future outlook and recommendations
-- Extensive coverage of subtopics and related concepts
+Structure:
+- Deep introduction with context
+- 4-5 detailed sections with examples & analysis
+- Practical applications
+- Data-driven insights
+- Forward-looking conclusion
 
-The article should be academic/research-quality with substantial depth and comprehensive coverage of the topic.
-
-You must respond with ONLY a valid JSON object. Start your response with { and end with }. No explanations, no markdown, no code blocks.
-
-Required JSON format:
+Output as valid JSON only (no markdown, no explanations):
 {
   "refinedTags": ["tag1", "tag2", "tag3", "tag4", "tag5"],
-  "titleSelection": ["Title Option 1", "Title Option 2", "Title Option 3"],
-  "subtitleSelection": ["Subtitle Option 1", "Subtitle Option 2", "Subtitle Option 3"],
-  "content": "Write the complete 1500-2000 word article here with extensive sections, detailed analysis, comprehensive coverage, and academic depth."
-}
-
-IMPORTANT: Your entire response must be parseable JSON. Nothing else.`;
+  "titleSelection": ["Title 1", "Title 2", "Title 3"],
+  "subtitleSelection": ["Subtitle 1", "Subtitle 2", "Subtitle 3"],
+  "content": "Full 1800-2000 word article here"
+}`;
 
   try {
     // Use Flash for shorter articles, Pro for comprehensive long-form content
@@ -370,48 +384,35 @@ export async function generateChapterContent(chapter: {
     keyEvents?: string[];
   }>;
 }, apiKey: string): Promise<string> {
-  // Build context from previous chapters
+  // Optimize context: Only summarize last 2-3 chapters to avoid prompt bloat
   let previousContext = '';
   if (chapter.previousChapters && chapter.previousChapters.length > 0) {
-    previousContext = `\n\nPREVIOUS CHAPTERS CONTEXT:\n`;
-    chapter.previousChapters.forEach(prevChapter => {
-      previousContext += `Chapter ${prevChapter.chapterNumber} "${prevChapter.title}": ${prevChapter.content.substring(0, 500)}...\n`;
-      if (prevChapter.keyEvents && prevChapter.keyEvents.length > 0) {
-        previousContext += `Key events: ${prevChapter.keyEvents.join(', ')}\n`;
-      }
-      previousContext += `---\n`;
+    const recentChapters = chapter.previousChapters.slice(-3); // Last 3 only
+    previousContext = `\n\nPREVIOUS CONTEXT:\n`;
+    recentChapters.forEach(prev => {
+      // Use key events or short summary instead of full content
+      const summary = prev.keyEvents && prev.keyEvents.length > 0 
+        ? prev.keyEvents.join(', ')
+        : prev.content.substring(0, 300) + '...';
+      previousContext += `Ch${prev.chapterNumber} "${prev.title}": ${summary}\n`;
     });
-    previousContext += `\nCRITICAL: Ensure this chapter continues the story naturally from the previous chapters. Reference previous events, maintain character development arcs, and advance the overall plot. Do NOT contradict or ignore previous chapter content.\n`;
+    previousContext += `\nContinue the story naturally. Reference previous events, maintain character arcs.\n`;
   }
 
-  const prompt = `Write a detailed chapter for the novel "${chapter.novelTitle}".
+  const prompt = `Write Chapter ${chapter.chapterNumber} for "${chapter.novelTitle}" (EXACTLY 2200-2800 words).
 
-Novel Synopsis: ${chapter.novelSynopsis}${previousContext}
+Synopsis: ${chapter.novelSynopsis}${previousContext}
 
-Chapter ${chapter.chapterNumber}: "${chapter.chapterTitle}"
-Chapter Description: ${chapter.chapterSubtitle}
+This Chapter: "${chapter.chapterTitle}" - ${chapter.chapterSubtitle}
 
-Write a comprehensive chapter of 2000-3000 words that:
-- Advances the plot in a meaningful way from previous chapters
-- Continues character development arcs established earlier
-- References and builds upon previous events and relationships
-- Includes vivid descriptions and dialogue
-- Maintains consistency with the novel's tone and style
-- Builds tension or provides important revelations
-- Ends in a way that leads naturally to the next chapter
-- Shows clear narrative progression and character growth
+Requirements:
+- Advance plot meaningfully
+- Show character development
+- Vivid descriptions & dialogue
+- Build tension or provide revelations
+- Natural flow from previous chapters
 
-IMPORTANT CONTINUITY REQUIREMENTS:
-- Acknowledge and reference events from previous chapters
-- Show how characters have changed or grown since earlier chapters
-- Advance the main plot while maintaining subplots
-- Avoid contradicting established facts or character traits
-- Build upon existing relationships and conflicts
-- Ensure the story flows logically from chapter ${chapter.chapterNumber - 1} to chapter ${chapter.chapterNumber}
-
-Focus on this specific chapter's events, character development, and plot progression. Make it engaging and well-written.
-
-Return only the chapter content without any JSON formatting or additional text.`;
+Return raw chapter content (no JSON, no metadata).`;
 
   try {
     const response = await callGeminiFlashAPI(prompt, apiKey);
@@ -454,34 +455,28 @@ Error: ${(error as Error).message}`;
 
 export async function generateShortStory(request: GenerateRequest, apiKey: string): Promise<ArticleResponse> {
   const language = request.language === 'indonesian' ? 'Indonesian (Bahasa Indonesia)' : 'English';
-  const mainIdeaText = request.mainIdea ? `\n\nBuild upon this main idea/concept: ${request.mainIdea}` : '';
+  const styleGuide = getAuthorStyleGuide(request.authorStyle);
 
-  const prompt = `You are a masterful storyteller. Create a complete short story in ${language} about "${request.topic}" in the writing style of ${request.authorStyle}.${request.tags ? `\n\nIncorporate these themes: ${request.tags.join(', ')}` : ''}${request.keywords ? `\n\nInclude these elements: ${request.keywords.join(', ')}` : ''}${mainIdeaText}
+  const prompt = `You are a masterful storyteller. Write a complete short story (EXACTLY 2500-3000 words) in ${language} about "${request.topic}" in the style of ${request.authorStyle}${styleGuide ? ` (${styleGuide})` : ''}.
 
-Write a comprehensive short story of at least 2250-3000 words that includes:
-- A compelling beginning that hooks the reader
-- Well-developed characters with depth and motivation
-- Rich setting descriptions that enhance the atmosphere
-- A clear conflict that drives the narrative
-- Rising action with increasing tension
-- A satisfying climax and resolution
-- Meaningful themes and character development
-- Natural dialogue that reveals character and advances plot
-- Sensory details that bring the story to life
+${request.tags ? `Themes: ${request.tags.join(', ')}` : ''}
+${request.keywords ? `Elements: ${request.keywords.join(', ')}` : ''}
+${request.mainIdea ? `Core concept: ${request.mainIdea}` : ''}
 
-The story should have a complete narrative arc with a beginning, middle, and end. Focus on emotional impact and character transformation.
+Include:
+- Compelling hook & well-developed characters
+- Rich setting & clear conflict
+- Rising tension → climax → resolution
+- Natural dialogue & sensory details
+- Emotional impact & character arc
 
-You must respond with ONLY a valid JSON object. Start your response with { and end with }. No explanations, no markdown, no code blocks.
-
-Required JSON format:
+Output as valid JSON only:
 {
   "refinedTags": ["tag1", "tag2", "tag3", "tag4", "tag5"],
-  "titleSelection": ["First Story Title", "Second Story Title", "Third Story Title"],
-  "subtitleSelection": ["Subtitle Option 1", "Subtitle Option 2", "Subtitle Option 3"],
-  "content": "Write the complete 2250-3000 word short story here with rich descriptions, character development, and emotional depth."
-}
-
-IMPORTANT: Your entire response must be parseable JSON. Nothing else.`;
+  "titleSelection": ["Title 1", "Title 2", "Title 3"],
+  "subtitleSelection": ["Subtitle 1", "Subtitle 2", "Subtitle 3"],
+  "content": "Full 2500-3000 word story here"
+}`;
 
   try {
     const response = await callGeminiFlashAPI(prompt, apiKey);
@@ -940,11 +935,6 @@ async function callGeminiAPIWithRetry(
   retryCount = 0,
   useHeaderAuth = true
 ): Promise<string> {
-  // Check circuit breaker
-  if (isCircuitBreakerOpen()) {
-    throw new Error('Circuit breaker is open - service temporarily unavailable');
-  }
-
   // Check cache for duplicate requests
   const cacheKey = getCacheKey(prompt, modelUrl);
   const cachedResponse = getCachedResponse(cacheKey);
@@ -1074,9 +1064,6 @@ async function callGeminiAPIWithRetry(
     // Cache successful response
     setCachedResponse(cacheKey, result);
 
-    // Record circuit breaker success
-    recordCircuitBreakerSuccess();
-
     return result;
 
   } catch (error) {
@@ -1084,19 +1071,11 @@ async function callGeminiAPIWithRetry(
 
     const classifiedError = classifyError(error);
 
-    // Record circuit breaker failure for retryable errors, but not for model-not-found errors
-    if (classifiedError.type === ErrorType.RETRYABLE && !classifiedError.modelNotFound) {
-      recordCircuitBreakerFailure();
-    }
-
     // Handle different error types
     switch (classifiedError.type) {
       case ErrorType.NON_RETRYABLE:
       case ErrorType.QUOTA_EXCEEDED:
         throw new Error(classifiedError.message);
-
-      case ErrorType.CIRCUIT_OPEN:
-        throw new Error('Service temporarily unavailable due to repeated failures');
 
       case ErrorType.RETRYABLE:
         // Retry logic with exponential backoff
