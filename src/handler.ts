@@ -1,4 +1,4 @@
-import { generateArticle, generateNovelOutline, generateShortStory, generateNews, callGeminiAPI, testGeminiAPIKey, generateChapterContent } from './gemini';
+import { generateArticle, generateNovelOutline, generateShortStory, generateNews, generateShortNews, callGeminiAPI, testGeminiAPIKey, generateChapterContent } from './gemini';
 import { generateMainPageHTML, generateSettingsPageHTML } from './ui';
 
 export interface GenerateRequest {
@@ -6,7 +6,7 @@ export interface GenerateRequest {
   tags?: string[];
   keywords?: string[];
   authorStyle: string;
-  type: 'article' | 'shortstory' | 'novel' | 'news';
+  type: 'article' | 'shortstory' | 'novel' | 'news' | 'shortnews';
   newspaperStyle?: string;
   chapterCount?: number;
   language: 'english' | 'indonesian';
@@ -258,6 +258,8 @@ export async function handleRequest(request: Request, env: { GEMINI_API_KEY: str
         result = await generateShortStory(body, apiKey);
       } else if (body.type === 'news') {
         result = await generateNews(body, apiKey);
+      } else if (body.type === 'shortnews') {
+        result = await generateShortNews(body, apiKey);
       } else {
         result = await generateNovelOutline(body, apiKey);
       }

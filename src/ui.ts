@@ -1032,10 +1032,11 @@ export function generateMainPageHTML(): string {
                     <label for="type">Type *</label>
                     <select id="type" name="type" required>
                         <option value="">Select type</option>
-                        <option value="article">Article</option>
-                        <option value="shortstory">Short Story</option>
+                        <option value="article">Article (1800-2000 words)</option>
+                        <option value="shortstory">Short Story (2500-3000 words)</option>
                         <option value="novel">Novel Outline</option>
-                        <option value="news">News Article</option>
+                        <option value="news">News Article (1200-1800 words)</option>
+                        <option value="shortnews">Short News (400-600 words)</option>
                     </select>
                 </div>
 
@@ -1673,7 +1674,7 @@ export function generateMainPageHTML(): string {
 
                     // Show/hide newspaper style group based on type
                     const newspaperStyleGroup = document.getElementById('newspaperStyleGroup');
-                    if (formData.type === 'news') {
+                    if (formData.type === 'news' || formData.type === 'shortnews') {
                         newspaperStyleGroup.style.display = 'block';
                         document.getElementById('newspaperStyle').required = true;
                     } else {

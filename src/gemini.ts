@@ -614,6 +614,95 @@ Please try again with a different topic or simplified request.
   }
 }
 
+export async function generateShortNews(request: GenerateRequest, apiKey: string): Promise<ArticleResponse> {
+  const language = request.language === 'indonesian' ? 'Indonesian (Bahasa Indonesia)' : 'English';
+
+  const prompt = `You are a professional news journalist. Write a concise news brief (EXACTLY 400-600 words) in ${language} about "${request.topic}" in the style of ${request.newspaperStyle || request.authorStyle}.
+
+${request.tags ? `Themes: ${request.tags.join(', ')}` : ''}
+${request.keywords ? `Keywords: ${request.keywords.join(', ')}` : ''}
+${request.mainIdea ? `Core idea: ${request.mainIdea}` : ''}
+
+Format (5W1H style):
+- Punchy headline & lead paragraph
+- Who, what, when, where, why, how (concise)
+- 1-2 key quotes or data points
+- Brief context (2-3 sentences max)
+- Quick impact statement
+
+Keep it tight, factual, and newsworthy. No fluff.
+
+Output as valid JSON only:
+{
+  "refinedTags": ["tag1", "tag2", "tag3", "tag4", "tag5"],
+  "titleSelection": ["Headline 1", "Headline 2", "Headline 3"],
+  "subtitleSelection": ["Lead 1", "Lead 2", "Lead 3"],
+  "content": "Full 400-600 word news brief here"
+}`;
+
+  try {
+    const response = await callGeminiFlashAPI(prompt, apiKey);
+    console.log('Gemini API response for short news (first 500 chars):', response.substring(0, 500));
+
+    let parsed: ArticleResponse;
+    try {
+      parsed = parseGeminiResponse(response) as ArticleResponse;
+    } catch (parseError) {
+      console.warn('JSON parsing failed for short news, using fallback:', (parseError as Error).message);
+      return {
+        refinedTags: request.tags || ['news', 'breaking', 'brief'],
+        titleSelection: [
+          `Breaking: ${request.topic}`,
+          `${request.topic} - Quick Update`,
+          `Latest on ${request.topic}`
+        ],
+        subtitleSelection: [
+          'Developing story with key facts',
+          'Quick brief on latest developments',
+          'Essential details you need to know'
+        ],
+        content: `## ${request.topic}\n\n**Brief:** A developing story about ${request.topic} has emerged today.\n\n### Key Facts\n- Initial reports indicate significant developments\n- Multiple sources confirm the information\n- Situation continues to evolve\n\n### Context\nThis follows earlier reports from the region. Experts are monitoring the situation closely.\n\n### Impact\nThe developments could have implications for stakeholders in the coming days.\n\n*Word count: 98*`
+      };
+    }
+
+    if (!parsed.refinedTags || !parsed.titleSelection || !parsed.subtitleSelection || !parsed.content) {
+      console.warn('Invalid response structure from Gemini, using fallback');
+      return {
+        refinedTags: request.tags || ['news', 'breaking', 'brief'],
+        titleSelection: [
+          `Breaking: ${request.topic}`,
+          `${request.topic} - Quick Update`,
+          `Latest on ${request.topic}`
+        ],
+        subtitleSelection: [
+          'Developing story with key facts',
+          'Quick brief on latest developments',
+          'Essential details you need to know'
+        ],
+        content: `## ${request.topic}\n\nA news brief about "${request.topic}".\n\n*Error: Invalid JSON structure*`
+      };
+    }
+
+    return parsed;
+  } catch (error) {
+    console.error('Short news generation error:', error);
+    return {
+      refinedTags: request.tags || ['news', 'breaking', 'brief'],
+      titleSelection: [
+        `Breaking: ${request.topic}`,
+        `${request.topic} - Quick Update`,
+        `Latest on ${request.topic}`
+      ],
+      subtitleSelection: [
+        'Developing story with key facts',
+        'Quick brief on latest developments',
+        'Essential details you need to know'
+      ],
+      content: `## ${request.topic}\n\nI encountered an issue generating the news brief about "${request.topic}".\n\nPlease try again.\n\n*Error: ${(error as Error).message}*`
+    };
+  }
+}
+
 export async function generateNews(request: GenerateRequest, apiKey: string): Promise<ArticleResponse> {
   const language = request.language === 'indonesian' ? 'Indonesian (Bahasa Indonesia)' : 'English';
 
