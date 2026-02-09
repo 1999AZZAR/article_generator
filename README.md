@@ -1,472 +1,124 @@
-# Quill™
+# Quill™ - AI Writing Assistant
 
-AI-powered writing assistant for creating professional articles and novel outlines using Google Gemini AI, built on Cloudflare Workers.
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
+![Version](https://img.shields.io/badge/version-2.0.0-green)
+![Status](https://img.shields.io/badge/status-active-success)
 
-## Table of Contents
+**Quill™** is an enterprise-grade AI writing assistant built on Cloudflare Workers and Google Gemini 3 models. It generates professional articles, short stories, and news briefs with precise author style mimicry.
 
-- [Features](#features)
-- [Prerequisites](#prerequisites)
-- [Installation](#installation)
-- [Configuration](#configuration)
-- [Usage](#usage)
-- [API Reference](#api-reference)
-- [Deployment](#deployment)
-- [Development](#development)
-- [Project Structure](#project-structure)
-- [Contributing](#contributing)
-- [License](#license)
-- [Support](#support)
+🔗 **Live Demo:** [https://article-generator.azzar.workers.dev](https://article-generator.azzar.workers.dev)
 
-## Features
+---
 
-### Content Generation
-- **Articles**: Comprehensive coverage (1500-2000 words)
-- **Short Stories**: Complete narrative fiction (2250-3000 words) - 1.5x longer than articles
-- **Novel Outlines**: Detailed chapter structures with synopsis
-- **Individual Chapters**: Content generation for novel chapters (2000-3000 words each)
-- **Chapter Continuity**: Intelligent story flow that maintains narrative consistency across chapters
-- Multi-language support (English and Indonesian)
-- User-guided content creation with main idea/plot input
+## 🚀 Key Features
 
-### Author Style Simulation
-- Predefined author selection including international and Indonesian writers
-- Custom author input capability
-- Consistent writing style maintenance throughout content
+### ✍️ Content Generation
+| Type | Description | Length |
+|------|-------------|--------|
+| **Article** | Comprehensive, research-quality content | 1800-2000 words |
+| **Short Story** | Narrative fiction with character arcs | 2500-3000 words |
+| **News Article** | In-depth journalistic reporting | 1200-1800 words |
+| **Short News** | **(New)** Concise 5W1H news briefs | 400-600 words |
+| **Novel Outline** | Full chapter breakdown & synopsis | Flexible |
 
-### Export Functionality
-- **Markdown Export**: Clean text format for documentation and version control
-- **Rich Text Format (RTF) Export**: Word processor compatible with formatting preserved
-- **Article Export**: Full articles with title, subtitle, and formatted content
-- **Chapter Export**: Individual novel chapters with proper chapter formatting
-- **Multi-format Support**: Both Markdown and RTF options for all content types
+### 🎨 Author Style System (21+ Presets)
+Advanced style mimicry with curated prompts for specific authors:
 
-### User Interface
-- Responsive design for desktop, tablet, and mobile devices
-- Professional dark theme interface
-- Multi-language support (English and Indonesian)
-- Comprehensive form validation
-- Loading states and error handling
+- **Classic & Literary:** Hemingway, Austen, Orwell, Toni Morrison, etc.
+- **Fantasy & Sci-Fi:** Tolkien, G.R.R. Martin, Neil Gaiman, J.K. Rowling
+- **Contemporary:** Stephen King, Murakami, Margaret Atwood
+- **Indonesian Authors:** Pramoedya Ananta Toer, Dee Lestari, Andrea Hirata
+- **Non-Fiction:** Yuval Noah Harari
 
-### Technical Features
-- Serverless architecture using Cloudflare Workers
-- TypeScript implementation for type safety
-- RESTful API design
-- Secure environment variable management
-- Edge computing for performance
-- Advanced error handling with circuit breaker pattern
-- Request deduplication and caching for performance
-- Improved JSON parsing with fallback mechanisms
-- Adaptive timeouts based on content complexity
-- Multi-model fallback system for quota resilience (Gemini 3 → 1.5 → Legacy models)
-- Chapter continuity system that maintains narrative flow across novel chapters
-- Smart circuit breaker that distinguishes between service outages and model availability
-- Graceful degradation when models are unavailable or quota-exceeded
+### ⚡ Performance & Engineering
+- **Prompt Optimization:** Compressed prompts (60% token reduction) for faster generation.
+- **Smart Context:** Novel chapters use optimized summaries (last 3 chapters only) to prevent token bloat.
+- **Circuit Breaker:** Removed for stateless edge deployment stability.
+- **Gemini 3 Powered:** Uses latest `gemini-3-flash-preview` & `gemini-3-pro-preview` models.
 
-## Prerequisites
+### 💎 UI/UX Design
+- **Premium Aesthetics:** Dark mode, Glassmorphism, Inter font.
+- **Interactive UI:** Smooth button animations, categorized dropdowns.
+- **Mobile Responsive:** Optimized for all devices.
 
-- Node.js 18.x or later
-- npm package manager
-- Google Gemini API key
-- Cloudflare account (for deployment)
+---
 
-## Installation
+## 🛠️ Installation & Setup
 
-### Live Application
+### Prerequisites
+- Node.js 18+
+- Cloudflare Account
+- Google Gemini API Key
 
-Quill is deployed and available at: **https://article-generator.azzar.workers.dev**
-
-### Local Development Setup
-
-1. Clone the repository:
+### Local Development
+1. **Clone Repo:**
    ```bash
-   git clone https://github.com/your-username/article_generator.git
+   git clone https://github.com/1999AZZAR/article_generator.git
    cd article_generator
    ```
 
-2. Install dependencies:
+2. **Install Dependencies:**
    ```bash
    npm install
    ```
 
-3. Build the project:
-   ```bash
-   npm run build
-   ```
-
-4. Start the development server:
+3. **Run Locally:**
    ```bash
    npm run dev
    ```
 
-5. Open the application in a web browser at `http://localhost:8787`
-
-## Configuration
-
-### Environment Variables
-
-The application requires a Google Gemini API key for content generation:
-
-- `GEMINI_API_KEY`: Your Google Gemini API key
-
-### API Key Setup Options
-
-#### Option 1: Web Interface Configuration
-- Access the settings page at `/settings`
-- Enter your Gemini API key in the provided field
-- The key is stored locally in browser storage
-
-#### Option 2: Cloudflare Environment Variables
-```bash
-npx wrangler secret put GEMINI_API_KEY
-```
-
-#### Option 3: Local Environment File
-Create a `.env` file in the project root:
-```
-GEMINI_API_KEY=your_api_key_here
-```
-
-## Usage
-
-### Basic Content Generation
-
-1. Access the application at the deployed URL or local development server
-2. **Optional**: Change interface language via Settings page (`/settings`)
-3. Select the content type (Article/Chapter or Novel Outline)
-4. Complete the input form:
-   - Topic or title
-   - Author writing style
-   - Content language
-   - Optional tags and keywords
-   - Optional main idea/plot description
-   - Chapter count (for novels)
-5. Submit the form to generate content
-6. Review the generated content and export as needed
-
-### Language Settings
-
-The application supports two interface languages:
-
-- **English**: Default interface language
-- **Indonesian (Bahasa Indonesia)**: Localized interface
-
-**To change language:**
-- Visit the Settings page (`/settings`)
-- Select your preferred language from the "Interface Language" dropdown
-- Language preference is saved locally in your browser
-
-All UI elements, form labels, buttons, and messages will be displayed in your selected language.
-
-### Novel Writing Workflow
-
-1. Generate a novel outline with desired specifications
-2. Review the generated chapter structure and titles
-3. Generate content for individual chapters as needed
-4. Export chapters separately or compile the complete novel
-
-### Export Options
-
-- **Markdown**: Suitable for documentation, blogging, and version control
-- **RTF**: Compatible with Microsoft Word and other word processing applications
-- **File Naming**: Automatic naming based on content titles and chapter numbers
-
-## API Reference
-
-### POST `/api/generate`
-
-Generates articles, short stories, or novel outlines based on provided parameters.
-
-**Request Body:**
-```json
-{
-  "topic": "string",
-  "authorStyle": "string",
-        "type": "article" | "shortstory" | "novel",
-        // "article": Generates a comprehensive article (1500-2000 words)
-        // "shortstory": Generates a complete short story/cerpen (2250-3000 words)
-        // "novel": Generates a novel outline with chapter structure
-  "language": "english" | "indonesian",
-  "tags": ["string"],
-  "keywords": ["string"],
-  "mainIdea": "string",
-  "chapterCount": number,
-  "apiKey": "string"
-}
-```
-
-**Response (Article):**
-```json
-{
-  "refinedTags": ["string"],
-  "titleSelection": ["string"],
-  "subtitleSelection": ["string"],
-  "content": "string"
-}
-```
-
-**Response (Novel):**
-```json
-{
-  "titleSelection": ["string"],
-  "synopsis": "string",
-  "outline": [
-    {
-      "chapterNumber": number,
-      "title": "string",
-      "subtitle": "string"
-    }
-  ]
-}
-```
-
-### POST `/api/generate-chapter`
-
-Generates content for individual novel chapters.
-
-**Request Body:**
-```json
-{
-  "chapterNumber": number,
-  "chapterTitle": "string",
-  "chapterSubtitle": "string",
-  "novelTitle": "string",
-  "novelSynopsis": "string",
-  "previousChapters": [
-    {
-      "chapterNumber": number,
-      "title": "string",
-      "content": "string",
-      "keyEvents": ["string"]
-    }
-  ],
-  "apiKey": "string"
-}
-```
-
-**Response:**
-```json
-{
-  "content": "string"
-}
-```
-
-### POST `/api/test-key`
-
-Validates the provided Gemini API key.
-
-**Request Body:**
-```json
-{
-  "apiKey": "string"
-}
-```
-
-**Response:**
-```json
-{
-  "success": boolean,
-  "message": "string"
-}
-```
-
-### POST `/api/export-rtf`
-
-Exports article content as an RTF file compatible with word processors like Microsoft Word.
-
-**Request Body:**
-```json
-{
-  "title": "string",
-  "subtitle": "string",
-  "content": "string"
-}
-```
-
-**Response:** RTF file download with proper formatting (headers, paragraphs, bullet points)
-
-### POST `/api/export-chapter-rtf`
-
-Exports individual novel chapter content as an RTF file with chapter-specific formatting.
-
-**Request Body:**
-```json
-{
-  "chapterNumber": number,
-  "chapterTitle": "string",
-  "chapterSubtitle": "string",
-  "content": "string"
-}
-```
-
-**Response:** RTF file download with chapter header, separator, and page break formatting
-
-## Deployment
-
-### Cloudflare Workers Deployment
-
-1. Install the Wrangler CLI:
+4. **Build:**
    ```bash
-   npm install -g wrangler
+   npm run build
    ```
 
-2. Authenticate with Cloudflare:
+---
+
+## 📦 Deployment (Cloudflare Workers)
+
+We use **Wrangler** for direct deployment (GitHub Actions workflow has been removed).
+
+1. **Login to Cloudflare:**
    ```bash
-   npx wrangler auth login
+   npx wrangler login
    ```
 
-3. Configure account settings in `wrangler.toml` if needed:
-   ```toml
-   account_id = "your_account_id"
-   ```
-
-4. Set the API key as a secret:
+2. **Set API Key (Secret):**
    ```bash
    npx wrangler secret put GEMINI_API_KEY
    ```
 
-5. Deploy the application:
+3. **Deploy:**
    ```bash
-   npm run build
    npx wrangler deploy
    ```
 
-### Automated Deployment (GitHub Actions)
+---
 
-The repository includes automated deployment configuration.
-
-#### Required GitHub Secrets
-
-Configure these secrets in your GitHub repository settings:
-
-- `CLOUDFLARE_API_TOKEN`: Cloudflare API token with Workers permissions
-- `CLOUDFLARE_ACCOUNT_ID`: Cloudflare account identifier
-- `GEMINI_API_KEY`: Google Gemini API key
-
-#### Deployment Triggers
-
-- Automatic deployment on pushes to the main branch
-- Manual deployment via GitHub Actions workflow dispatch
-
-## Development
-
-### Development Workflow
-
-1. Install project dependencies:
-   ```bash
-   npm install
-   ```
-
-2. Start the development server:
-   ```bash
-   npm run dev
-   ```
-
-3. Modify source files in the `src/` directory
-
-4. Build and test changes:
-   ```bash
-   npm run build
-   npm run dev
-   ```
-
-### Project Structure
-
-```
-quill/
-├── src/
-│   ├── index.ts           # Cloudflare Worker entry point
-│   ├── handler.ts         # HTTP request handling and API routes
-│   ├── gemini.ts          # Google Gemini AI integration with latest models
-│   └── ui.ts              # HTML generation and responsive UI components
-├── public/                # Static assets
-├── package.json           # Project dependencies and scripts
-├── tsconfig.json          # TypeScript configuration
-├── wrangler.toml          # Cloudflare Workers configuration
-└── README.md              # Project documentation
-```
-
-### Code Standards
-
-- TypeScript with strict type checking
-- Consistent code formatting
-- Comprehensive error handling
-- Modular architecture
-
-## Project Structure
+## 🧩 Project Structure
 
 ```
 article_generator/
-├── .github/
-│   └── workflows/
-│       └── deploy.yml
 ├── src/
-│   ├── index.ts
-│   ├── handler.ts
-│   ├── gemini.ts
-│   └── ui.ts
-├── .gitignore
-├── LICENSE
-├── package.json
-├── tsconfig.json
-├── wrangler.toml
-└── README.md
+│   ├── index.ts           # Worker Entry Point
+│   ├── handler.ts         # API Route Handlers
+│   ├── gemini.ts          # AI Logic & Prompt Engineering
+│   └── ui.ts              # Frontend Components (HTML/CSS)
+├── public/                # Static Assets
+├── PROMPT_OPTIMIZATION.md # Prompt Engineering Docs
+├── wrangler.toml          # Worker Config (Ignored in Git)
+└── package.json           # Deps
 ```
 
-## Contributing
+---
 
-1. Fork the repository
-2. Create a feature branch:
-   ```bash
-   git checkout -b feature/your-feature-name
-   ```
-3. Make your changes
-4. Test your changes locally
-5. Commit your changes:
-   ```bash
-   git commit -m "feat: description of changes"
-   ```
-6. Push to your fork:
-   ```bash
-   git push origin feature/your-feature-name
-   ```
-7. Create a pull request
+## 📖 Documentation
 
-### Contribution Guidelines
+- [Prompt Optimization Guide](PROMPT_OPTIMIZATION.md) - How we reduced tokens by 60% while improving quality.
+- [Model Verification](MODEL_VERIFICATION.md) - Details on Gemini 3 model usage.
 
-- Follow TypeScript best practices
-- Add appropriate error handling
-- Update documentation for new features
-- Ensure code passes type checking
-- Test changes before submission
+---
 
-## License
+## 📄 License
 
-This project is licensed under the MIT License. See the LICENSE file for details.
-
-## Support
-
-### Documentation Links
-
-- [Cloudflare Workers Documentation](https://developers.cloudflare.com/workers/)
-- [Google Gemini API Documentation](https://ai.google.dev/docs)
-- [Wrangler CLI Documentation](https://developers.cloudflare.com/workers/wrangler/)
-
-### Troubleshooting
-
-#### Common Issues
-
-1. **API Key Errors**
-   - Verify API key validity and permissions
-   - Check API quota limits
-
-2. **Deployment Failures**
-   - Confirm Cloudflare account permissions
-   - Validate API token scope
-
-3. **Content Generation Issues**
-   - Check network connectivity
-   - Verify API key configuration
-
-### Getting Help
-
-For questions or issues, please create an issue in the GitHub repository.
+MIT License. Created by [Azzar Budiyanto](https://github.com/1999AZZAR).
