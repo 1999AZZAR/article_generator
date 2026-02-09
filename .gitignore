@@ -55,6 +55,7 @@ temp/
 
 # Cloudflare Workers
 .wrangler/
+wrangler.toml
 
 # Test files
 test_export.rtf
