@@ -18,12 +18,12 @@ export function generateMainPageHTML(): string {
         }
 
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 100%);
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background-color: #0F172A;
             color: #e0e0e0;
             min-height: 100vh;
             padding: 20px;
-            padding-bottom: 50px; /* Space for footer */
+            padding-bottom: 50px;
         }
 
         .container {
@@ -39,325 +39,130 @@ export function generateMainPageHTML(): string {
 
         .header h1 {
             font-size: 3rem;
-            font-weight: 300;
+            font-weight: 700;
             margin-bottom: 10px;
-            background: linear-gradient(45deg, #00d4ff, #00ff88);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            color: #FFFFFF;
         }
 
         .header p {
             font-size: 1.1rem;
-            opacity: 0.8;
-        }
-
-        /* Mobile responsiveness improvements */
-        @media (max-width: 768px) {
-            body {
-                padding: 15px;
-            }
-
-            .header {
-                margin-bottom: 30px;
-            }
-
-            .header h1 {
-                font-size: 2.2rem;
-            }
-
-            .header p {
-                font-size: 1rem;
-            }
-        }
-
-        @media (max-width: 480px) {
-            body {
-                padding: 10px;
-            }
-
-            .header h1 {
-                font-size: 1.8rem;
-            }
-
-            .header p {
-                font-size: 0.9rem;
-            }
+            color: #94A3B8;
         }
 
         .settings-link {
             position: absolute;
             top: 0;
             right: 0;
-            color: #00d4ff;
+            color: #38BDF8;
             text-decoration: none;
             padding: 10px 20px;
-            border-radius: 8px;
+            border-radius: 12px;
             transition: all 0.3s ease;
             font-size: 14px;
+            background: rgba(56, 189, 248, 0.1);
+            border: 1px solid rgba(56, 189, 248, 0.2);
         }
 
         .settings-link:hover {
-            background: rgba(0, 212, 255, 0.1);
+            background: rgba(56, 189, 248, 0.2);
         }
 
         .form-container {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 20px;
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border-radius: 24px;
             padding: 30px;
             margin-bottom: 30px;
-            backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .form-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-
-        /* Responsive form improvements */
-        @media (max-width: 768px) {
-            .form-container {
-                padding: 20px;
-                border-radius: 15px;
-            }
-
-            .form-grid {
-                grid-template-columns: 1fr;
-                gap: 15px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .form-container {
-                padding: 15px;
-                margin-bottom: 20px;
-            }
-
-            .form-grid {
-                gap: 12px;
-            }
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group.full-width {
-            grid-column: 1 / -1;
+            box-shadow: 0 0 20px rgba(56, 189, 248, 0.1);
         }
 
         label {
             display: block;
             margin-bottom: 8px;
-            font-weight: 500;
-            color: #00d4ff;
+            font-weight: 600;
+            color: #CBD5E1;
+            font-size: 0.875rem;
         }
 
         input, select, textarea {
             width: 100%;
             padding: 12px 16px;
-            background: rgba(255, 255, 255, 0.08);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 8px;
-            color: #e0e0e0;
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid #334155;
+            border-radius: 12px;
+            color: #F8FAFC;
             font-size: 14px;
             transition: all 0.3s ease;
         }
 
-        /* Optgroup styling for better category visibility */
-        optgroup {
-            font-weight: 600;
-            font-size: 13px;
-            color: #00d4ff;
-            background: rgba(0, 0, 0, 0.3);
-            padding: 8px 0;
-        }
-
-        optgroup option {
-            font-weight: 400;
-            color: #e0e0e0;
-            padding-left: 12px;
-        }
-
         input:focus, select:focus, textarea:focus {
             outline: none;
-            border-color: #00d4ff;
-            box-shadow: 0 0 0 2px rgba(0, 212, 255, 0.2);
-        }
-
-        textarea {
-            resize: vertical;
-            min-height: 100px;
-        }
-
-        .tag-input-container {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 10px;
-        }
-
-        .tag-input {
-            flex: 1;
+            border-color: #38BDF8;
+            box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
         }
 
         .add-tag-btn {
             padding: 12px 16px;
-            background: rgba(0, 212, 255, 0.2);
-            border: 1px solid #00d4ff;
-            border-radius: 8px;
-            color: #00d4ff;
+            background: rgba(56, 189, 248, 0.1);
+            border: 1px solid #38BDF8;
+            border-radius: 12px;
+            color: #38BDF8;
             cursor: pointer;
-            font-weight: 500;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-weight: 600;
+            transition: all 0.3s ease;
         }
 
         .add-tag-btn:hover {
-            background: rgba(0, 212, 255, 0.3);
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(0, 212, 255, 0.25);
-        }
-
-        .add-tag-btn:active {
-            transform: translateY(0);
-        }
-
-        .tags-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-top: 10px;
+            background: #38BDF8;
+            color: #FFFFFF;
         }
 
         .tag {
-            background: rgba(0, 212, 255, 0.2);
-            border: 1px solid #00d4ff;
-            border-radius: 20px;
+            background: rgba(56, 189, 248, 0.1);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            border-radius: 12px;
+            color: #38BDF8;
             padding: 6px 12px;
             font-size: 12px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .tag-remove {
-            cursor: pointer;
-            color: #ff6b6b;
-            font-weight: bold;
+            font-weight: 600;
         }
 
         .generate-btn {
-            background: linear-gradient(45deg, #00d4ff, #00ff88);
-            color: #0f0f0f;
+            background: #38BDF8;
+            color: #FFFFFF;
             border: none;
             padding: 16px 32px;
-            border-radius: 12px;
+            border-radius: 16px;
             font-size: 16px;
-            font-weight: 600;
+            font-weight: 700;
             cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.3s ease;
             width: 100%;
-            margin-top: 20px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .generate-btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(45deg, #00ff88, #00d4ff);
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .generate-btn:hover::before {
-            opacity: 1;
+            box-shadow: 0 4px 12px rgba(56, 189, 248, 0.2);
         }
 
         .generate-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 12px 30px rgba(0, 212, 255, 0.4);
-        }
-
-        .generate-btn:active {
-            transform: translateY(-1px);
-            box-shadow: 0 6px 15px rgba(0, 212, 255, 0.3);
-        }
-
-        .generate-btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-
-        .generate-btn:disabled:hover::before {
-            opacity: 0;
-        }
-
-        .button-group {
-            display: flex;
-            gap: 15px;
-            align-items: center;
-            justify-content: center;
-            flex-wrap: wrap;
+            background: #0EA5E9;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(56, 189, 248, 0.3);
         }
 
         .reset-btn {
-            background: linear-gradient(45deg, #ff6b6b, #ff4757);
-            color: #ffffff;
-            border: none;
+            background: rgba(244, 63, 94, 0.1);
+            color: #FB7185;
+            border: 1px solid rgba(244, 63, 94, 0.2);
             padding: 16px 32px;
-            border-radius: 12px;
+            border-radius: 16px;
             font-size: 16px;
-            font-weight: 600;
+            font-weight: 700;
             cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            white-space: nowrap;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .reset-btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(45deg, #ff4757, #ff6b6b);
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .reset-btn:hover::before {
-            opacity: 1;
+            transition: all 0.3s ease;
         }
 
         .reset-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 12px 30px rgba(255, 107, 107, 0.4);
-        }
-
-        .reset-btn:active {
-            transform: translateY(-1px);
-            box-shadow: 0 6px 15px rgba(255, 107, 107, 0.3);
-        }
-
-        .reset-btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-
-        .reset-btn:disabled:hover::before {
-            opacity: 0;
+            background: #F43F5E;
+            color: #FFFFFF;
         }
 
         .reset-btn.hidden {
