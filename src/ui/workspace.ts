@@ -3,40 +3,6 @@ import { renderHead, renderFooter, renderTopbar, getTopbarStrings, ARCHIVAL_DETA
 import { SPECIMEN_JS } from './specimen';
 
 const PAGE_CSS = `
-.ws-hero {
-    padding: 48px 0 32px 0;
-    border-bottom: var(--rule);
-    display: grid;
-    grid-template-columns: repeat(12, 1fr);
-    column-gap: var(--gutter);
-    align-items: end;
-}
-.ws-hero .ws-hero-num {
-    grid-column: 1 / span 1;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    color: var(--accent);
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    padding-bottom: 4px;
-}
-.ws-hero .ws-hero-title {
-    grid-column: 2 / span 6;
-    font-size: clamp(32px, 5vw, 56px);
-    font-weight: 800;
-    letter-spacing: -0.03em;
-    line-height: 1;
-}
-.ws-hero .ws-hero-lede {
-    grid-column: 8 / span 5;
-    font-size: 13px;
-    color: var(--gray-600);
-    letter-spacing: 0.02em;
-    line-height: 1.6;
-    align-self: end;
-    padding-bottom: 6px;
-}
-
 /* Filter bar */
 .ws-filter-bar {
     display: flex;
@@ -333,10 +299,12 @@ const BODY_HTML = `
 <div class="container">
     ${renderTopbar('workspace', 'english')}
 
-    <header class="ws-hero">
-        <div class="ws-hero-num">02</div>
-        <h1 class="ws-hero-title" id="wsTitle">Workspace.</h1>
-        <p class="ws-hero-lede" id="wsLede">Your saved drafts and finished pieces. Edit inline, autosave while you write.</p>
+    <header class="hero">
+        <div class="index">&#8470; 02</div>
+        <div class="headline">
+            <h1 id="heroTitle">Workspace<span class="amp">.</span></h1>
+        </div>
+        <p class="lede" id="heroLede">Your saved drafts and finished pieces. Edit inline, autosave while you write.</p>
     </header>
 
     <div class="ws-filter-bar" id="wsFilterBar">
@@ -750,8 +718,9 @@ const SCRIPT = `
         var topbar = document.querySelector('.topbar');
         if (topbar && TOPBARS[newLang]) topbar.outerHTML = TOPBARS[newLang];
         var el = function(id) { return document.getElementById(id); };
-        if (el('wsTitle')) el('wsTitle').textContent = t.title;
-        if (el('wsLede')) el('wsLede').textContent = t.lede;
+        var heroTitle = el('heroTitle');
+        if (heroTitle) heroTitle.innerHTML = t.title.replace(/\\./, '<span class="amp">.</span>');
+        if (el('heroLede')) el('heroLede').textContent = t.lede;
         if (el('filterAll')) el('filterAll').textContent = t.filterAll;
         if (el('filterDraft')) el('filterDraft').textContent = t.filterDraft;
         if (el('filterFinal')) el('filterFinal').textContent = t.filterFinal;
