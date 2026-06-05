@@ -638,9 +638,8 @@ button { font-family: inherit; }
     color: var(--gray-600);
     margin-top: auto;
 }
-.footer .col-1 { grid-column: 1 / span 4; }
-.footer .col-2 { grid-column: 5 / span 4; }
-.footer .col-3 { grid-column: 9 / span 4; text-align: right; }
+.footer .col-1 { grid-column: 1 / span 6; }
+.footer .col-3 { grid-column: 7 / span 6; text-align: right; }
 .footer a { color: var(--black); }
 .footer .accent-dot { color: var(--accent); }
 
@@ -1044,7 +1043,6 @@ export function renderHead(opts: { title: string; pageStyles: string }): string 
 export function renderFooter(i18n: FooterStrings): string {
   return `<footer class="footer">
         <div class="col-1">${i18n.copyright}</div>
-        <div class="col-2">${i18n.typeface}</div>
         <div class="col-3">${i18n.by.replace('{link}', '<a href="https://azzar.netlify.app/porto" target="_blank">LilyOpenCMS</a>')}</div>
     </footer>`;
 }
