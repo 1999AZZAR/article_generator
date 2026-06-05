@@ -5,11 +5,14 @@ export { generateMainPageHTML } from './main';
 export { generateSettingsPageHTML } from './settings';
 export { generateAuthPageHTML } from './auth';
 export { generateWorkspacePageHTML } from './workspace';
+export { generateAboutPageHTML } from './about';
 export {
   MAIN_STRINGS,
   SETTINGS_STRINGS,
   AUTH_STRINGS,
   WORKSPACE_STRINGS,
+  ABOUT_STRINGS,
+  COMMON_STRINGS,
   getLocale,
   type Locale,
   type MainPageStrings,

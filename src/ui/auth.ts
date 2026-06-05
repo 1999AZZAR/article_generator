@@ -3,8 +3,8 @@
 // the user's password. The user's UID is mirrored to localStorage so other
 // pages can namespace the BYOK key per user.
 
-import { AUTH_STRINGS, Locale } from './i18n';
-import { renderHead, renderFooter, renderTopbar, getTopbarStrings, FOOTER_STRINGS, ARCHIVAL_DETAILS_HTML } from './styles';
+import { AUTH_STRINGS, COMMON_STRINGS, Locale } from './i18n';
+import { renderHead, renderFooter, renderTopbar, getTopbarStrings, FOOTER_STRINGS, ARCHIVAL_DETAILS_HTML, COMMON_JS } from './styles';
 import { SPECIMEN_JS } from './specimen';
 
 const FIREBASE_CONFIG = {
@@ -137,16 +137,6 @@ const SCRIPT = `
         return uid ? ('geminiApiKey.' + uid) : 'geminiApiKey';
     }
 
-    function syncByokStatus() {
-        const lang = localStorage.getItem('uiLanguage') || 'english';
-        const has = !!((localStorage.getItem(getApiKeyStorageKey()) || '').trim());
-        const byokStatus = document.getElementById('byokStatus');
-        if (byokStatus) byokStatus.setAttribute('data-state', has ? 'ok' : 'missing');
-        const byokStrings = (window.__QUILL_TOPBAR_STRINGS__ && window.__QUILL_TOPBAR_STRINGS__[lang]) || null;
-        const byokStateText = document.getElementById('byokStateText');
-        if (byokStateText) byokStateText.textContent = has ? (byokStrings ? byokStrings.byokSet : 'Key Set') : (byokStrings ? byokStrings.byokMissing : 'No Key');
-    }
-
     function setBusy(busy) {
         inFlight = busy;
         const submit = document.getElementById('authSubmitBtn');
@@ -168,7 +158,9 @@ const SCRIPT = `
             const tmp = document.createElement('div');
             tmp.innerHTML = (window.__QUILL_TOPBAR__ && window.__QUILL_TOPBAR__[lang]) || topbarEl.outerHTML;
             topbarEl.replaceWith(tmp.firstElementChild);
-            syncByokStatus();
+            window.setupAccountMenu();
+            window.syncAuthPill();
+            window.syncByokStatus();
         }
         const introTitle = document.getElementById('introTitle');
         introTitle.innerHTML = t.introTitle.replace(/\\./, '<span class="amp">.</span>');
@@ -309,7 +301,11 @@ const SCRIPT = `
             }
             persistSession(cred.user);
             await notifyServerSession(cred.user);
-            setTimeout(function() { window.location.href = '/'; }, 600);
+            setTimeout(function() { 
+                const params = new URLSearchParams(window.location.search);
+                const dest = params.get('redirect') || '/';
+                window.location.href = dest;
+            }, 600);
         } catch (err) {
             const code = (err && err.code) || '';
             showStatus(mapAuthError(code), 'error');
@@ -331,7 +327,11 @@ const SCRIPT = `
             persistSession(cred.user);
             showStatus(t.signInSuccess, 'success');
             await notifyServerSession(cred.user);
-            setTimeout(function() { window.location.href = '/'; }, 600);
+            setTimeout(function() { 
+                const params = new URLSearchParams(window.location.search);
+                const dest = params.get('redirect') || '/';
+                window.location.href = dest;
+            }, 600);
         } catch (err) {
             const code = (err && err.code) || '';
             showStatus(mapAuthError(code), 'error');
@@ -362,6 +362,8 @@ const SCRIPT = `
 
     document.addEventListener('DOMContentLoaded', function() {
         const savedLanguage = localStorage.getItem('uiLanguage') || 'english';
+        window.setupAccountMenu();
+        window.syncAuthPill();
         repaint(savedLanguage);
         setMode('signin');
 
@@ -387,7 +389,7 @@ ${renderHead({ title: strings.documentTitle, pageStyles: PAGE_CSS })}
 <body>
 ${BODY_HTML}
 <script>
-window.__QUILL_I18N__ = ${JSON.stringify({ auth: AUTH_STRINGS, footer: FOOTER_STRINGS })};
+window.__QUILL_I18N__ = ${JSON.stringify({ auth: AUTH_STRINGS, common: COMMON_STRINGS, footer: FOOTER_STRINGS })};
 window.__QUILL_FIREBASE_CONFIG__ = ${JSON.stringify(FIREBASE_CONFIG)};
 window.__QUILL_INITIAL_LOCALE__ = ${JSON.stringify(locale)};
 window.__QUILL_TOPBAR__ = ${JSON.stringify({
@@ -399,6 +401,7 @@ window.__QUILL_TOPBAR_STRINGS__ = ${JSON.stringify({
   indonesian: getTopbarStrings('indonesian'),
 })};
 </script>
+<script>${COMMON_JS}</script>
 <script>${SCRIPT}</script>
 <script>${SPECIMEN_JS}</script>
 <script>

@@ -2,8 +2,8 @@
 // English strings are the default markup; the script below re-paints
 // translatable fields when the user changes the language.
 
-import { SETTINGS_STRINGS, Locale } from './i18n';
-import { renderHead, renderFooter, renderTopbar, getTopbarStrings, FOOTER_STRINGS, ARCHIVAL_DETAILS_HTML } from './styles';
+import { SETTINGS_STRINGS, COMMON_STRINGS, Locale } from './i18n';
+import { renderHead, renderFooter, renderTopbar, getTopbarStrings, FOOTER_STRINGS, ARCHIVAL_DETAILS_HTML, COMMON_JS } from './styles';
 import { SELECT_CSS, SELECT_SCRIPT } from './select';
 import { SPECIMEN_JS } from './specimen';
 
@@ -252,60 +252,6 @@ const SCRIPT = `
         syncByokStatus();
     }
 
-    function syncByokStatus() {
-        const lang = localStorage.getItem('uiLanguage') || 'english';
-        const t = I18N[lang];
-        const has = !!((localStorage.getItem(getApiKeyStorageKey()) || '').trim());
-        const byokStatus = document.getElementById('byokStatus');
-        if (byokStatus) byokStatus.setAttribute('data-state', has ? 'ok' : 'missing');
-        const byokStrings = (window.__QUILL_TOPBAR_STRINGS__ && window.__QUILL_TOPBAR_STRINGS__[lang]) || null;
-        const byokStateText = document.getElementById('byokStateText');
-        if (byokStateText) byokStateText.textContent = has ? (byokStrings ? byokStrings.byokSet : 'Key Set') : (byokStrings ? byokStrings.byokMissing : 'No Key');
-        const byokNoticeTitle = document.getElementById('byokNoticeTitle');
-        if (byokNoticeTitle) byokNoticeTitle.textContent = t.byokNoticeTitle;
-        const byokNoticeMsg = document.getElementById('byokNoticeMsg');
-        if (byokNoticeMsg) byokNoticeMsg.innerHTML = t.byokNoticeMsg;
-    }
-
-    function showModal(title, message, onConfirm, cancelText, confirmText, opts) {
-        const modal = document.getElementById('confirmationModal');
-        const lang = localStorage.getItem('uiLanguage') || 'english';
-        const t = I18N[lang];
-        const lab = document.getElementById('modalLab');
-        const escClose = document.getElementById('modalEscClose');
-        const modalExtra = document.getElementById('modalExtra');
-        if (lab) lab.textContent = t.confirmLabel;
-        if (escClose) escClose.textContent = t.escToClose;
-        document.getElementById('modalTitle').textContent = title;
-        document.getElementById('modalMessage').textContent = message;
-        document.getElementById('modalCancel').textContent = cancelText || 'Cancel';
-        document.getElementById('modalConfirm').textContent = confirmText || 'Confirm';
-        if (modalExtra) {
-            if (opts && opts.checkboxLabel) {
-                modalExtra.innerHTML = '<label class="modal-checkbox"><input type="checkbox" id="modalCheckbox" ' + (opts.checkboxDefault !== false ? 'checked' : '') + '> <span id="modalCheckboxLabel"></span></label>';
-                const lbl = document.getElementById('modalCheckboxLabel');
-                if (lbl) lbl.textContent = opts.checkboxLabel;
-                modalExtra.style.display = 'block';
-            } else {
-                modalExtra.innerHTML = '';
-                modalExtra.style.display = 'none';
-            }
-        }
-        modal.classList.add('show');
-        function closeModal() { modal.classList.remove('show'); }
-        document.getElementById('modalCancel').onclick = closeModal;
-        document.getElementById('modalConfirm').onclick = function() {
-            const cb = document.getElementById('modalCheckbox');
-            const checked = cb ? cb.checked : true;
-            closeModal();
-            onConfirm(checked);
-        };
-        modal.onclick = function(e) { if (e.target === modal) closeModal(); };
-        document.addEventListener('keydown', function escHandler(e) {
-            if (e.key === 'Escape') { closeModal(); document.removeEventListener('keydown', escHandler); }
-        });
-    }
-
     function getApiKeyStorageKey() {
         const uid = localStorage.getItem('quillAuthUid');
         return uid ? ('geminiApiKey.' + uid) : 'geminiApiKey';
@@ -321,72 +267,9 @@ const SCRIPT = `
 
     function computeInitials(name) {
         if (!name) return '';
-        var parts = name.trim().split(/\s+/);
+        var parts = name.trim().split(/\\s+/);
         if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
         return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-    }
-
-    function syncAuthPill() {
-        const trigger = document.getElementById('accountTrigger');
-        const signIn = document.getElementById('authSignInLink');
-        const name = localStorage.getItem('quillAuthName') || '';
-        const uid = localStorage.getItem('quillAuthUid') || '';
-        const initials = computeInitials(name) || (uid ? uid.slice(0, 2).toUpperCase() : '--');
-        if (trigger && signIn) {
-            if (name || uid) {
-                trigger.hidden = false;
-                signIn.hidden = true;
-                trigger.setAttribute('data-uid', uid);
-                const av = document.getElementById('accountAvatar');
-                const avLg = document.getElementById('accountAvatarLg');
-                const trigName = document.getElementById('accountTriggerName');
-                const ddName = document.getElementById('accountName');
-                const ddEmail = document.getElementById('accountEmail');
-                const footUid = document.getElementById('accountFootUid');
-                if (av) av.textContent = initials;
-                if (avLg) avLg.textContent = initials;
-                if (trigName) trigName.textContent = name || 'Account';
-                if (ddName) ddName.textContent = name || 'Account';
-                if (ddEmail) ddEmail.textContent = uid || '';
-                if (footUid) footUid.textContent = uid ? 'UID ' + uid.slice(0, 8) + (uid.length > 8 ? '…' : '') : '';
-            } else {
-                trigger.hidden = true;
-                signIn.hidden = false;
-            }
-        }
-    }
-
-    function openAccountMenu() {
-        var trigger = document.getElementById('accountTrigger');
-        var dd = document.getElementById('accountDropdown');
-        var back = document.getElementById('accountBackdrop');
-        if (!trigger || !dd) return;
-        trigger.setAttribute('aria-expanded', 'true');
-        dd.hidden = false;
-        if (back) back.hidden = false;
-    }
-    function closeAccountMenu() {
-        var trigger = document.getElementById('accountTrigger');
-        var dd = document.getElementById('accountDropdown');
-        var back = document.getElementById('accountBackdrop');
-        if (trigger) trigger.setAttribute('aria-expanded', 'false');
-        if (dd) dd.hidden = true;
-        if (back) back.hidden = true;
-    }
-    function setupAccountMenu() {
-        var trigger = document.getElementById('accountTrigger');
-        var back = document.getElementById('accountBackdrop');
-        if (trigger) {
-            trigger.addEventListener('click', function(e) {
-                e.stopPropagation();
-                if (trigger.getAttribute('aria-expanded') === 'true') closeAccountMenu();
-                else openAccountMenu();
-            });
-        }
-        if (back) back.addEventListener('click', closeAccountMenu);
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') closeAccountMenu();
-        });
     }
 
     document.addEventListener('DOMContentLoaded', function() {
@@ -407,8 +290,8 @@ const SCRIPT = `
         } else {
             removeBtn.style.display = 'none';
         }
-        setupAccountMenu();
-        syncAuthPill();
+        window.setupAccountMenu();
+        window.syncAuthPill();
         repaint(savedLanguage);
 
         languageSelect.addEventListener('change', function() {
@@ -535,7 +418,7 @@ ${renderHead({ title: strings.documentTitle, pageStyles: PAGE_CSS })}
 <body>
 ${BODY_HTML}
 <script>
-window.__QUILL_I18N__ = ${JSON.stringify({ settings: SETTINGS_STRINGS, footer: FOOTER_STRINGS })};
+window.__QUILL_I18N__ = ${JSON.stringify({ settings: SETTINGS_STRINGS, common: COMMON_STRINGS, footer: FOOTER_STRINGS })};
 window.__QUILL_INITIAL_LOCALE__ = ${JSON.stringify(locale)};
 window.__QUILL_TOPBAR__ = ${JSON.stringify({
   english: renderTopbar('settings', 'english'),
@@ -546,6 +429,7 @@ window.__QUILL_TOPBAR_STRINGS__ = ${JSON.stringify({
   indonesian: getTopbarStrings('indonesian'),
 })};
 </script>
+<script>${COMMON_JS}</script>
 <script>${SCRIPT}</script>
 <script>${SELECT_SCRIPT}</script>
 <script>${SPECIMEN_JS}</script>

@@ -2,8 +2,8 @@
 // English strings are the default markup; the script reads the i18n table
 // injected below and re-paints fields when the user changes language.
 
-import { MAIN_STRINGS, Locale } from './i18n';
-import { renderHead, renderFooter, renderTopbar, getTopbarStrings, FOOTER_STRINGS, ARCHIVAL_DETAILS_HTML } from './styles';
+import { MAIN_STRINGS, COMMON_STRINGS, Locale } from './i18n';
+import { renderHead, renderFooter, renderTopbar, getTopbarStrings, FOOTER_STRINGS, ARCHIVAL_DETAILS_HTML, COMMON_JS } from './styles';
 import { SELECT_CSS, SELECT_SCRIPT } from './select';
 import { SPECIMEN_JS } from './specimen';
 
@@ -582,122 +582,6 @@ const SCRIPT = `
         syncByokStatus();
     }
 
-    function syncByokStatus() {
-        const lang = (localStorage.getItem('uiLanguage') || 'english');
-        const t = I18N[lang];
-        const key = (localStorage.getItem(getApiKeyStorageKey()) || '').trim();
-        const has = key.length > 0;
-        const byokStatus = document.getElementById('byokStatus');
-        if (byokStatus) byokStatus.setAttribute('data-state', has ? 'ok' : 'missing');
-        const byokStrings = (window.__QUILL_TOPBAR_STRINGS__ && window.__QUILL_TOPBAR_STRINGS__[lang]) || null;
-        const byokStateText = document.getElementById('byokStateText');
-        if (byokStateText) byokStateText.textContent = has ? (byokStrings ? byokStrings.byokSet : 'Key Set') : (byokStrings ? byokStrings.byokMissing : 'No Key');
-        const byokBanner = document.getElementById('byokBanner');
-        if (byokBanner) byokBanner.classList.toggle('show', !has);
-        const byokBannerTitle = document.getElementById('byokBannerTitle');
-        if (byokBannerTitle) byokBannerTitle.textContent = t.byokBannerTitle;
-        const byokBannerMsg = document.getElementById('byokBannerMsg');
-        if (byokBannerMsg) byokBannerMsg.innerHTML = t.byokBannerMsg;
-        const byokBannerLink = document.getElementById('byokBannerLink');
-        if (byokBannerLink) byokBannerLink.textContent = t.byokBannerCta;
-    }
-
-    function getApiKeyOrRedirect() {
-        const key = (localStorage.getItem('geminiApiKey') || '').trim();
-        if (!key) {
-            const lang = localStorage.getItem('uiLanguage') || 'english';
-            showError(I18N[lang].apiKeyRequired);
-            syncByokStatus();
-            return null;
-        }
-        return key;
-    }
-
-    async function callByokEndpoint(url, body) {
-        const key = getApiKeyOrRedirect();
-        if (!key) return null;
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-User-API-Key': key },
-            body: JSON.stringify(body),
-        });
-        if (response.status === 400) {
-            let payload = null;
-            try { payload = await response.json(); } catch (_) {}
-            if (payload && payload.code === 'BYOK_KEY_REQUIRED') {
-                const lang = localStorage.getItem('uiLanguage') || 'english';
-                showError(I18N[lang].apiKeyRequired);
-                syncByokStatus();
-                return null;
-            }
-        }
-        return response;
-    }
-
-    function showError(message) {
-        const errorMessage = document.getElementById('errorMessage');
-        const errorMessageText = document.getElementById('errorMessageText');
-        if (errorMessageText) errorMessageText.textContent = message;
-        if (errorMessage) {
-            errorMessage.classList.add('show');
-            errorMessage.scrollIntoView({ behavior: 'smooth' });
-        }
-    }
-
-    function showModal(title, message, onConfirm, cancelText, confirmText, opts) {
-        const modal = document.getElementById('confirmationModal');
-        const modalTitle = document.getElementById('modalTitle');
-        const modalMessage = document.getElementById('modalMessage');
-        const modalCancel = document.getElementById('modalCancel');
-        const modalConfirm = document.getElementById('modalConfirm');
-        const lab = document.getElementById('modalLab');
-        const escClose = document.getElementById('modalEscClose');
-        const modalExtra = document.getElementById('modalExtra');
-        const lang = localStorage.getItem('uiLanguage') || 'english';
-        if (lab) lab.textContent = I18N[lang].confirmLabel;
-        if (escClose) escClose.textContent = I18N[lang].escToClose;
-        modalTitle.textContent = title;
-        modalMessage.textContent = message;
-        modalCancel.textContent = cancelText || 'Cancel';
-        modalConfirm.textContent = confirmText || 'Confirm';
-        if (modalExtra) {
-            if (opts && opts.checkboxLabel) {
-                modalExtra.innerHTML = '<label class="modal-checkbox"><input type="checkbox" id="modalCheckbox" ' + (opts.checkboxDefault !== false ? 'checked' : '') + '> <span id="modalCheckboxLabel"></span></label>';
-                const lbl = document.getElementById('modalCheckboxLabel');
-                if (lbl) lbl.textContent = opts.checkboxLabel;
-                modalExtra.style.display = 'block';
-            } else {
-                modalExtra.innerHTML = '';
-                modalExtra.style.display = 'none';
-            }
-        }
-        modal.classList.add('show');
-        function closeModal() { modal.classList.remove('show'); }
-        modalCancel.onclick = closeModal;
-        modalConfirm.onclick = function() {
-            const cb = document.getElementById('modalCheckbox');
-            const checked = cb ? cb.checked : true;
-            closeModal();
-            onConfirm(checked);
-        };
-        modal.onclick = function(e) { if (e.target === modal) closeModal(); };
-        document.addEventListener('keydown', function escHandler(e) {
-            if (e.key === 'Escape') { closeModal(); document.removeEventListener('keydown', escHandler); }
-        });
-    }
-
-    // Loading facts cycling
-    let loadingInterval;
-    let shuffledFacts = [];
-    let currentFactIndex = 0;
-    function shuffleArray(array) {
-        const s = array.slice();
-        for (let i = s.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [s[i], s[j]] = [s[j], s[i]];
-        }
-        return s;
-    }
     function startLoadingFacts(lang) {
         const facts = I18N[lang].loadingFacts;
         if (!facts || facts.length === 0) return;
@@ -719,76 +603,37 @@ const SCRIPT = `
         }
     }
 
-    // Auth state
-    function syncAuthPill() {
-        const trigger = document.getElementById('accountTrigger');
-        const signIn = document.getElementById('authSignInLink');
-        const name = localStorage.getItem('quillAuthName') || '';
-        const uid = localStorage.getItem('quillAuthUid') || '';
-        const initials = computeInitials(name) || (uid ? uid.slice(0, 2).toUpperCase() : '--');
-        if (trigger && signIn) {
-            if (name || uid) {
-                trigger.hidden = false;
-                signIn.hidden = true;
-                trigger.setAttribute('data-uid', uid);
-                const av = document.getElementById('accountAvatar');
-                const avLg = document.getElementById('accountAvatarLg');
-                const trigName = document.getElementById('accountTriggerName');
-                const ddName = document.getElementById('accountName');
-                const ddEmail = document.getElementById('accountEmail');
-                const footUid = document.getElementById('accountFootUid');
-                if (av) av.textContent = initials;
-                if (avLg) avLg.textContent = initials;
-                if (trigName) trigName.textContent = name || 'Account';
-                if (ddName) ddName.textContent = name || 'Account';
-                if (ddEmail) ddEmail.textContent = uid || '';
-                if (footUid) footUid.textContent = uid ? 'UID ' + uid.slice(0, 8) + (uid.length > 8 ? '…' : '') : '';
-            } else {
-                trigger.hidden = true;
-                signIn.hidden = false;
-                closeAccountMenu();
+    function getApiKeyOrRedirect() {
+        const uid = localStorage.getItem('quillAuthUid');
+        const key = (localStorage.getItem(uid ? 'geminiApiKey.' + uid : 'geminiApiKey') || '').trim();
+        if (!key) {
+            const lang = localStorage.getItem('uiLanguage') || 'english';
+            showError(I18N[lang].apiKeyRequired);
+            window.syncByokStatus();
+            return null;
+        }
+        return key;
+    }
+
+    async function callByokEndpoint(url, body) {
+        const key = getApiKeyOrRedirect();
+        if (!key) return null;
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-User-API-Key': key },
+            body: JSON.stringify(body),
+        });
+        if (response.status === 400) {
+            let payload = null;
+            try { payload = await response.json(); } catch (_) {}
+            if (payload && payload.code === 'BYOK_KEY_REQUIRED') {
+                const lang = localStorage.getItem('uiLanguage') || 'english';
+                showError(I18N[lang].apiKeyRequired);
+                window.syncByokStatus();
+                return null;
             }
         }
-    }
-
-    function computeInitials(name) {
-        if (!name) return '';
-        var parts = name.trim().split(/\s+/);
-        if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-        return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-    }
-
-    function openAccountMenu() {
-        var trigger = document.getElementById('accountTrigger');
-        var dd = document.getElementById('accountDropdown');
-        var back = document.getElementById('accountBackdrop');
-        if (!trigger || !dd) return;
-        trigger.setAttribute('aria-expanded', 'true');
-        dd.hidden = false;
-        if (back) back.hidden = false;
-    }
-    function closeAccountMenu() {
-        var trigger = document.getElementById('accountTrigger');
-        var dd = document.getElementById('accountDropdown');
-        var back = document.getElementById('accountBackdrop');
-        if (trigger) trigger.setAttribute('aria-expanded', 'false');
-        if (dd) dd.hidden = true;
-        if (back) back.hidden = true;
-    }
-    function setupAccountMenu() {
-        var trigger = document.getElementById('accountTrigger');
-        var back = document.getElementById('accountBackdrop');
-        if (trigger) {
-            trigger.addEventListener('click', function(e) {
-                e.stopPropagation();
-                if (trigger.getAttribute('aria-expanded') === 'true') closeAccountMenu();
-                else openAccountMenu();
-            });
-        }
-        if (back) back.addEventListener('click', closeAccountMenu);
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') closeAccountMenu();
-        });
+        return response;
     }
 
     function setupTagSystem(inputId, containerId, array, addBtnId) {
@@ -850,7 +695,8 @@ const SCRIPT = `
         setupTagSystem('tagInput', 'tagsContainer', tagsArr, 'addTagBtn');
         setupTagSystem('keywordInput', 'keywordsContainer', keywordsArr, 'addKeywordBtn');
 
-        syncAuthPill();
+        window.setupAccountMenu();
+        window.syncAuthPill();
         repaint(savedLanguage);
 
         function saveFormData() {
@@ -955,67 +801,8 @@ const SCRIPT = `
         document.getElementById('resetBtn').addEventListener('click', function() {
             const lang = localStorage.getItem('uiLanguage') || 'english';
             const t = I18N[lang];
-            showModal(t.resetConfirmTitle, t.resetConfirmMessage, clearAllData, t.cancelButton, t.resetModalButton);
+            window.showModal(t.resetConfirmTitle, t.resetConfirmMessage, clearAllData, t.cancelButton, t.resetModalButton);
         });
-
-        document.addEventListener('click', function(e) {
-            const target = e.target;
-            if (!(target instanceof Element)) return;
-            const btn = target.closest('#authSignOutBtn');
-            if (!btn) return;
-            e.preventDefault();
-            const lang = localStorage.getItem('uiLanguage') || 'english';
-            const t = I18N[lang];
-            showModal(
-                t.signOutConfirmTitle,
-                t.signOutConfirmMessage,
-                function(keepKey) { performSignOut(keepKey); },
-                t.cancelButton,
-                t.signOutConfirmButton,
-                { checkboxLabel: t.signOutKeepKeyLabel, checkboxDefault: true }
-            );
-        });
-
-        async function performSignOut(keepKey) {
-            const previousUid = localStorage.getItem('quillAuthUid');
-            const previousKey = previousUid ? localStorage.getItem('geminiApiKey.' + previousUid) : null;
-            try {
-                if (!window.firebase || !window.firebase.auth) {
-                    await new Promise(function(resolve, reject) {
-                        const s1 = document.createElement('script');
-                        s1.src = 'https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js';
-                        s1.onload = resolve; s1.onerror = reject;
-                        document.head.appendChild(s1);
-                    });
-                    await new Promise(function(resolve, reject) {
-                        const s2 = document.createElement('script');
-                        s2.src = 'https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js';
-                        s2.onload = resolve; s2.onerror = reject;
-                        document.head.appendChild(s2);
-                    });
-                }
-                if (window.firebase && window.firebase.auth) {
-                    try { await window.firebase.auth().signOut(); } catch (_) {}
-                }
-            } catch (_) {}
-            try { await fetch('/api/auth/session', { method: 'DELETE' }); } catch (_) {}
-            try { await fetch('/api/auth/signout', { method: 'POST' }); } catch (_) {}
-            localStorage.removeItem('quillAuthUid');
-            localStorage.removeItem('quillAuthName');
-            if (!keepKey && previousUid) {
-                localStorage.removeItem('geminiApiKey.' + previousUid);
-            }
-            localStorage.removeItem('geminiApiKey');
-            const newKey = getApiKeyStorageKey();
-            if (keepKey && previousKey) {
-                localStorage.setItem(newKey, previousKey);
-            } else {
-                localStorage.setItem(newKey, '');
-            }
-            syncAuthPill();
-            syncByokStatus();
-            location.reload();
-        }
 
         form.addEventListener('submit', async function(e) {
             e.preventDefault();
@@ -1456,7 +1243,7 @@ ${renderHead({ title: strings.documentTitle, pageStyles: PAGE_CSS })}
 <body>
 ${BODY_HTML}
 <script>
-window.__QUILL_I18N__ = ${JSON.stringify({ main: MAIN_STRINGS, footer: FOOTER_STRINGS })};
+window.__QUILL_I18N__ = ${JSON.stringify({ main: MAIN_STRINGS, common: COMMON_STRINGS, footer: FOOTER_STRINGS })};
 window.__QUILL_INITIAL_LOCALE__ = ${JSON.stringify(locale)};
 window.__QUILL_TOPBAR__ = ${JSON.stringify({
   english: renderTopbar('generator', 'english'),
@@ -1467,6 +1254,7 @@ window.__QUILL_TOPBAR_STRINGS__ = ${JSON.stringify({
   indonesian: getTopbarStrings('indonesian'),
 })};
 </script>
+<script>${COMMON_JS}</script>
 <script>${SCRIPT}</script>
 <script>${SELECT_SCRIPT}</script>
 <script>${SPECIMEN_JS}</script>

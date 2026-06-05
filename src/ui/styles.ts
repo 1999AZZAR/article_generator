@@ -1051,13 +1051,14 @@ export function renderFooter(i18n: FooterStrings): string {
 
 // Shared topbar used on every page. Hybrid: Swiss grid + Polaris nav patterns
 // (brand mark, primary nav, BYOK chip, account menu with ActionList dropdown).
-// `active` is one of: 'generator' | 'workspace' | 'settings' | 'login'.
-export type TopbarPage = 'generator' | 'workspace' | 'settings' | 'login';
+// `active` is one of: 'generator' | 'workspace' | 'settings' | 'about' | 'login'.
+export type TopbarPage = 'generator' | 'workspace' | 'settings' | 'about' | 'login';
 
 export interface TopbarStrings {
   brandAria: string;
   navGenerator: string;
   navWorkspace: string;
+  navAbout: string;
   navSettings: string;
   byokAria: string;
   byokLabel: string;
@@ -1068,6 +1069,8 @@ export interface TopbarStrings {
   menuAccount: string;
   menuWorkspace: string;
   menuWorkspaceMeta: string;
+  menuAbout: string;
+  menuAboutMeta: string;
   menuSettings: string;
   menuSettingsMeta: string;
   menuSignOut: string;
@@ -1080,6 +1083,7 @@ const TOPBAR_STRINGS_EN: TopbarStrings = {
   brandAria: 'Quill home',
   navGenerator: 'Generator',
   navWorkspace: 'Workspace',
+  navAbout: 'About',
   navSettings: 'Settings',
   byokAria: 'BYOK — Bring Your Own Key',
   byokLabel: 'BYOK',
@@ -1090,6 +1094,8 @@ const TOPBAR_STRINGS_EN: TopbarStrings = {
   menuAccount: 'Account',
   menuWorkspace: 'Workspace',
   menuWorkspaceMeta: 'WS',
+  menuAbout: 'About',
+  menuAboutMeta: 'INF',
   menuSettings: 'Settings',
   menuSettingsMeta: 'CFG',
   menuSignOut: 'Sign out',
@@ -1102,6 +1108,7 @@ const TOPBAR_STRINGS_ID: TopbarStrings = {
   brandAria: 'Beranda Quill',
   navGenerator: 'Generator',
   navWorkspace: 'Ruang Kerja',
+  navAbout: 'Tentang',
   navSettings: 'Pengaturan',
   byokAria: 'BYOK — Bawa Kunci Anda Sendiri',
   byokLabel: 'BYOK',
@@ -1112,6 +1119,8 @@ const TOPBAR_STRINGS_ID: TopbarStrings = {
   menuAccount: 'Akun',
   menuWorkspace: 'Ruang Kerja',
   menuWorkspaceMeta: 'WK',
+  menuAbout: 'Tentang',
+  menuAboutMeta: 'INF',
   menuSettings: 'Pengaturan',
   menuSettingsMeta: 'CFG',
   menuSignOut: 'Keluar',
@@ -1138,8 +1147,11 @@ export function renderTopbar(active: TopbarPage, lang: 'english' | 'indonesian' 
                 <a href="/workspace" class="topbar-nav-link${active === 'workspace' ? ' active' : ''}" data-page="workspace" ${active === 'workspace' ? 'aria-current="page"' : ''}>
                     <span class="nav-num">02</span>${t.navWorkspace}
                 </a>
+                <a href="/about" class="topbar-nav-link${active === 'about' ? ' active' : ''}" data-page="about" ${active === 'about' ? 'aria-current="page"' : ''}>
+                    <span class="nav-num">03</span>${t.navAbout}
+                </a>
                 <a href="/settings" class="topbar-nav-link${active === 'settings' ? ' active' : ''}" data-page="settings" ${active === 'settings' ? 'aria-current="page"' : ''}>
-                    <span class="nav-num">03</span>${t.navSettings}
+                    <span class="nav-num">04</span>${t.navSettings}
                 </a>
             </nav>
         </div>
@@ -1169,6 +1181,10 @@ export function renderTopbar(active: TopbarPage, lang: 'english' | 'indonesian' 
                         <a href="/workspace" class="account-dropdown-item" role="menuitem" ${active === 'workspace' ? 'aria-current="page"' : ''}>
                             <span class="account-dropdown-label">${t.menuWorkspace}</span>
                             <span class="account-dropdown-meta">${t.menuWorkspaceMeta}</span>
+                        </a>
+                        <a href="/about" class="account-dropdown-item" role="menuitem" ${active === 'about' ? 'aria-current="page"' : ''}>
+                            <span class="account-dropdown-label">${t.menuAbout}</span>
+                            <span class="account-dropdown-meta">${t.menuAboutMeta}</span>
                         </a>
                         <a href="/settings" class="account-dropdown-item" role="menuitem" ${active === 'settings' ? 'aria-current="page"' : ''}>
                             <span class="account-dropdown-label">${t.menuSettings}</span>
@@ -1240,5 +1256,169 @@ export const ARCHIVAL_DETAILS_HTML = `
     </svg>
 </div>
 <div class="crop-marks" aria-hidden="true"><span></span></div>
+<div class="modal-overlay" id="commonModal" aria-hidden="true">
+    <div class="modal-content">
+        <div class="modal-head">
+            <span class="lab" id="commonModalLab">CONFIRM</span>
+            <span id="commonModalEsc">ESC TO CLOSE</span>
+        </div>
+        <div class="modal-body">
+            <h3 class="modal-title" id="commonModalTitle"></h3>
+            <p class="modal-msg" id="commonModalMsg"></p>
+            <div id="commonModalExtra" style="margin-top:20px;"></div>
+        </div>
+        <div class="modal-actions">
+            <button class="modal-btn modal-btn-cancel" id="commonModalCancel"></button>
+            <button class="modal-btn modal-btn-confirm" id="commonModalConfirm"></button>
+        </div>
+    </div>
+</div>
+`;
+
+export const COMMON_JS = `
+(function() {
+    window.showModal = function(title, message, onConfirm, cancelText, confirmText, opts) {
+        const modal = document.getElementById('commonModal');
+        const lang = localStorage.getItem('uiLanguage') || 'english';
+        const t = (window.__QUILL_I18N__ && window.__QUILL_I18N__.common) ? window.__QUILL_I18N__.common[lang] : { confirmLabel: 'CONFIRM', escToClose: 'ESC TO CLOSE', cancelButton: 'Cancel' };
+        
+        document.getElementById('commonModalLab').textContent = t.confirmLabel;
+        document.getElementById('commonModalEsc').textContent = t.escToClose;
+        document.getElementById('commonModalTitle').textContent = title;
+        document.getElementById('commonModalMsg').textContent = message;
+        document.getElementById('commonModalCancel').textContent = cancelText || t.cancelButton;
+        document.getElementById('commonModalConfirm').textContent = confirmText || 'OK';
+        
+        const extra = document.getElementById('commonModalExtra');
+        if (opts && opts.checkboxLabel) {
+            extra.innerHTML = '<label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;"><input type="checkbox" id="commonModalCb" ' + (opts.checkboxDefault !== false ? 'checked' : '') + '> ' + escapeHtml(opts.checkboxLabel) + '</label>';
+            extra.style.display = 'block';
+        } else {
+            extra.innerHTML = '';
+            extra.style.display = 'none';
+        }
+        
+        modal.classList.add('show');
+        modal.removeAttribute('aria-hidden');
+        
+        function close() {
+            modal.classList.remove('show');
+            modal.setAttribute('aria-hidden', 'true');
+        }
+        
+        document.getElementById('commonModalCancel').onclick = close;
+        document.getElementById('commonModalConfirm').onclick = function() {
+            const cb = document.getElementById('commonModalCb');
+            close();
+            onConfirm(cb ? cb.checked : true);
+        };
+    };
+
+    function escapeHtml(s) {
+        return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    window.syncAuthPill = function() {
+        const lang = localStorage.getItem('uiLanguage') || 'english';
+        const t = (window.__QUILL_I18N__ && window.__QUILL_I18N__.common) ? window.__QUILL_I18N__.common[lang] : { authAccount: 'Account', authUID: 'UID' };
+        const trigger = document.getElementById('accountTrigger');
+        const signIn = document.getElementById('authSignInLink');
+        const name = localStorage.getItem('quillAuthName') || '';
+        const uid = localStorage.getItem('quillAuthUid') || '';
+        if (!trigger || !signIn) return;
+        
+        if (name || uid) {
+            trigger.hidden = false;
+            signIn.hidden = true;
+            const initials = (name || uid).slice(0, 2).toUpperCase();
+            document.getElementById('accountAvatar').textContent = initials;
+            document.getElementById('accountAvatarLg').textContent = initials;
+            document.getElementById('accountTriggerName').textContent = name || t.authAccount;
+            document.getElementById('accountName').textContent = name || t.authAccount;
+            document.getElementById('accountEmail').textContent = uid || '';
+            const footUid = document.getElementById('accountFootUid');
+            if (footUid) footUid.textContent = uid ? t.authUID + ' ' + uid.slice(0, 8) + '…' : '';
+        } else {
+            trigger.hidden = true;
+            signIn.hidden = false;
+        }
+    };
+
+    window.syncByokStatus = function() {
+        const lang = localStorage.getItem('uiLanguage') || 'english';
+        const tb = (window.__QUILL_TOPBAR_STRINGS__ && window.__QUILL_TOPBAR_STRINGS__[lang]) || { byokSet: 'Key Set', byokMissing: 'No Key' };
+        const uid = localStorage.getItem('quillAuthUid');
+        const key = (localStorage.getItem(uid ? 'geminiApiKey.' + uid : 'geminiApiKey') || '').trim();
+        const has = key.length > 0;
+        const chip = document.getElementById('byokStatus');
+        if (chip) {
+            chip.setAttribute('data-state', has ? 'ok' : 'missing');
+            const txt = document.getElementById('byokStateText');
+            if (txt) txt.textContent = has ? tb.byokSet : tb.byokMissing;
+        }
+    };
+
+    window.setupAccountMenu = function() {
+        const trigger = document.getElementById('accountTrigger');
+        const back = document.getElementById('accountBackdrop');
+        const dd = document.getElementById('accountDropdown');
+        if (!trigger || !dd) return;
+        
+        trigger.onclick = function(e) {
+            e.stopPropagation();
+            const open = trigger.getAttribute('aria-expanded') === 'true';
+            trigger.setAttribute('aria-expanded', !open);
+            dd.hidden = open;
+            if (back) back.hidden = open;
+        };
+        if (back) back.onclick = function() {
+            trigger.setAttribute('aria-expanded', 'false');
+            dd.hidden = true;
+            back.hidden = true;
+        };
+    };
+
+    document.addEventListener('click', function(e) {
+        const target = e.target.closest('#authSignOutBtn');
+        if (!target) return;
+        e.preventDefault();
+        const lang = localStorage.getItem('uiLanguage') || 'english';
+        const t = (window.__QUILL_I18N__ && window.__QUILL_I18N__.common) ? window.__QUILL_I18N__.common[lang] : { signOutConfirmTitle: 'Sign Out', signOutConfirmMessage: 'Are you sure?', signOutConfirmButton: 'Sign Out', signOutKeepKeyLabel: 'Keep key' };
+        
+        window.showModal(t.signOutConfirmTitle, t.signOutConfirmMessage, async function(keepKey) {
+            const uid = localStorage.getItem('quillAuthUid');
+            const key = uid ? localStorage.getItem('geminiApiKey.' + uid) : null;
+            
+            try { await fetch('/api/auth/session', { method: 'DELETE' }); } catch(_) {}
+            try { await fetch('/api/auth/signout', { method: 'POST' }); } catch(_) {}
+            
+            localStorage.removeItem('quillAuthUid');
+            localStorage.removeItem('quillAuthName');
+            localStorage.removeItem('geminiApiKey');
+            if (!keepKey && uid) localStorage.removeItem('geminiApiKey.' + uid);
+            
+            if (keepKey && key) localStorage.setItem('geminiApiKey', key);
+            
+            location.reload();
+        }, null, t.signOutConfirmButton, { checkboxLabel: t.signOutKeepKeyLabel, checkboxDefault: true });
+    });
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            const modal = document.getElementById('commonModal');
+            if (modal && modal.classList.contains('show')) {
+                modal.classList.remove('show');
+                modal.setAttribute('aria-hidden', 'true');
+            }
+            const dd = document.getElementById('accountDropdown');
+            if (dd && !dd.hidden) {
+                document.getElementById('accountTrigger').setAttribute('aria-expanded', 'false');
+                dd.hidden = true;
+                const back = document.getElementById('accountBackdrop');
+                if (back) back.hidden = true;
+            }
+        }
+    });
+})();
 `;
 

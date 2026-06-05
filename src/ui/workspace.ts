@@ -1,5 +1,5 @@
-import { WORKSPACE_STRINGS, Locale } from './i18n';
-import { renderHead, renderFooter, renderTopbar, getTopbarStrings, ARCHIVAL_DETAILS_HTML, FOOTER_STRINGS } from './styles';
+import { WORKSPACE_STRINGS, COMMON_STRINGS, Locale } from './i18n';
+import { renderHead, renderFooter, renderTopbar, getTopbarStrings, ARCHIVAL_DETAILS_HTML, FOOTER_STRINGS, COMMON_JS } from './styles';
 import { SPECIMEN_JS } from './specimen';
 
 const PAGE_CSS = `
@@ -673,75 +673,8 @@ const SCRIPT = `
         }
     });
 
-    // ── Account menu (shared pattern) ─────────────────────────────────────────
-    function syncAuthPill() {
-        var name = localStorage.getItem('quillAuthName');
-        uid = localStorage.getItem('quillAuthUid');
-        var trigger = document.getElementById('accountTrigger');
-        var signIn = document.getElementById('authSignInLink');
-        if (!trigger || !signIn) return;
-        if (uid) {
-            trigger.hidden = false;
-            signIn.hidden = true;
-            var initials = (name || uid).slice(0, 2).toUpperCase();
-            var av = document.getElementById('accountAvatar');
-            var avLg = document.getElementById('accountAvatarLg');
-            var trigName = document.getElementById('accountTriggerName');
-            var ddName = document.getElementById('accountName');
-            var ddEmail = document.getElementById('accountEmail');
-            var footUid = document.getElementById('accountFootUid');
-            if (av) av.textContent = initials;
-            if (avLg) avLg.textContent = initials;
-            if (trigName) trigName.textContent = name || 'Account';
-            if (ddName) ddName.textContent = name || 'Account';
-            if (ddEmail) ddEmail.textContent = uid || '';
-            if (footUid) footUid.textContent = uid ? 'UID ' + uid.slice(0, 8) + (uid.length > 8 ? '\\u2026' : '') : '';
-        } else {
-            trigger.hidden = true;
-            signIn.hidden = false;
-        }
-    }
-
-    function syncByokStatus() {
-        var authUid = localStorage.getItem('quillAuthUid');
-        var keyStorageKey = authUid ? ('geminiApiKey.' + authUid) : 'geminiApiKey';
-        var apiKey = localStorage.getItem(keyStorageKey);
-        var chip = document.getElementById('byokStatus');
-        var stateText = document.getElementById('byokStateText');
-        if (chip) chip.setAttribute('data-state', apiKey ? 'ok' : 'missing');
-        var tb = window.__QUILL_TOPBAR_STRINGS__[localStorage.getItem('uiLanguage') || 'english'];
-        if (stateText) stateText.textContent = apiKey ? tb.byokSet : tb.byokMissing;
-    }
-
-    function openAccountMenu() {
-        var trigger = document.getElementById('accountTrigger');
-        var dd = document.getElementById('accountDropdown');
-        var back = document.getElementById('accountBackdrop');
-        if (!trigger || !dd) return;
-        trigger.setAttribute('aria-expanded', 'true');
-        dd.hidden = false;
-        if (back) back.hidden = false;
-    }
-    function closeAccountMenu() {
-        var trigger = document.getElementById('accountTrigger');
-        var dd = document.getElementById('accountDropdown');
-        var back = document.getElementById('accountBackdrop');
-        if (trigger) trigger.setAttribute('aria-expanded', 'false');
-        if (dd) dd.hidden = true;
-        if (back) back.hidden = true;
-    }
-    function setupAccountMenu() {
-        var trigger = document.getElementById('accountTrigger');
-        var back = document.getElementById('accountBackdrop');
-        if (trigger) {
-            trigger.addEventListener('click', function(e) {
-                e.stopPropagation();
-                if (trigger.getAttribute('aria-expanded') === 'true') closeAccountMenu();
-                else openAccountMenu();
-            });
-        }
-        if (back) back.addEventListener('click', closeAccountMenu);
-    }
+    // ── Render draft list ─────────────────────────────────────────────────────
+    function renderDrafts() {
 
     // ── i18n repaint ──────────────────────────────────────────────────────────
     function repaint(newLang) {
@@ -769,23 +702,23 @@ const SCRIPT = `
         if (el('deleteModalConfirm')) el('deleteModalConfirm').textContent = t.deleteConfirmButton;
         var wsHead = document.getElementById('wsTableHead');
         if (wsHead) wsHead.innerHTML = '<div>' + t.colStatus + '</div><div>' + t.colTitle + '</div><div>' + t.colType + '</div><div>' + t.colDate + '</div><div></div>';
-        setupAccountMenu();
-        syncAuthPill();
-        syncByokStatus();
+        window.setupAccountMenu();
+        window.syncAuthPill();
+        window.syncByokStatus();
         renderDrafts();
     }
 
     // ── Storage listener (cross-tab auth changes) ─────────────────────────────
     window.addEventListener('storage', function(e) {
         if (e.key === 'uiLanguage') repaint(e.newValue || 'english');
-        if (e.key === 'quillAuthUid' || e.key === 'quillAuthName') syncAuthPill();
+        if (e.key === 'quillAuthUid' || e.key === 'quillAuthName') window.syncAuthPill();
     });
 
     // ── Boot ──────────────────────────────────────────────────────────────────
     document.addEventListener('DOMContentLoaded', function() {
-        setupAccountMenu();
-        syncAuthPill();
-        syncByokStatus();
+        window.setupAccountMenu();
+        window.syncAuthPill();
+        window.syncByokStatus();
         repaint(localStorage.getItem('uiLanguage') || 'english');
         loadDrafts();
 
@@ -807,7 +740,7 @@ ${renderHead({ title: strings.documentTitle, pageStyles: PAGE_CSS })}
 <body>
 ${BODY_HTML}
 <script>
-window.__QUILL_I18N__ = ${JSON.stringify({ workspace: WORKSPACE_STRINGS, footer: FOOTER_STRINGS })};
+window.__QUILL_I18N__ = ${JSON.stringify({ workspace: WORKSPACE_STRINGS, common: COMMON_STRINGS, footer: FOOTER_STRINGS })};
 window.__QUILL_INITIAL_LOCALE__ = ${JSON.stringify(locale)};
 window.__QUILL_TOPBAR__ = ${JSON.stringify({
     english: renderTopbar('workspace', 'english'),
@@ -818,6 +751,7 @@ window.__QUILL_TOPBAR_STRINGS__ = ${JSON.stringify({
     indonesian: getTopbarStrings('indonesian'),
   })};
 </script>
+<script>${COMMON_JS}</script>
 <script>${SCRIPT}</script>
 <script>${SPECIMEN_JS}</script>
 <script>
