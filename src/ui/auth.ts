@@ -171,7 +171,7 @@ const SCRIPT = `
             syncByokStatus();
         }
         const introTitle = document.getElementById('introTitle');
-        introTitle.innerHTML = t.introTitle.replace(/\./, '<span class="amp">.</span>');
+        introTitle.innerHTML = t.introTitle.replace(/\\./, '<span class="amp">.</span>');
         document.getElementById('introBody').innerHTML = t.introBody;
         document.getElementById('tabSignIn').textContent = t.signInTab;
         document.getElementById('tabSignUp').textContent = t.signUpTab;

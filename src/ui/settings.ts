@@ -225,7 +225,7 @@ const SCRIPT = `
         }
         const heroTitle = document.getElementById('heroTitle');
         if (heroTitle) {
-            heroTitle.innerHTML = t.title.replace(/\./, '<span class="amp">.</span>');
+            heroTitle.innerHTML = t.title.replace(/\\./, '<span class="amp">.</span>');
         }
         document.getElementById('heroLede').textContent = t.lede;
         document.getElementById('backLink').textContent = t.backLink;

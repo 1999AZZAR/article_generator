@@ -510,7 +510,7 @@ const SCRIPT = `
         // Hero
         const heroTitle = document.getElementById('heroTitle');
         if (heroTitle) {
-            heroTitle.innerHTML = t.title.replace(/\./, '<span class="amp">.</span>');
+            heroTitle.innerHTML = t.title.replace(/\\./, '<span class="amp">.</span>');
         }
         const heroLede = document.getElementById('heroLede');
         if (heroLede) heroLede.textContent = t.lede;
