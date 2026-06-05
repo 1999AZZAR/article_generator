@@ -184,6 +184,12 @@ export interface WorkspacePageStrings {
   cancelButton: string;
   deleteConfirmButton: string;
 
+  // Sign-out confirm modal
+  signOutConfirmTitle: string;
+  signOutConfirmMessage: string;
+  signOutConfirmButton: string;
+  signOutKeepKeyLabel: string;
+
   // Toasts / errors
   loadError: string;
   saveSuccess: string;
@@ -626,6 +632,11 @@ export const WORKSPACE_STRINGS: Record<Locale, WorkspacePageStrings> = {
     cancelButton: 'Cancel',
     deleteConfirmButton: 'Delete',
 
+    signOutConfirmTitle: 'Sign out?',
+    signOutConfirmMessage: 'You will be signed out of your account. Your saved articles and form drafts will stay on this device until you sign back in.',
+    signOutConfirmButton: 'Sign out',
+    signOutKeepKeyLabel: 'Keep my saved API key for next sign-in',
+
     loadError: 'Failed to load drafts. Please try again.',
     saveSuccess: 'Draft saved.',
     saveError: 'Failed to save. Please try again.',
@@ -686,7 +697,13 @@ export const WORKSPACE_STRINGS: Record<Locale, WorkspacePageStrings> = {
     cancelButton: 'Batal',
     deleteConfirmButton: 'Hapus',
 
-    loadError: 'Gagal memuat draf. Coba lagi.',
+    signOutConfirmTitle: 'Keluar?',
+    signOutConfirmMessage: 'Anda akan keluar dari akun. Artikel dan draf formulir yang tersimpan tetap ada di perangkat ini sampai Anda masuk lagi.',
+    signOutConfirmButton: 'Keluar',
+    signOutKeepKeyLabel: 'Simpan kunci API saya untuk masuk berikutnya',
+
+    loadError: 'Gagal memuat draf. Silakan coba lagi.',
+
     saveSuccess: 'Draf disimpan.',
     saveError: 'Gagal menyimpan. Coba lagi.',
     deleteSuccess: 'Draf dihapus.',

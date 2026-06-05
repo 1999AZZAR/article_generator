@@ -348,6 +348,24 @@ ${ARCHIVAL_DETAILS_HTML}
 
 <div class="ws-toast" id="wsToast"></div>
 
+<div class="modal-overlay" id="confirmationModal">
+    <div class="modal-content">
+        <div class="modal-head">
+            <span class="lab" id="modalLab">CONFIRM</span>
+            <span id="modalEscClose">ESC TO CLOSE</span>
+        </div>
+        <div class="modal-body">
+            <h3 class="modal-title" id="modalTitle"></h3>
+            <p class="modal-message" id="modalMessage"></p>
+            <div class="modal-extra" id="modalExtra" style="display: none;"></div>
+        </div>
+        <div class="modal-actions">
+            <button class="modal-btn modal-btn-cancel" id="modalCancel">Cancel</button>
+            <button class="modal-btn modal-btn-confirm" id="modalConfirm">Confirm</button>
+        </div>
+    </div>
+</div>
+
 <div class="modal-overlay" id="deleteModal">
     <div class="modal-content">
         <div class="modal-head">
@@ -622,6 +640,105 @@ const SCRIPT = `
     document.getElementById('editorDeleteBtn').addEventListener('click', function() {
         if (!openDraftId) return;
         openDeleteModal(openDraftId);
+    });
+
+    function showModal(title, message, onConfirm, cancelText, confirmText, opts) {
+        const modal = document.getElementById('confirmationModal');
+        const lab = document.getElementById('modalLab');
+        const escClose = document.getElementById('modalEscClose');
+        const modalExtra = document.getElementById('modalExtra');
+        if (lab) lab.textContent = t.confirmLabel;
+        if (escClose) escClose.textContent = t.escToClose;
+        document.getElementById('modalTitle').textContent = title;
+        document.getElementById('modalMessage').textContent = message;
+        const cancelBtn = document.getElementById('modalCancel');
+        const confirmBtn = document.getElementById('modalConfirm');
+        cancelBtn.textContent = cancelText || 'Cancel';
+        confirmBtn.textContent = confirmText || 'Confirm';
+
+        modalExtra.style.display = 'none';
+        modalExtra.innerHTML = '';
+        if (opts && opts.checkboxLabel) {
+            modalExtra.style.display = 'block';
+            const id = 'modalCheck' + Math.random().toString(36).slice(2);
+            modalExtra.innerHTML = '<div style="margin-top:20px;display:flex;align-items:center;gap:10px;cursor:pointer">' +
+                '<input type="checkbox" id="' + id + '" ' + (opts.checkboxDefault ? 'checked' : '') + ' style="cursor:pointer">' +
+                '<label for="' + id + '" style="font-size:13px;color:var(--gray-800);cursor:pointer">' + opts.checkboxLabel + '</label></div>';
+        }
+
+        const handleEsc = (e) => { if (e.key === 'Escape') closeModal(); };
+        const closeModal = () => {
+            modal.classList.remove('show');
+            document.removeEventListener('keydown', handleEsc);
+        };
+
+        cancelBtn.onclick = closeModal;
+        confirmBtn.onclick = () => {
+            let val;
+            if (opts && opts.checkboxLabel) val = modalExtra.querySelector('input').checked;
+            onConfirm(val);
+            closeModal();
+        };
+
+        modal.classList.add('show');
+        document.addEventListener('keydown', handleEsc);
+    }
+
+    async function performSignOut(keepKey) {
+        const previousUid = localStorage.getItem('quillAuthUid');
+        const previousKey = previousUid ? localStorage.getItem('geminiApiKey.' + previousUid) : null;
+        try {
+            if (!window.firebase || !window.firebase.auth) {
+                await new Promise(function(resolve, reject) {
+                    const s1 = document.createElement('script');
+                    s1.src = 'https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js';
+                    s1.onload = resolve; s1.onerror = reject;
+                    document.head.appendChild(s1);
+                });
+                await new Promise(function(resolve, reject) {
+                    const s2 = document.createElement('script');
+                    s2.src = 'https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js';
+                    s2.onload = resolve; s2.onerror = reject;
+                    document.head.appendChild(s2);
+                });
+            }
+            if (window.firebase && window.firebase.auth) {
+                try { await window.firebase.auth().signOut(); } catch (_) {}
+            }
+        } catch (_) {}
+        try { await fetch('/api/auth/session', { method: 'DELETE' }); } catch (_) {}
+        try { await fetch('/api/auth/signout', { method: 'POST' }); } catch (_) {}
+        localStorage.removeItem('quillAuthUid');
+        localStorage.removeItem('quillAuthName');
+        if (!keepKey && previousUid) {
+            localStorage.removeItem('geminiApiKey.' + previousUid);
+        }
+        localStorage.removeItem('geminiApiKey');
+        const newKey = (localStorage.getItem('quillAuthUid') ? ('geminiApiKey.' + localStorage.getItem('quillAuthUid')) : 'geminiApiKey');
+        if (keepKey && previousKey) {
+            localStorage.setItem(newKey, previousKey);
+        } else {
+            localStorage.setItem(newKey, '');
+        }
+        syncAuthPill();
+        syncByokStatus();
+        location.reload();
+    }
+
+    document.addEventListener('click', function(e) {
+        var target = e.target;
+        if (!target) return;
+        var btn = target.closest('#authSignOutBtn');
+        if (!btn) return;
+        e.preventDefault();
+        showModal(
+            t.signOutConfirmTitle,
+            t.signOutConfirmMessage,
+            function(keepKey) { performSignOut(keepKey); },
+            t.cancelButton,
+            t.signOutConfirmButton,
+            { checkboxLabel: t.signOutKeepKeyLabel, checkboxDefault: true }
+        );
     });
 
     // ── Delete modal ──────────────────────────────────────────────────────────
