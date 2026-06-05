@@ -50,9 +50,17 @@ WORKDIR /app
 # Without this, every Gemini call fails with
 # "TLS peer's certificate is not trusted; unable to get local issuer certificate"
 # and the app silently falls back to template responses.
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends ca-certificates \
-    && rm -rf /var/lib/apt/lists/*
+#
+# The bundle is fetched on the HOST (where DNS works) and COPY'd in, because
+# the Docker build sandbox cannot reach deb.debian.org or curl.se — the
+# internal DNS resolver is dead, and the daemon rejects --network=host for
+# builds. To refresh the bundle:
+#   curl -fsSL https://curl.se/ca/cacert.pem -o docker/ca-certificates.crt
+COPY --chown=root:root docker/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
+# The OpenSSL/boringSSL default lookup path also wants this hash-dir layout.
+# Easiest portable option: point SSL_CERT_FILE at the bundle via the runtime
+# command. The env var is picked up by the host OpenSSL, and by workerd via
+# libuv/libcurl if it's used under the hood.
 
 # Pull node_modules from the deps stage
 COPY --from=deps --chown=node:node /app/node_modules ./node_modules
@@ -71,7 +79,8 @@ RUN mkdir -p /app/.wrangler && chown -R node:node /app
 
 ENV NODE_ENV=development \
     HOST=0.0.0.0 \
-    PORT=8787
+    PORT=8787 \
+    SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
 
 EXPOSE 8787
 

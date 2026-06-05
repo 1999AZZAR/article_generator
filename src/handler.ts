@@ -1,5 +1,5 @@
-import { generateArticle, generateNovelOutline, generateShortStory, generateNews, generateShortNews, callGeminiAPI, testGeminiAPIKey, generateChapterContent } from './gemini';
-import { generateMainPageHTML, generateSettingsPageHTML } from './ui';
+import { generateArticle, generateNovelOutline, generateShortStory, generateNews, generateShortNews, testGeminiAPIKey, generateChapterContent } from './gemini';
+import { generateMainPageHTML, generateSettingsPageHTML, generateAuthPageHTML } from './ui';
 
 export interface GenerateRequest {
   topic: string;
@@ -55,6 +55,17 @@ function byokRequiredResponse(): Response {
   );
 }
 
+function jsonResponse(body: unknown, status = 200, extraHeaders: Record<string, string> = {}): Response {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: {
+      'Content-Type': 'application/json',
+      'Access-Control-Allow-Origin': '*',
+      ...extraHeaders,
+    },
+  });
+}
+
 export interface ArticleResponse {
   refinedTags: string[];
   titleSelection: string[];
@@ -86,6 +97,43 @@ export async function handleRequest(request: Request, env: { GEMINI_API_KEY?: st
     });
   }
 
+  const url = new URL(request.url);
+
+  // --- Auth: persist session (UID in signed cookie) ---
+  if (request.method === 'POST' && url.pathname === '/api/auth/session') {
+    try {
+      const body = await request.json() as { idToken?: string; uid?: string };
+      if (!body.uid || !/^[a-zA-Z0-9_-]{6,128}$/.test(body.uid)) {
+        return jsonResponse({ error: 'Invalid uid' }, 400);
+      }
+      // Note: we don't gate any BYOK endpoint on this cookie. It is purely a
+      // UX hint so the server can greet the user. The actual BYOK key lives
+      // only in the browser.
+      const cookie = `quill_uid=${encodeURIComponent(body.uid)}; Path=/; Max-Age=2592000; SameSite=Lax; HttpOnly`;
+      return new Response(JSON.stringify({ ok: true, uid: body.uid }), {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+          'Set-Cookie': cookie,
+        },
+      });
+    } catch (e) {
+      return jsonResponse({ error: 'Bad request' }, 400);
+    }
+  }
+
+  if (request.method === 'POST' && url.pathname === '/api/auth/signout') {
+    return new Response(JSON.stringify({ ok: true }), {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+        'Set-Cookie': 'quill_uid=; Path=/; Max-Age=0; SameSite=Lax; HttpOnly',
+      },
+    });
+  }
+
   // Serve static files
   if (request.method === 'GET' && new URL(request.url).pathname !== '/api/generate') {
     return serveStatic(request);
@@ -113,28 +161,26 @@ export async function handleRequest(request: Request, env: { GEMINI_API_KEY?: st
         return byokRequiredResponse();
       }
 
-      const chapterContent = await generateChapterContent({
+      return new Response(streamChapterGeneration({
         chapterNumber: body.chapterNumber,
         chapterTitle: body.chapterTitle,
         chapterSubtitle: body.chapterSubtitle,
         novelTitle: body.novelTitle,
         novelSynopsis: body.novelSynopsis,
         previousChapters: body.previousChapters
-      }, apiKey);
-
-      return new Response(JSON.stringify({ content: chapterContent }), {
+      }, apiKey), {
         status: 200,
-        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+          'Cache-Control': 'no-cache',
+        },
       });
     } catch (error) {
       console.error('Chapter generation error:', error);
-      return new Response(JSON.stringify({
-        error: 'Chapter generation failed',
-        details: (error as Error).message
-      }), {
-        status: 500,
-        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
-      });
+      return jsonResponse({
+        error: 'Chapter generation failed: ' + ((error as Error).message || 'unknown'),
+      }, 500);
     }
   }
 
@@ -153,7 +199,7 @@ export async function handleRequest(request: Request, env: { GEMINI_API_KEY?: st
 
       // Test the API key with a simple request
       try {
-        const isValid = await testGeminiAPIKey(body.apiKey);
+        const isValid = await withDeadline(testGeminiAPIKey(body.apiKey), 30_000);
 
         if (!isValid) {
           return new Response(JSON.stringify({
@@ -165,11 +211,15 @@ export async function handleRequest(request: Request, env: { GEMINI_API_KEY?: st
           });
         }
       } catch (testError) {
+        const msg = (testError as Error).message;
+        const isTimeout = msg === 'GENERATION_TIMEOUT';
         return new Response(JSON.stringify({
-          error: 'API key test failed',
-          details: (testError as Error).message
+          error: isTimeout
+            ? 'API key test timed out. Please check your network or try a different key.'
+            : 'API key test failed',
+          details: isTimeout ? 'Timeout after 30s' : msg
         }), {
-          status: 400,
+          status: isTimeout ? 504 : 400,
           headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
         });
       }
@@ -285,24 +335,12 @@ export async function handleRequest(request: Request, env: { GEMINI_API_KEY?: st
         return byokRequiredResponse();
       }
 
-      let result;
-      if (body.type === 'article') {
-        result = await generateArticle(body, apiKey);
-      } else if (body.type === 'shortstory') {
-        result = await generateShortStory(body, apiKey);
-      } else if (body.type === 'news') {
-        result = await generateNews(body, apiKey);
-      } else if (body.type === 'shortnews') {
-        result = await generateShortNews(body, apiKey);
-      } else {
-        result = await generateNovelOutline(body, apiKey);
-      }
-
-      return new Response(JSON.stringify(result), {
+      return new Response(streamGeneration(body, apiKey), {
         status: 200,
         headers: {
           'Content-Type': 'application/json',
           'Access-Control-Allow-Origin': '*',
+          'Cache-Control': 'no-cache',
         },
       });
     } catch (error) {
@@ -315,6 +353,104 @@ export async function handleRequest(request: Request, env: { GEMINI_API_KEY?: st
   }
 
   return new Response('Not Found', { status: 404 });
+}
+
+async function withDeadline<T>(p: Promise<T>, ms: number): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new Error('Request timed out')), ms);
+  });
+  try {
+    return await Promise.race([p, timeout]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
+// Streaming generation: returns a ReadableStream that emits periodic heartbeats
+// (single space bytes) while the model is generating, then sends the final JSON
+// result. The heartbeats keep the Cloudflare edge connection alive and prevent
+// the 100s tunnel timeout (524). The client just reads the body as a single
+// JSON payload — leading whitespace is valid in JSON.
+function streamGeneration(body: GenerateRequest, apiKey: string): ReadableStream<Uint8Array> {
+  const enc = new TextEncoder();
+  let closed = false;
+  return new ReadableStream({
+    async start(controller) {
+      const safeEnqueue = (chunk: Uint8Array) => {
+        if (closed) return;
+        try { controller.enqueue(chunk); } catch (_) { closed = true; }
+      };
+      const heartbeat = setInterval(() => safeEnqueue(enc.encode(' ')), 5_000);
+      const onChunk = () => safeEnqueue(enc.encode(' '));
+      try {
+        let result: any;
+        if (body.type === 'article') {
+          result = await generateArticle(body, apiKey, onChunk);
+        } else if (body.type === 'shortstory') {
+          result = await generateShortStory(body, apiKey, onChunk);
+        } else if (body.type === 'news') {
+          result = await generateNews(body, apiKey, onChunk);
+        } else if (body.type === 'shortnews') {
+          result = await generateShortNews(body, apiKey, onChunk);
+        } else {
+          result = await generateNovelOutline(body, apiKey, onChunk);
+        }
+        safeEnqueue(enc.encode(JSON.stringify(result)));
+      } catch (err) {
+        const message = (err as Error).message || 'Generation failed';
+        console.error('Streaming generation error:', err);
+        safeEnqueue(enc.encode(JSON.stringify({
+          error: message,
+          code: 'GENERATION_ERROR',
+        })));
+      } finally {
+        clearInterval(heartbeat);
+        closed = true;
+        try { controller.close(); } catch (_) {}
+      }
+    },
+    cancel() { closed = true; },
+  });
+}
+
+function streamChapterGeneration(
+  chapter: {
+    chapterNumber: number;
+    chapterTitle: string;
+    chapterSubtitle: string;
+    novelTitle: string;
+    novelSynopsis: string;
+    previousChapters?: Array<{ chapterNumber: number; title: string; content: string; keyEvents?: string[] }>;
+  },
+  apiKey: string,
+): ReadableStream<Uint8Array> {
+  const enc = new TextEncoder();
+  let closed = false;
+  return new ReadableStream({
+    async start(controller) {
+      const safeEnqueue = (chunk: Uint8Array) => {
+        if (closed) return;
+        try { controller.enqueue(chunk); } catch (_) { closed = true; }
+      };
+      const heartbeat = setInterval(() => safeEnqueue(enc.encode(' ')), 5_000);
+      const onChunk = () => safeEnqueue(enc.encode(' '));
+      try {
+        const content = await generateChapterContent(chapter, apiKey, onChunk);
+        safeEnqueue(enc.encode(JSON.stringify({ content })));
+      } catch (err) {
+        console.error('Chapter streaming error:', err);
+        safeEnqueue(enc.encode(JSON.stringify({
+          error: (err as Error).message || 'Chapter generation failed',
+        })));
+      } finally {
+        clearInterval(heartbeat);
+        closed = true;
+        try { controller.close(); } catch (_) {}
+      }
+    },
+    cancel() { closed = true; },
+  });
 }
 
 function generateChapterRTF(chapterNumber: number, chapterTitle: string, chapterSubtitle: string, content: string): string {
@@ -500,6 +636,16 @@ async function serveStatic(request: Request): Promise<Response> {
 
   if (pathname === '/settings') {
     const htmlContent = generateSettingsPageHTML();
+    return new Response(htmlContent, {
+      headers: {
+        'Content-Type': 'text/html',
+        'Access-Control-Allow-Origin': '*',
+      },
+    });
+  }
+
+  if (pathname === '/login') {
+    const htmlContent = generateAuthPageHTML();
     return new Response(htmlContent, {
       headers: {
         'Content-Type': 'text/html',

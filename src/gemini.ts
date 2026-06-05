@@ -10,11 +10,16 @@ const GEMINI_FALLBACK_FLASH_URL = 'https://generativelanguage.googleapis.com/v1b
 const GEMINI_LEGACY_PRO_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
 
 // Enhanced retry configuration
-const MAX_RETRIES = 3; // Reduced from 5 (edge workers have time limits)
-const BASE_RETRY_DELAY = 1000; // 1 second
-const MAX_RETRY_DELAY = 15000; // 15 seconds (reduced from 30s for edge)
-const ADAPTIVE_TIMEOUT_BASE = 30000; // 30 seconds base timeout
-const ADAPTIVE_TIMEOUT_MAX = 90000; // 90 seconds max (reduced from 120s for edge)
+// We use Gemini's `:streamGenerateContent?alt=sse` endpoint so bytes flow
+// continuously to workerd, which forwards heartbeats to the Cloudflare edge.
+// This sidesteps the 100s edge read timeout on the tunnel (524 was previously
+// returned after 100s with no body bytes).
+const MAX_RETRIES = 1; // streaming + tight timeouts, fewer retries needed
+const BASE_RETRY_DELAY = 800; // 0.8 seconds
+const MAX_RETRY_DELAY = 2500; // 2.5 seconds
+const ADAPTIVE_TIMEOUT_BASE = 20000; // 20 seconds per fetch
+const ADAPTIVE_TIMEOUT_MAX = 45000; // 45 seconds per fetch — single attempt,
+                                     // then move to next fallback model
 
 // Request deduplication cache with cleanup
 const requestCache = new Map<string, { response: string; timestamp: number }>();
@@ -254,7 +259,7 @@ function getAuthorStyleGuide(authorStyle: string): string {
   return styles[authorStyle] || '';
 }
 
-export async function generateArticle(request: GenerateRequest, apiKey: string): Promise<ArticleResponse> {
+export async function generateArticle(request: GenerateRequest, apiKey: string, onChunk?: (t: string) => void): Promise<ArticleResponse> {
   const language = request.language === 'indonesian' ? 'Indonesian (Bahasa Indonesia)' : 'English';
   const styleGuide = getAuthorStyleGuide(request.authorStyle);
 
@@ -284,8 +289,8 @@ Output as valid JSON only (no markdown, no explanations):
     const useProModel = request.type === 'article' || (request.mainIdea && request.mainIdea.length > 200);
 
     const response = useProModel
-      ? await callGeminiProAPI(prompt, apiKey)
-      : await callGeminiFlashAPI(prompt, apiKey);
+      ? await callGeminiProAPI(prompt, apiKey, onChunk || (() => {}))
+      : await callGeminiFlashAPI(prompt, apiKey, onChunk || (() => {}));
 
     console.log(`Gemini API response for article using ${useProModel ? 'Pro' : 'Flash'} (first 500 chars):`, response.substring(0, 500));
 
@@ -406,7 +411,7 @@ export async function generateChapterContent(chapter: {
     content: string;
     keyEvents?: string[];
   }>;
-}, apiKey: string): Promise<string> {
+}, apiKey: string, onChunk?: (t: string) => void): Promise<string> {
   // Optimize context: Only summarize last 2-3 chapters to avoid prompt bloat
   let previousContext = '';
   if (chapter.previousChapters && chapter.previousChapters.length > 0) {
@@ -438,9 +443,7 @@ Requirements:
 Return raw chapter content (no JSON, no metadata).`;
 
   try {
-    const response = await callGeminiFlashAPI(prompt, apiKey);
-
-    // For chapter generation, return the raw response since we want the actual chapter text
+    const response = await callGeminiFlashAPI(prompt, apiKey, onChunk || (() => {}));
     // Clean up any unwanted prefixes
     const cleanedResponse = response
       .replace(/^Of course\./i, '')
@@ -476,7 +479,7 @@ Error: ${(error as Error).message}`;
   }
 }
 
-export async function generateShortStory(request: GenerateRequest, apiKey: string): Promise<ArticleResponse> {
+export async function generateShortStory(request: GenerateRequest, apiKey: string, onChunk?: (t: string) => void): Promise<ArticleResponse> {
   const language = request.language === 'indonesian' ? 'Indonesian (Bahasa Indonesia)' : 'English';
   const styleGuide = getAuthorStyleGuide(request.authorStyle);
 
@@ -502,7 +505,7 @@ Output as valid JSON only:
 }`;
 
   try {
-    const response = await callGeminiFlashAPI(prompt, apiKey);
+    const response = await callGeminiFlashAPI(prompt, apiKey, onChunk || (() => {}));
     console.log('Gemini API response for short story (first 500 chars):', response.substring(0, 500));
 
     let parsed: ArticleResponse;
@@ -614,7 +617,7 @@ Please try again with a different topic or simplified request.
   }
 }
 
-export async function generateShortNews(request: GenerateRequest, apiKey: string): Promise<ArticleResponse> {
+export async function generateShortNews(request: GenerateRequest, apiKey: string, onChunk?: (t: string) => void): Promise<ArticleResponse> {
   const language = request.language === 'indonesian' ? 'Indonesian (Bahasa Indonesia)' : 'English';
 
   const prompt = `You are a professional news journalist. Write a concise news brief (EXACTLY 400-600 words) in ${language} about "${request.topic}" in the style of ${request.newspaperStyle || request.authorStyle}.
@@ -641,7 +644,7 @@ Output as valid JSON only:
 }`;
 
   try {
-    const response = await callGeminiFlashAPI(prompt, apiKey);
+    const response = await callGeminiFlashAPI(prompt, apiKey, onChunk || (() => {}));
     console.log('Gemini API response for short news (first 500 chars):', response.substring(0, 500));
 
     let parsed: ArticleResponse;
@@ -703,7 +706,7 @@ Output as valid JSON only:
   }
 }
 
-export async function generateNews(request: GenerateRequest, apiKey: string): Promise<ArticleResponse> {
+export async function generateNews(request: GenerateRequest, apiKey: string, onChunk?: (t: string) => void): Promise<ArticleResponse> {
   const language = request.language === 'indonesian' ? 'Indonesian (Bahasa Indonesia)' : 'English';
 
   const prompt = `You are a professional news journalist. Create a comprehensive news article of at least 1200-1800 words in ${language} about "${request.topic}" in the writing style of ${request.newspaperStyle || request.authorStyle}.
@@ -737,7 +740,7 @@ Required JSON format:
 IMPORTANT: Your entire response must be parseable JSON. Nothing else.`;
 
   try {
-    const response = await callGeminiFlashAPI(prompt, apiKey);
+    const response = await callGeminiFlashAPI(prompt, apiKey, onChunk || (() => {}));
     console.log('Gemini API response for news article (first 500 chars):', response.substring(0, 500));
 
     let parsed: ArticleResponse;
@@ -877,7 +880,7 @@ Please try again with a different topic or simplified request.
   }
 }
 
-export async function generateNovelOutline(request: GenerateRequest, apiKey: string): Promise<NovelResponse> {
+export async function generateNovelOutline(request: GenerateRequest, apiKey: string, onChunk?: (t: string) => void): Promise<NovelResponse> {
   const language = request.language === 'indonesian' ? 'Indonesian (Bahasa Indonesia)' : 'English';
   const chapterCount = request.chapterCount || 10;
 
@@ -912,7 +915,7 @@ Required JSON format:
 IMPORTANT: Your entire response must be parseable JSON. The outline array must have exactly ${chapterCount} chapters. Nothing else.`;
 
   try {
-    const response = await callGeminiProAPI(prompt, apiKey);
+    const response = await callGeminiProAPI(prompt, apiKey, onChunk || (() => {}));
     console.log('Gemini API response (first 500 chars):', response.substring(0, 500));
 
     let parsed: NovelResponse;
@@ -1203,6 +1206,167 @@ async function callGeminiAPIWithRetry(
   }
 }
 
+// Streaming variant of callGeminiAPIWithRetry. Uses `:streamGenerateContent?alt=sse`
+// so Gemini sends Server-Sent Events as it generates. We accumulate the text and
+// return the final string once the stream closes. The optional `onChunk` callback
+// is invoked after each SSE event (with the full accumulated text so far) —
+// the handler uses this to forward heartbeats to the Cloudflare edge and keep
+// the tunnel connection alive.
+async function callGeminiStreamWithRetry(
+  prompt: string,
+  apiKey: string,
+  modelUrl: string,
+  onChunk: (fullText: string) => void,
+  retryCount = 0,
+): Promise<string> {
+  const cacheKey = getCacheKey(prompt, modelUrl);
+  const cached = getCachedResponse(cacheKey);
+  if (cached) {
+    onChunk(cached);
+    return cached;
+  }
+
+  // Convert :generateContent → :streamGenerateContent?alt=sse
+  const streamUrl = modelUrl.replace(':generateContent', ':streamGenerateContent') + '?alt=sse';
+
+  const controller = new AbortController();
+  const adaptiveTimeout = calculateAdaptiveTimeout(prompt);
+  const timeoutId = setTimeout(() => controller.abort(), adaptiveTimeout);
+
+  const requestBody = {
+    contents: [{ parts: [{ text: prompt }] }],
+    generationConfig: {
+      temperature: 0.7,
+      topK: 40,
+      topP: 0.95,
+      maxOutputTokens: modelUrl.includes('flash') ? 8192 : 16384,
+    },
+    safetySettings: [
+      { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
+      { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
+      { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
+      { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
+    ],
+  };
+
+  let response: Response;
+  try {
+    response = await fetch(streamUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-goog-api-key': apiKey,
+      },
+      body: JSON.stringify(requestBody),
+      signal: controller.signal,
+    });
+  } catch (e) {
+    clearTimeout(timeoutId);
+    // Network error → retry once then fall through to non-streaming fallback
+    if (retryCount < MAX_RETRIES) {
+      await delay(BASE_RETRY_DELAY);
+      return callGeminiStreamWithRetry(prompt, apiKey, modelUrl, onChunk, retryCount + 1);
+    }
+    throw e;
+  }
+  clearTimeout(timeoutId);
+
+  if (!response.ok) {
+    const errorText = await response.text().catch(() => 'Unknown error');
+    const status = response.status;
+    let errorMessage = `Gemini API error: ${status} ${response.statusText}`;
+    if (status === 429) errorMessage = 'API quota exceeded.';
+    else if (status === 403) errorMessage = 'API access denied.';
+    else if (status === 404) errorMessage = 'Model not found.';
+    throw new Error(`${errorMessage} ${errorText}`);
+  }
+
+  if (!response.body) {
+    throw new Error('Gemini stream returned no body');
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+  let fullText = '';
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+      for (const line of lines) {
+        if (!line.startsWith('data:')) continue;
+        const data = line.slice(5).trim();
+        if (!data || data === '[DONE]') continue;
+        try {
+          const parsed = JSON.parse(data);
+          const text = parsed?.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (text) {
+            fullText += text;
+            onChunk(fullText);
+          }
+        } catch (_) { /* skip malformed event */ }
+      }
+    }
+  } catch (e) {
+    reader.cancel().catch(() => {});
+    throw e;
+  }
+
+  if (!fullText) {
+    throw new Error('Gemini stream produced no text');
+  }
+
+  setCachedResponse(cacheKey, fullText);
+  return fullText;
+}
+
+// Call Gemini Pro for content generation (higher quality) with multiple fallback models.
+// Streaming variant — each model uses the SSE endpoint so bytes flow continuously.
+async function callGeminiProAPI(prompt: string, apiKey: string, onChunk: (t: string) => void): Promise<string> {
+  console.log('Attempting Gemini Pro API call (stream)...');
+  return callGeminiWithFallback(prompt, apiKey, [
+    { name: 'Gemini 3 Pro Preview', url: GEMINI_PRO_URL },
+    { name: 'Gemini 3 Flash Preview', url: GEMINI_FLASH_URL },
+    { name: 'Gemini 2.5 Flash', url: GEMINI_FALLBACK_FLASH_URL },
+  ], onChunk);
+}
+
+async function callGeminiFlashAPI(prompt: string, apiKey: string, onChunk: (t: string) => void): Promise<string> {
+  console.log('Attempting Gemini Flash API call (stream)...');
+  return callGeminiWithFallback(prompt, apiKey, [
+    { name: 'Gemini 3 Flash Preview', url: GEMINI_FLASH_URL },
+    { name: 'Gemini 2.5 Flash', url: GEMINI_FALLBACK_FLASH_URL },
+  ], onChunk);
+}
+
+async function callGeminiWithFallback(
+  prompt: string,
+  apiKey: string,
+  fallbackModels: { name: string; url: string }[],
+  onChunk: (t: string) => void,
+): Promise<string> {
+  for (let i = 0; i < fallbackModels.length; i++) {
+    const model = fallbackModels[i];
+    try {
+      console.log(`Trying ${model.name}...`);
+      const result = await callGeminiStreamWithRetry(prompt, apiKey, model.url, onChunk);
+      return result;
+    } catch (error) {
+      console.warn(`${model.name} failed:`, (error as Error).message);
+      const classifiedError = classifyError(error);
+      if (classifiedError.modelNotFound) continue;
+      if (classifiedError.type === ErrorType.QUOTA_EXCEEDED && i < fallbackModels.length - 1) continue;
+      if (classifiedError.type === ErrorType.RETRYABLE) continue;
+      throw error;
+    }
+  }
+  throw new Error('All Gemini fallback models failed');
+}
+
 // Parse JSON response with improved reliability
 function parseGeminiResponse(text: string): any {
   // Ensure text is actually a string
@@ -1257,109 +1421,4 @@ function parseGeminiResponse(text: string): any {
       throw new Error(`Unable to parse Gemini response as JSON after fixes. Response: ${cleanedText.substring(0, 500)}...`);
     }
   }
-}
-
-
-// Call Gemini Pro for content generation (higher quality) with multiple fallback models
-async function callGeminiProAPI(prompt: string, apiKey: string): Promise<string> {
-  console.log('Attempting Gemini Pro API call...');
-
-  const fallbackModels = [
-    { name: 'Gemini 3 Pro Preview', url: GEMINI_PRO_URL },
-    { name: 'Gemini 3 Flash Preview', url: GEMINI_FLASH_URL },
-    { name: 'Gemini 1.5 Flash', url: GEMINI_FALLBACK_FLASH_URL },
-    { name: 'Gemini Pro (Legacy)', url: GEMINI_LEGACY_PRO_URL }
-  ];
-
-  for (let i = 0; i < fallbackModels.length; i++) {
-    const model = fallbackModels[i];
-    try {
-      console.log(`Trying ${model.name}...`);
-      return await callGeminiAPIWithRetry(prompt, apiKey, model.url);
-    } catch (error) {
-      console.warn(`${model.name} failed:`, (error as Error).message);
-
-      const classifiedError = classifyError(error);
-
-      // Model not found errors should not trigger circuit breaker - just skip to next model
-      if (classifiedError.modelNotFound) {
-        console.log(`${model.name} not available, trying next model...`);
-        continue;
-      }
-
-      // For quota exceeded, only try one more model before giving up
-      if (classifiedError.type === ErrorType.QUOTA_EXCEEDED) {
-        if (i === 0) {
-          console.log('Quota exceeded on primary model, trying one fallback...');
-          continue;
-        }
-        // If we've tried the primary + one fallback and still hitting quota, give up
-        throw error;
-      }
-
-      // For other retryable errors, continue to next model
-      if (classifiedError.type === ErrorType.RETRYABLE) {
-        continue;
-      }
-
-      // For non-retryable errors (like auth), throw immediately
-      throw error;
-    }
-  }
-
-  throw new Error('All Gemini Pro fallback models failed');
-}
-
-// Enhanced Flash API call with multiple fallback models for better resilience
-async function callGeminiFlashAPI(prompt: string, apiKey: string): Promise<string> {
-  console.log('Attempting Gemini Flash API call...');
-
-  const fallbackModels = [
-    { name: 'Gemini 3 Flash Preview', url: GEMINI_FLASH_URL },
-    { name: 'Gemini 1.5 Flash', url: GEMINI_FALLBACK_FLASH_URL },
-    { name: 'Gemini Pro (Legacy)', url: GEMINI_LEGACY_PRO_URL }
-  ];
-
-  for (let i = 0; i < fallbackModels.length; i++) {
-    const model = fallbackModels[i];
-    try {
-      console.log(`Trying ${model.name}...`);
-      return await callGeminiAPIWithRetry(prompt, apiKey, model.url);
-    } catch (error) {
-      console.warn(`${model.name} failed:`, (error as Error).message);
-
-      const classifiedError = classifyError(error);
-
-      // Model not found errors should not trigger circuit breaker - just skip to next model
-      if (classifiedError.modelNotFound) {
-        console.log(`${model.name} not available, trying next model...`);
-        continue;
-      }
-
-      // For quota exceeded, only try one more model before giving up
-      if (classifiedError.type === ErrorType.QUOTA_EXCEEDED) {
-        if (i === 0) {
-          console.log('Quota exceeded on primary model, trying one fallback...');
-          continue;
-        }
-        // If we've tried the primary + one fallback and still hitting quota, give up
-        throw error;
-      }
-
-      // For other retryable errors, continue to next model
-      if (classifiedError.type === ErrorType.RETRYABLE) {
-        continue;
-      }
-
-      // For non-retryable errors (like auth), throw immediately
-      throw error;
-    }
-  }
-
-  throw new Error('All Gemini Flash fallback models failed');
-}
-
-export async function callGeminiAPI(prompt: string, apiKey: string): Promise<string> {
-  const rawResponse = await callGeminiAPIWithRetry(prompt, apiKey, GEMINI_FLASH_URL);
-  return parseGeminiResponse(rawResponse);
 }
