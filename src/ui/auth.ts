@@ -4,7 +4,7 @@
 // pages can namespace the BYOK key per user.
 
 import { AUTH_STRINGS, Locale } from './i18n';
-import { renderHead, renderFooter, FOOTER_STRINGS } from './styles';
+import { renderHead, renderFooter, renderTopbar, FOOTER_STRINGS } from './styles';
 
 const FIREBASE_CONFIG = {
   apiKey: 'AIzaSyD1E_enU3EG10HHT-g2Z0fY7OhaHm_aKY8',
@@ -34,12 +34,7 @@ const PAGE_CSS = `
 
 const BODY_HTML = `
 <div class="container">
-    <div class="topbar">
-        <div class="meta" id="brandLine">QUILL <span class="accent-dot">/</span> SIGN IN <span class="accent-dot">/</span> ED. 02</div>
-        <div class="topbar-right">
-            <a href="/" id="backLink">&larr; BACK TO GENERATOR</a>
-        </div>
-    </div>
+    ${renderTopbar('login')}
 
     <div class="auth-section-label">
         <div class="num">01</div>
@@ -136,8 +131,13 @@ const SCRIPT = `
     function repaint(lang) {
         const t = I18N[lang];
         document.title = t.documentTitle;
-        document.getElementById('brandLine').textContent = t.brand.replace(/<[^>]+>/g, '');
-        document.getElementById('backLink').textContent = t.backLink;
+        // Topbar (replace on language change)
+        const topbarEl = document.querySelector('.topbar');
+        if (topbarEl) {
+            const tmp = document.createElement('div');
+            tmp.innerHTML = renderTopbar('login', lang);
+            topbarEl.replaceWith(tmp.firstElementChild);
+        }
         const introTitle = document.getElementById('introTitle');
         introTitle.innerHTML = escapeHtml(t.introTitle).replace(/\\./, '<span class="amp">.</span>');
         document.getElementById('introBody').textContent = t.introBody;

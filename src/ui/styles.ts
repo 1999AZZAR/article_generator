@@ -58,21 +58,110 @@ button { font-family: inherit; }
 /* ========== TOP BANNER ========== */
 .topbar {
     border-bottom: var(--rule);
-    padding: 12px 0;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    padding: 0;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: stretch;
+    min-height: 56px;
     font-size: 11px;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
     font-weight: 500;
 }
-.topbar .meta { color: var(--gray-600); }
-.topbar .meta strong { color: var(--black); font-weight: 700; }
 .topbar a { color: var(--black); }
-.topbar-right { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+.topbar a:hover { text-decoration: none; }
 
-/* ========== BYOK STATUS (topbar badge) ========== */
+.topbar-left {
+    display: flex;
+    align-items: stretch;
+    border-right: var(--rule);
+}
+.topbar-right {
+    display: flex;
+    align-items: stretch;
+    justify-content: flex-end;
+    border-left: var(--rule);
+}
+
+/* Brand mark (left) */
+.brand {
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    font-family: 'Inter', sans-serif;
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    text-transform: none;
+    color: var(--black);
+    border-right: var(--rule);
+    background: var(--white);
+}
+.brand:hover { background: var(--gray-100); }
+.brand-mark { line-height: 1; }
+.brand-dot { color: var(--accent); margin-left: 1px; }
+
+/* Primary nav (centre-left) — Polaris "Navigation" pattern in Swiss treatment */
+.topbar-nav {
+    display: flex;
+    align-items: stretch;
+}
+.topbar-nav-link {
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--gray-600);
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: color 80ms linear, border-color 80ms linear;
+}
+.topbar-nav-link:hover { color: var(--black); }
+.topbar-nav-link.active {
+    color: var(--black);
+    border-bottom-color: var(--accent);
+}
+.topbar-nav-link .nav-num {
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--accent);
+    margin-right: 8px;
+    font-size: 10px;
+    font-weight: 400;
+}
+
+/* ========== BYOK STATUS (topbar chip, Polaris "Tag" pattern) ========== */
+.byok-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 20px;
+    height: 100%;
+    border: 0;
+    border-left: var(--rule);
+    background: transparent;
+    color: var(--gray-600);
+    font: inherit;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    cursor: pointer;
+    text-decoration: none;
+}
+.byok-chip:hover { background: var(--gray-100); color: var(--black); }
+.byok-chip[data-state="ok"] { color: var(--black); }
+.byok-chip[data-state="missing"] { color: var(--accent); }
+.byok-chip-dot {
+    width: 6px; height: 6px;
+    background: var(--accent);
+    flex-shrink: 0;
+}
+.byok-chip[data-state="ok"] .byok-chip-dot { background: var(--black); }
+.byok-chip-lab { font-family: 'JetBrains Mono', monospace; font-weight: 700; }
+.byok-chip-text { font-size: 11px; }
+
+/* Legacy alias — kept for the byok-banner block in pages that still uses it */
 .byok-status {
     display: inline-flex;
     align-items: center;
@@ -91,31 +180,177 @@ button { font-family: inherit; }
 .byok-status .byok-dot { width: 6px; height: 6px; display: inline-block; background: var(--accent); }
 .byok-status[data-state="ok"] .byok-dot { background: var(--black); }
 
-/* ========== AUTH (user pill, in topbar) ========== */
-.auth-pill {
-    display: inline-flex;
+/* ========== ACCOUNT MENU (Polaris ActionList pattern, Swiss treatment) ========== */
+.account-menu { position: relative; display: flex; align-items: stretch; }
+
+.account-trigger {
+    display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
+    padding: 0 16px 0 20px;
+    height: 100%;
+    border: 0;
+    border-left: var(--rule);
+    background: transparent;
+    color: var(--black);
+    font: inherit;
     font-size: 11px;
+    font-weight: 700;
     letter-spacing: 0.16em;
     text-transform: uppercase;
-    font-weight: 600;
-    color: var(--black);
-    border: 1px solid var(--black);
-    padding: 4px 10px;
-}
-.auth-pill .auth-name { font-weight: 700; }
-.auth-pill button {
-    background: transparent;
-    border: 0;
-    color: var(--accent);
-    font: inherit;
-    font-weight: 700;
     cursor: pointer;
-    padding: 0;
-    letter-spacing: 0.16em;
 }
-.auth-pill button:hover { text-decoration: underline; text-underline-offset: 4px; }
+.account-trigger:hover { background: var(--gray-100); }
+.account-trigger[aria-expanded="true"] { background: var(--black); color: var(--white); }
+.account-trigger[aria-expanded="true"] .account-avatar { background: var(--accent); color: var(--white); }
+.account-avatar {
+    width: 28px; height: 28px;
+    display: inline-flex;
+    align-items: center; justify-content: center;
+    background: var(--black);
+    color: var(--white);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0;
+    text-transform: uppercase;
+    flex-shrink: 0;
+}
+.account-trigger-name {
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.account-caret {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    opacity: 0.6;
+    margin-left: -2px;
+}
+.account-trigger[aria-expanded="true"] .account-caret { transform: rotate(180deg); opacity: 1; }
+
+.signin-btn {
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    height: 100%;
+    border: 0;
+    border-left: var(--rule);
+    background: var(--black);
+    color: var(--white);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    text-decoration: none;
+    cursor: pointer;
+}
+.signin-btn:hover { background: var(--accent); text-decoration: none; }
+
+.account-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    z-index: 100;
+    min-width: 280px;
+    background: var(--white);
+    border: 1px solid var(--black);
+    border-top: 0;
+    box-shadow: 0 8px 0 -7px var(--black);
+}
+.account-dropdown[hidden] { display: none; }
+
+.account-dropdown-head {
+    display: grid;
+    grid-template-columns: 40px 1fr;
+    gap: 12px;
+    padding: 16px;
+    border-bottom: var(--rule);
+    align-items: center;
+    background: var(--white);
+}
+.account-avatar-lg {
+    width: 40px; height: 40px;
+    display: inline-flex;
+    align-items: center; justify-content: center;
+    background: var(--black);
+    color: var(--white);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    font-weight: 700;
+}
+.account-info { min-width: 0; }
+.account-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--black);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    letter-spacing: 0; text-transform: none;
+}
+.account-email {
+    font-size: 11px;
+    color: var(--gray-600);
+    font-family: 'JetBrains Mono', monospace;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    margin-top: 2px;
+    letter-spacing: 0; text-transform: none;
+}
+
+.account-dropdown-list { display: flex; flex-direction: column; }
+.account-dropdown-item {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    padding: 12px 16px;
+    border: 0;
+    border-bottom: var(--rule);
+    background: transparent;
+    color: var(--black);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+    width: 100%;
+    letter-spacing: 0;
+    text-transform: none;
+}
+.account-dropdown-item:last-child { border-bottom: 0; }
+.account-dropdown-item:hover { background: var(--gray-100); text-decoration: none; }
+.account-dropdown-item[aria-current="page"] { background: var(--gray-100); border-left: 2px solid var(--accent); padding-left: 14px; }
+.account-dropdown-label { font-size: 13px; }
+.account-dropdown-meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--gray-600);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+}
+.account-dropdown-item-danger .account-dropdown-label { color: var(--accent); }
+.account-dropdown-item-danger .account-dropdown-meta { color: var(--accent); }
+.account-dropdown-item-danger:hover { background: var(--accent); color: var(--white); }
+.account-dropdown-item-danger:hover .account-dropdown-meta { color: var(--white); }
+
+.account-dropdown-foot {
+    padding: 8px 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--gray-600);
+    border-top: var(--rule);
+    display: flex;
+    justify-content: space-between;
+}
+
+/* Backdrop when dropdown is open (click anywhere to close) */
+.account-backdrop {
+    position: fixed; inset: 0; z-index: 99;
+    background: transparent;
+}
+.account-backdrop[hidden] { display: none; }
 
 /* ========== BYOK BANNER (no-key warning) ========== */
 .byok-banner {
@@ -534,7 +769,15 @@ button { font-family: inherit; }
     .footer .col-1, .footer .col-2, .footer .col-3 { grid-column: 1 / -1; text-align: left; margin-bottom: 4px; }
     .byok-banner-row { grid-template-columns: 1fr; row-gap: 12px; padding: 16px 0; }
     .byok-banner-num { text-align: left; font-size: 24px; }
-    .topbar-right { gap: 12px; }
+    .topbar { min-height: 48px; }
+    .brand { padding: 0 16px; font-size: 16px; }
+    .topbar-nav-link { padding: 0 12px; letter-spacing: 0.14em; }
+    .byok-chip { padding: 0 12px; letter-spacing: 0.12em; }
+    .byok-chip-text { display: none; }
+    .account-trigger-name { display: none; }
+    .account-trigger { padding: 0 14px; }
+    .signin-btn { padding: 0 16px; }
+    .account-dropdown { min-width: 260px; right: -8px; }
     .byok-status { font-size: 10px; padding: 3px 8px; }
     .byok-notice { grid-template-columns: 1fr; row-gap: 12px; }
     .byok-notice-num { justify-self: start; }
@@ -572,6 +815,131 @@ export function renderFooter(i18n: FooterStrings): string {
         <div class="col-2">${i18n.typeface}</div>
         <div class="col-3">${i18n.by.replace('{link}', '<a href="https://azzar.netlify.app/porto" target="_blank">LilyOpenCMS</a>')}</div>
     </footer>`;
+}
+
+// Shared topbar used on every page. Hybrid: Swiss grid + Polaris nav patterns
+// (brand mark, primary nav, BYOK chip, account menu with ActionList dropdown).
+// `active` is one of: 'generator' | 'settings' | 'login'. The active page's
+// link in the account dropdown is marked `aria-current="page"` too.
+export type TopbarPage = 'generator' | 'settings' | 'login';
+
+export interface TopbarStrings {
+  brandAria: string;
+  navGenerator: string;
+  navSettings: string;
+  byokAria: string;
+  byokLabel: string;
+  byokSet: string;
+  byokMissing: string;
+  signIn: string;
+  accountAria: string;
+  menuAccount: string;
+  menuSettings: string;
+  menuSettingsMeta: string;
+  menuSignOut: string;
+  menuSignOutMeta: string;
+  footPrefix: string;
+  footVersion: string;
+}
+
+const TOPBAR_STRINGS_EN: TopbarStrings = {
+  brandAria: 'Quill home',
+  navGenerator: 'Generator',
+  navSettings: 'Settings',
+  byokAria: 'BYOK — Bring Your Own Key',
+  byokLabel: 'BYOK',
+  byokSet: 'Key Set',
+  byokMissing: 'No Key',
+  signIn: 'Sign in',
+  accountAria: 'Account menu',
+  menuAccount: 'Account',
+  menuSettings: 'Settings',
+  menuSettingsMeta: 'CFG',
+  menuSignOut: 'Sign out',
+  menuSignOutMeta: 'EXIT',
+  footPrefix: 'BYOK',
+  footVersion: 'v0.2',
+};
+
+const TOPBAR_STRINGS_ID: TopbarStrings = {
+  brandAria: 'Beranda Quill',
+  navGenerator: 'Generator',
+  navSettings: 'Pengaturan',
+  byokAria: 'BYOK — Bawa Kunci Anda Sendiri',
+  byokLabel: 'BYOK',
+  byokSet: 'Kunci Disetel',
+  byokMissing: 'Tanpa Kunci',
+  signIn: 'Masuk',
+  accountAria: 'Menu akun',
+  menuAccount: 'Akun',
+  menuSettings: 'Pengaturan',
+  menuSettingsMeta: 'CFG',
+  menuSignOut: 'Keluar',
+  menuSignOutMeta: 'KELUAR',
+  footPrefix: 'BYOK',
+  footVersion: 'v0.2',
+};
+
+export function getTopbarStrings(lang: 'english' | 'indonesian'): TopbarStrings {
+  return lang === 'indonesian' ? TOPBAR_STRINGS_ID : TOPBAR_STRINGS_EN;
+}
+
+export function renderTopbar(active: TopbarPage, lang: 'english' | 'indonesian' = 'english'): string {
+  const t = getTopbarStrings(lang);
+  return `<div class="topbar">
+        <div class="topbar-left">
+            <a href="/" class="brand" aria-label="${t.brandAria}">
+                <span class="brand-mark">QUILL</span><span class="brand-dot">.</span>
+            </a>
+            <nav class="topbar-nav" aria-label="Primary">
+                <a href="/" class="topbar-nav-link${active === 'generator' ? ' active' : ''}" data-page="generator" ${active === 'generator' ? 'aria-current="page"' : ''}>
+                    <span class="nav-num">01</span>${t.navGenerator}
+                </a>
+                <a href="/settings" class="topbar-nav-link${active === 'settings' ? ' active' : ''}" data-page="settings" ${active === 'settings' ? 'aria-current="page"' : ''}>
+                    <span class="nav-num">02</span>${t.navSettings}
+                </a>
+            </nav>
+        </div>
+        <div class="topbar-right">
+            <a href="/settings" class="byok-chip" id="byokStatus" data-state="missing" title="${t.byokAria}">
+                <span class="byok-chip-dot" aria-hidden="true"></span>
+                <span class="byok-chip-lab">${t.byokLabel}</span>
+                <span class="byok-chip-text" id="byokStateText">${t.byokMissing}</span>
+            </a>
+            <div class="account-menu" id="accountMenu">
+                <button type="button" class="account-trigger" id="accountTrigger" aria-haspopup="menu" aria-expanded="false" aria-label="${t.accountAria}" hidden>
+                    <span class="account-avatar" id="accountAvatar">--</span>
+                    <span class="account-trigger-name" id="accountTriggerName"></span>
+                    <span class="account-caret" aria-hidden="true">▾</span>
+                </button>
+                <a href="/login" class="signin-btn" id="authSignInLink" ${active === 'login' ? 'aria-current="page"' : ''}>${t.signIn}</a>
+                <div class="account-backdrop" id="accountBackdrop" hidden></div>
+                <div class="account-dropdown" id="accountDropdown" role="menu" hidden>
+                    <div class="account-dropdown-head">
+                        <div class="account-avatar-lg" id="accountAvatarLg">--</div>
+                        <div class="account-info">
+                            <div class="account-name" id="accountName">—</div>
+                            <div class="account-email" id="accountEmail">—</div>
+                        </div>
+                    </div>
+                    <div class="account-dropdown-list" role="none">
+                        <a href="/settings" class="account-dropdown-item" role="menuitem" ${active === 'settings' ? 'aria-current="page"' : ''}>
+                            <span class="account-dropdown-label">${t.menuSettings}</span>
+                            <span class="account-dropdown-meta">${t.menuSettingsMeta}</span>
+                        </a>
+                        <button type="button" class="account-dropdown-item account-dropdown-item-danger" id="authSignOutBtn" role="menuitem">
+                            <span class="account-dropdown-label">${t.menuSignOut}</span>
+                            <span class="account-dropdown-meta">${t.menuSignOutMeta}</span>
+                        </button>
+                    </div>
+                    <div class="account-dropdown-foot">
+                        <span>${t.footPrefix} · ${t.footVersion}</span>
+                        <span id="accountFootUid">—</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>`;
 }
 
 export interface FooterStrings {

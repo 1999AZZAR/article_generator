@@ -3,7 +3,7 @@
 // translatable fields when the user changes the language.
 
 import { SETTINGS_STRINGS, Locale } from './i18n';
-import { renderHead, renderFooter, FOOTER_STRINGS } from './styles';
+import { renderHead, renderFooter, renderTopbar, FOOTER_STRINGS } from './styles';
 
 const PAGE_CSS = `
 .nav {
@@ -103,22 +103,7 @@ const PAGE_CSS = `
 
 const BODY_HTML = `
 <div class="container">
-    <div class="topbar">
-        <div class="meta" id="brandLine">QUILL <span class="accent-dot">/</span> SETTINGS <span class="accent-dot">/</span> ED. 02</div>
-        <div class="topbar-right">
-            <span class="auth-pill" id="authPill" style="display: none;" data-uid="">
-                <span class="auth-name" id="authName"></span>
-                <button type="button" id="authSignOutBtn" title="Sign out">SIGN OUT</button>
-            </span>
-            <a href="/login" id="authSignInLink" title="Sign in">SIGN IN</a>
-            <span class="byok-status" id="byokStatus" data-state="missing" title="BYOK &mdash; Bring Your Own Key">
-                <span class="byok-lab">BYOK</span>
-                <span class="byok-dot" aria-hidden="true"></span>
-                <span class="byok-state" id="byokStateText">No API Key</span>
-            </span>
-            <a href="/">&larr; BACK TO GENERATOR</a>
-        </div>
-    </div>
+    ${renderTopbar('settings')}
 
     <header class="hero">
         <div class="index">&#8470; S.01</div>
@@ -227,7 +212,15 @@ const SCRIPT = `
     function repaint(lang) {
         const t = I18N[lang];
         document.title = t.documentTitle;
-        document.getElementById('brandLine').textContent = t.brand.replace(/<[^>]+>/g, '');
+        // Topbar (replace on language change)
+        const topbarEl = document.querySelector('.topbar');
+        if (topbarEl) {
+            const tmp = document.createElement('div');
+            tmp.innerHTML = renderTopbar('settings', lang);
+            topbarEl.replaceWith(tmp.firstElementChild);
+            setupAccountMenu();
+            syncAuthPill();
+        }
         const heroTitle = document.getElementById('heroTitle');
         if (heroTitle) {
             heroTitle.innerHTML = escapeHtml(t.title).replace(/\\./, '<span class="amp">.</span>');
@@ -309,22 +302,74 @@ const SCRIPT = `
         setTimeout(() => { sm.style.display = 'none'; }, 5000);
     }
 
+    function computeInitials(name) {
+        if (!name) return '';
+        var parts = name.trim().split(/\s+/);
+        if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+        return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+
     function syncAuthPill() {
-        const pill = document.getElementById('authPill');
+        const trigger = document.getElementById('accountTrigger');
         const signIn = document.getElementById('authSignInLink');
-        const name = localStorage.getItem('quillAuthName');
-        const uid = localStorage.getItem('quillAuthUid');
-        if (pill && signIn) {
-            if (name) {
-                pill.style.display = 'inline-flex';
-                pill.setAttribute('data-uid', uid || '');
-                document.getElementById('authName').textContent = name;
-                signIn.style.display = 'none';
+        const name = localStorage.getItem('quillAuthName') || '';
+        const uid = localStorage.getItem('quillAuthUid') || '';
+        const initials = computeInitials(name) || (uid ? uid.slice(0, 2).toUpperCase() : '--');
+        if (trigger && signIn) {
+            if (name || uid) {
+                trigger.hidden = false;
+                signIn.hidden = true;
+                trigger.setAttribute('data-uid', uid);
+                const av = document.getElementById('accountAvatar');
+                const avLg = document.getElementById('accountAvatarLg');
+                const trigName = document.getElementById('accountTriggerName');
+                const ddName = document.getElementById('accountName');
+                const ddEmail = document.getElementById('accountEmail');
+                const footUid = document.getElementById('accountFootUid');
+                if (av) av.textContent = initials;
+                if (avLg) avLg.textContent = initials;
+                if (trigName) trigName.textContent = name || 'Account';
+                if (ddName) ddName.textContent = name || 'Account';
+                if (ddEmail) ddEmail.textContent = uid || '';
+                if (footUid) footUid.textContent = uid ? 'UID ' + uid.slice(0, 8) + (uid.length > 8 ? '…' : '') : '';
             } else {
-                pill.style.display = 'none';
-                signIn.style.display = 'inline-flex';
+                trigger.hidden = true;
+                signIn.hidden = false;
             }
         }
+    }
+
+    function openAccountMenu() {
+        var trigger = document.getElementById('accountTrigger');
+        var dd = document.getElementById('accountDropdown');
+        var back = document.getElementById('accountBackdrop');
+        if (!trigger || !dd) return;
+        trigger.setAttribute('aria-expanded', 'true');
+        dd.hidden = false;
+        if (back) back.hidden = false;
+    }
+    function closeAccountMenu() {
+        var trigger = document.getElementById('accountTrigger');
+        var dd = document.getElementById('accountDropdown');
+        var back = document.getElementById('accountBackdrop');
+        if (trigger) trigger.setAttribute('aria-expanded', 'false');
+        if (dd) dd.hidden = true;
+        if (back) back.hidden = true;
+    }
+    function setupAccountMenu() {
+        var trigger = document.getElementById('accountTrigger');
+        var back = document.getElementById('accountBackdrop');
+        if (trigger) {
+            trigger.addEventListener('click', function(e) {
+                e.stopPropagation();
+                if (trigger.getAttribute('aria-expanded') === 'true') closeAccountMenu();
+                else openAccountMenu();
+            });
+        }
+        if (back) back.addEventListener('click', closeAccountMenu);
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeAccountMenu();
+        });
     }
 
     document.addEventListener('DOMContentLoaded', function() {
@@ -345,6 +390,7 @@ const SCRIPT = `
         } else {
             removeBtn.style.display = 'none';
         }
+        setupAccountMenu();
         syncAuthPill();
         repaint(savedLanguage);
 

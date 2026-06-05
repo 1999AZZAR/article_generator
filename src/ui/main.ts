@@ -3,7 +3,7 @@
 // injected below and re-paints fields when the user changes language.
 
 import { MAIN_STRINGS, Locale } from './i18n';
-import { renderHead, renderFooter, FOOTER_STRINGS } from './styles';
+import { renderHead, renderFooter, renderTopbar, getTopbarStrings, FOOTER_STRINGS } from './styles';
 
 const PAGE_CSS = `
 /* ========== SECTION LABEL ========== */
@@ -257,22 +257,7 @@ const PAGE_CSS = `
 // the i18n table that's embedded as a JSON blob.
 const BODY_HTML = `
 <div class="container">
-    <div class="topbar">
-        <div class="meta"><span id="brandLine">QUILL <span class="accent-dot">/</span> AI WRITING ASSISTANT <span class="accent-dot">/</span> ED. 02</span></div>
-        <div class="topbar-right">
-            <span class="auth-pill" id="authPill" style="display: none;" data-uid="">
-                <span class="auth-name" id="authName"></span>
-                <button type="button" id="authSignOutBtn" title="Sign out">SIGN OUT</button>
-            </span>
-            <a href="/login" id="authSignInLink" title="Sign in">SIGN IN</a>
-            <span class="byok-status" id="byokStatus" data-state="missing" title="BYOK &mdash; Bring Your Own Key">
-                <span class="byok-lab">BYOK</span>
-                <span class="byok-dot" aria-hidden="true"></span>
-                <span class="byok-state" id="byokStateText">No API Key</span>
-            </span>
-            <a href="/settings" id="settingsLink" title="Settings">SETTINGS &rarr;</a>
-        </div>
-    </div>
+    ${renderTopbar('generator')}
 
     <div class="byok-banner" id="byokBanner">
         <div class="byok-banner-row">
@@ -497,9 +482,17 @@ const SCRIPT = `
     function repaint(lang) {
         const t = I18N[lang];
         document.title = t.documentTitle;
-        // Topbar
-        const topbarMeta = document.querySelector('.topbar .meta');
-        if (topbarMeta) topbarMeta.textContent = t.brand.replace(/<[^>]+>/g, '');
+        // Topbar (replace the whole topbar block so language-specific labels + state reset)
+        const topbarEl = document.querySelector('.topbar');
+        if (topbarEl) {
+            const tmp = document.createElement('div');
+            tmp.innerHTML = renderTopbar('generator', lang);
+            topbarEl.replaceWith(tmp.firstElementChild);
+            // Re-bind dropdown interactions (event listeners don't survive outerHTML replace)
+            setupAccountMenu();
+            // Re-populate auth pill state on the freshly-injected elements
+            syncAuthPill();
+        }
         // Hero
         const heroTitle = document.getElementById('heroTitle');
         if (heroTitle) {
@@ -575,14 +568,14 @@ const SCRIPT = `
     }
 
     function syncByokStatus() {
-        const lang = localStorage.getItem('uiLanguage') || 'english';
+        const lang = (localStorage.getItem('uiLanguage') || 'english');
         const t = I18N[lang];
-        const key = (localStorage.getItem('geminiApiKey') || '').trim();
+        const key = (localStorage.getItem(getApiKeyStorageKey()) || '').trim();
         const has = key.length > 0;
         const byokStatus = document.getElementById('byokStatus');
         if (byokStatus) byokStatus.setAttribute('data-state', has ? 'ok' : 'missing');
         const byokStateText = document.getElementById('byokStateText');
-        if (byokStateText) byokStateText.textContent = has ? t.byokKeySet : t.byokKeyMissing;
+        if (byokStateText) byokStateText.textContent = has ? getTopbarStrings(lang).byokSet : getTopbarStrings(lang).byokMissing;
         const byokBanner = document.getElementById('byokBanner');
         if (byokBanner) byokBanner.classList.toggle('show', !has);
         const byokBannerTitle = document.getElementById('byokBannerTitle');
@@ -695,21 +688,74 @@ const SCRIPT = `
 
     // Auth state
     function syncAuthPill() {
-        const pill = document.getElementById('authPill');
+        const trigger = document.getElementById('accountTrigger');
         const signIn = document.getElementById('authSignInLink');
-        const name = localStorage.getItem('quillAuthName');
-        const uid = localStorage.getItem('quillAuthUid');
-        if (pill && signIn) {
-            if (name) {
-                pill.style.display = 'inline-flex';
-                pill.setAttribute('data-uid', uid || '');
-                document.getElementById('authName').textContent = name;
-                signIn.style.display = 'none';
+        const name = localStorage.getItem('quillAuthName') || '';
+        const uid = localStorage.getItem('quillAuthUid') || '';
+        const initials = computeInitials(name) || (uid ? uid.slice(0, 2).toUpperCase() : '--');
+        if (trigger && signIn) {
+            if (name || uid) {
+                trigger.hidden = false;
+                signIn.hidden = true;
+                trigger.setAttribute('data-uid', uid);
+                const av = document.getElementById('accountAvatar');
+                const avLg = document.getElementById('accountAvatarLg');
+                const trigName = document.getElementById('accountTriggerName');
+                const ddName = document.getElementById('accountName');
+                const ddEmail = document.getElementById('accountEmail');
+                const footUid = document.getElementById('accountFootUid');
+                if (av) av.textContent = initials;
+                if (avLg) avLg.textContent = initials;
+                if (trigName) trigName.textContent = name || 'Account';
+                if (ddName) ddName.textContent = name || 'Account';
+                if (ddEmail) ddEmail.textContent = uid || '';
+                if (footUid) footUid.textContent = uid ? 'UID ' + uid.slice(0, 8) + (uid.length > 8 ? '…' : '') : '';
             } else {
-                pill.style.display = 'none';
-                signIn.style.display = 'inline-flex';
+                trigger.hidden = true;
+                signIn.hidden = false;
+                closeAccountMenu();
             }
         }
+    }
+
+    function computeInitials(name) {
+        if (!name) return '';
+        var parts = name.trim().split(/\s+/);
+        if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+        return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+
+    function openAccountMenu() {
+        var trigger = document.getElementById('accountTrigger');
+        var dd = document.getElementById('accountDropdown');
+        var back = document.getElementById('accountBackdrop');
+        if (!trigger || !dd) return;
+        trigger.setAttribute('aria-expanded', 'true');
+        dd.hidden = false;
+        if (back) back.hidden = false;
+    }
+    function closeAccountMenu() {
+        var trigger = document.getElementById('accountTrigger');
+        var dd = document.getElementById('accountDropdown');
+        var back = document.getElementById('accountBackdrop');
+        if (trigger) trigger.setAttribute('aria-expanded', 'false');
+        if (dd) dd.hidden = true;
+        if (back) back.hidden = true;
+    }
+    function setupAccountMenu() {
+        var trigger = document.getElementById('accountTrigger');
+        var back = document.getElementById('accountBackdrop');
+        if (trigger) {
+            trigger.addEventListener('click', function(e) {
+                e.stopPropagation();
+                if (trigger.getAttribute('aria-expanded') === 'true') closeAccountMenu();
+                else openAccountMenu();
+            });
+        }
+        if (back) back.addEventListener('click', closeAccountMenu);
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeAccountMenu();
+        });
     }
 
     function setupTagSystem(inputId, containerId, array, addBtnId) {
@@ -1260,6 +1306,7 @@ const SCRIPT = `
         }
 
         // Initial paint and auth
+        setupAccountMenu();
         syncAuthPill();
         repaint(savedLanguage);
         loadFormData();

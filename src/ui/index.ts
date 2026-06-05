@@ -18,6 +18,8 @@ export {
   renderHead,
   renderStyle,
   renderFooter,
+  renderTopbar,
   SWISS_BASE_CSS,
   FOOTER_STRINGS,
+  type TopbarPage,
 } from './styles';
