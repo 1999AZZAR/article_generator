@@ -245,36 +245,60 @@ const PAGE_CSS = `
 
 /* Delete modal */
 .modal-overlay {
-    position: fixed; inset: 0;
-    background: rgba(255,255,255,0.92);
-    z-index: 1000; display: none; align-items: center; justify-content: center;
-    backdrop-filter: blur(4px);
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    display: none;
+    align-items: stretch;
+    justify-content: stretch;
+    z-index: 100;
 }
 .modal-overlay.show { display: flex; }
 .modal-content {
     background: var(--white);
+    margin: auto;
+    width: min(560px, calc(100% - 64px));
     border: 1px solid var(--black);
-    width: 100%; max-width: 480px; padding: 0;
+    padding: 0;
 }
 .modal-head {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 14px 20px; border-bottom: var(--rule);
+    border-bottom: var(--rule);
+    padding: 16px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    font-weight: 700;
 }
-.modal-head .lab { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; }
-.modal-body { padding: 32px 40px; }
-.modal-title { font-size: 24px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 12px; }
-.modal-message { font-size: 15px; line-height: 1.6; color: var(--gray-700); }
+.modal-head .lab { color: var(--accent); font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+.modal-body { padding: 24px; }
+.modal-title { font-size: 28px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.1; margin-bottom: 12px; }
+.modal-message { font-size: 14px; line-height: 1.5; color: var(--gray-900); }
 .modal-actions {
-    display: flex; gap: 12px; padding: 24px 40px 32px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border-top: var(--rule);
 }
-.modal-btn {
-    padding: 14px 24px; font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 700;
-    letter-spacing: 0.14em; text-transform: uppercase; cursor: pointer; border: 1px solid var(--black);
+.modal-actions .modal-btn {
+    background: var(--white);
+    color: var(--black);
+    border: none;
+    border-right: var(--rule);
+    padding: 18px 20px;
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    cursor: pointer;
+    border-radius: 0;
+    transition: background 120ms linear, color 120ms linear;
 }
-.modal-btn-confirm { background: var(--black); color: var(--white); }
-.modal-btn-confirm:hover { background: #c0392b; border-color: #c0392b; }
-.modal-btn-cancel { background: transparent; color: var(--black); }
-.modal-btn-cancel:hover { background: var(--gray-100); }
+.modal-actions .modal-btn:last-child { border-right: none; }
+.modal-actions .modal-btn:hover { background: var(--black); color: var(--white); }
+.modal-actions .modal-btn.danger:hover { background: var(--accent); color: var(--white); }
 
 @media (max-width: 900px) {
     .ws-hero { grid-template-columns: 1fr; padding: 32px 0 24px; }
@@ -360,8 +384,8 @@ ${ARCHIVAL_DETAILS_HTML}
             <div class="modal-extra" id="modalExtra" style="display: none;"></div>
         </div>
         <div class="modal-actions">
-            <button class="modal-btn modal-btn-cancel" id="modalCancel">Cancel</button>
-            <button class="modal-btn modal-btn-confirm" id="modalConfirm">Confirm</button>
+            <button class="modal-btn" id="modalCancel">Cancel</button>
+            <button class="modal-btn" id="modalConfirm">Confirm</button>
         </div>
     </div>
 </div>
@@ -376,8 +400,8 @@ ${ARCHIVAL_DETAILS_HTML}
             <p class="modal-message" id="deleteModalMsg">This will permanently delete the draft. This action cannot be undone.</p>
         </div>
         <div class="modal-actions">
-            <button class="modal-btn modal-btn-cancel" id="deleteModalCancel">Cancel</button>
-            <button class="modal-btn modal-btn-confirm" id="deleteModalConfirm">Delete</button>
+            <button class="modal-btn" id="deleteModalCancel">Cancel</button>
+            <button class="modal-btn danger" id="deleteModalConfirm">Delete</button>
         </div>
     </div>
 </div>
