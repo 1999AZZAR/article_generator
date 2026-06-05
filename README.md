@@ -35,9 +35,11 @@ Advanced style mimicry with curated prompts for 21+ specific authors:
 - **Gemini 3 Powered**: Uses latest `gemini-3-flash-preview` & `gemini-3-pro-preview` models
 
 ### UI/UX Design
-- **Premium Aesthetics**: Dark mode, Glassmorphism, Inter font
-- **Interactive UI**: Smooth button animations, categorized dropdowns
-- **Mobile Responsive**: Optimized for all devices
+- **Swiss Editorial System**: International Typographic Style — 12-column grid, hairline 1px rules, sharp 0px corners
+- **Typography**: Inter Display at display weights (800) with tight letter-spacing; JetBrains Mono for indices and captions
+- **Palette**: Black, White, Signal Red (#FF0000) on a white canvas; no gradients, no shadows, no ornament
+- **Numbered Sections**: Editorial chapter numbering (№ 01, 02, 03…) used as wayfinding
+- **Mobile Responsive**: Grid collapses to single column under 900px
 
 ---
 
@@ -70,6 +72,20 @@ Advanced style mimicry with curated prompts for 21+ specific authors:
    ```bash
    npm run build
    ```
+
+### Local development with the Cloudflare Tunnel
+
+Production is served through the existing Cloudflare Tunnel at [https://quill.glassgallery.my.id](https://quill.glassgallery.my.id). To run the same origin locally so the tunnel can proxy to it:
+
+```bash
+docker build -t quill-dev .
+docker run -d --name quill-dev -p 127.0.0.1:8787:8787 --restart unless-stopped \
+  -v quill-data:/app/.wrangler quill-dev
+# or
+docker compose up -d
+```
+
+The container exposes `wrangler dev` on `0.0.0.0:8787`. If your `cloudflared` is already running on the host with the tunnel origin set to `http://localhost:8787`, requests to `https://quill.glassgallery.my.id` are forwarded straight into the container. If `cloudflared` runs in its own container, attach it to the compose-managed `tunnel` network so the origin becomes `http://quill-dev:8787`.
 
 ---
 

@@ -1,0 +1,25 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  // url moved to config
+}
+
+model Article {
+  id        String   @id @default(cuid())
+  topic     String
+  content   String
+  type      String
+  style     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model UserPreference {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  language  String   @default("english")
+  history   Json?
+}

@@ -1,0 +1,57 @@
+# VCS
+.git
+.gitignore
+.gitattributes
+
+# Dependencies (rebuilt inside the image)
+node_modules
+
+# Build artefacts and cache
+dist
+build
+.wrangler
+.cache
+.parcel-cache
+.nyc_output
+coverage
+.tmp
+tmp
+temp
+
+# Local databases — regenerate per environment; mount a volume instead
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Secrets and env files
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+logs
+
+# IDE / OS
+.vscode
+.idea
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# Docker meta
+Dockerfile
+.dockerignore
+docker-compose*.yml
+
+# Project artefacts not needed at runtime
+test_export.rtf
+projects
+scripts
+*.md
+LICENSE
+docker/
+!docker/healthcheck.mjs

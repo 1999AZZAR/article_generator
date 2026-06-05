@@ -65,3 +65,14 @@ test_export.rtf
 # Cache directories
 .cache/
 .parcel-cache/
+
+# Local SQLite databases (dev artifacts)
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Wrangler dev cache
+.wrangler/
+
+/src/generated/prisma

@@ -1,0 +1,57 @@
+# docker-compose.yml
+# Local origin for the existing Cloudflare Tunnel (quill.glassgallery.my.id).
+#
+# Two network setups are supported:
+#   1. cloudflared runs on the HOST  -> publish 8787 to host, tunnel origin = http://localhost:8787
+#   2. cloudflared runs in a CONTAINER -> join the `tunnel` network, origin = http://quill-dev:8787
+#
+# Usage:
+#   docker compose up -d
+#   docker compose logs -f quill-dev
+
+name: quill
+
+services:
+  quill-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: quill-dev:latest
+    container_name: quill-dev
+    restart: unless-stopped
+    init: true
+    environment:
+      NODE_ENV: development
+      HOST: 0.0.0.0
+      PORT: 8787
+      # If wrangler needs a real Cloudflare account for --remote mode, drop the
+      # CLOUDFLARE_API_TOKEN/CLOUDFLARE_ACCOUNT_ID here as well.
+    ports:
+      # Host-side tunnel origin (when cloudflared runs on the host).
+      - "127.0.0.1:8787:8787"
+    volumes:
+      # Persist wrangler cache and any local SQLite between restarts.
+      - quill-data:/app/.wrangler
+      - quill-node:/app/node_modules
+    healthcheck:
+      test: ["CMD", "node", "docker/healthcheck.mjs"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    networks:
+      - tunnel
+
+networks:
+  tunnel:
+    name: tunnel
+    # If your existing cloudflared runs in its own container/compose and is
+    # already attached to a `tunnel` network, change this to `external: true`
+    # and ensure that network exists. Otherwise leave it as `external: false`
+    # and attach cloudflared with:
+    #   docker network connect tunnel <cloudflared-container>
+    external: false
+
+volumes:
+  quill-data:
+  quill-node:

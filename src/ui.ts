@@ -1,4 +1,8 @@
 // UI generation functions for Quill AI Writing Assistant
+// Design system: Swiss (International Typographic Style)
+// - 12-column grid, hairline 1px rules, sharp 0-4px corners
+// - Inter Display + Inter Text, tight headlines, wide-tracked uppercase captions
+// - Black / White / Signal Red palette, no shadows, no gradients
 
 export function generateMainPageHTML(): string {
   return `<!DOCTYPE html>
@@ -6,932 +10,949 @@ export function generateMainPageHTML(): string {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quill - AI Writing Assistant</title>
+    <title>Quill — AI Writing Assistant</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        :root {
+            --black: #000000;
+            --white: #FFFFFF;
+            --paper: #F5F5F5;
+            --gray-100: #F5F5F5;
+            --gray-300: #D4D4D4;
+            --gray-600: #737373;
+            --gray-900: #1A1A1A;
+            --accent: #FF0000;
+            --rule: 1px solid #000000;
+            --rule-soft: 1px solid #D4D4D4;
+            --grid: 12;
+            --gutter: 24px;
+            --col: calc((100vw - 2 * 32px - (var(--grid) - 1) * var(--gutter)) / var(--grid));
+            --container-max: 1280px;
+            --pad-x: 32px;
         }
+
+        /* ========== CONTAINER ========== */
+        .container {
+            max-width: var(--container-max);
+            margin: 0 auto;
+            padding-left: var(--pad-x);
+            padding-right: var(--pad-x);
+            width: 100%;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html, body { background: var(--white); color: var(--black); }
 
         body {
-            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background-color: #0F172A;
-            color: #e0e0e0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            font-weight: 400;
+            font-size: 15px;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
             min-height: 100vh;
-            padding: 20px;
-            padding-bottom: 50px;
+            padding: 0;
         }
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
+        a { color: inherit; text-decoration: none; }
+        a:hover { text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 1px; }
 
-        .header {
-            text-align: center;
-            margin-bottom: 40px;
-            position: relative;
-        }
-
-        .header h1 {
-            font-size: 3rem;
-            font-weight: 700;
-            margin-bottom: 10px;
-            color: #FFFFFF;
-        }
-
-        .header p {
-            font-size: 1.1rem;
-            color: #94A3B8;
-        }
-
-        .settings-link {
-            position: absolute;
-            top: 0;
-            right: 0;
-            color: #38BDF8;
-            text-decoration: none;
-            padding: 10px 20px;
-            border-radius: 12px;
-            transition: all 0.3s ease;
-            font-size: 14px;
-            background: rgba(56, 189, 248, 0.1);
-            border: 1px solid rgba(56, 189, 248, 0.2);
-        }
-
-        .settings-link:hover {
-            background: rgba(56, 189, 248, 0.2);
-        }
-
-        .form-container {
-            background: rgba(30, 41, 59, 0.7);
-            backdrop-filter: blur(12px);
-            border-radius: 24px;
-            padding: 30px;
-            margin-bottom: 30px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 0 20px rgba(56, 189, 248, 0.1);
-        }
-
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #CBD5E1;
-            font-size: 0.875rem;
-        }
-
-        input, select, textarea {
-            width: 100%;
-            padding: 12px 16px;
-            background: rgba(15, 23, 42, 0.5);
-            border: 1px solid #334155;
-            border-radius: 12px;
-            color: #F8FAFC;
-            font-size: 14px;
-            transition: all 0.3s ease;
-        }
-
-        input:focus, select:focus, textarea:focus {
-            outline: none;
-            border-color: #38BDF8;
-            box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
-        }
-
-        .add-tag-btn {
-            padding: 12px 16px;
-            background: rgba(56, 189, 248, 0.1);
-            border: 1px solid #38BDF8;
-            border-radius: 12px;
-            color: #38BDF8;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
-
-        .add-tag-btn:hover {
-            background: #38BDF8;
-            color: #FFFFFF;
-        }
-
-        .tag {
-            background: rgba(56, 189, 248, 0.1);
-            border: 1px solid rgba(56, 189, 248, 0.3);
-            border-radius: 12px;
-            color: #38BDF8;
-            padding: 6px 12px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-
-        .generate-btn {
-            background: #38BDF8;
-            color: #FFFFFF;
-            border: none;
-            padding: 16px 32px;
-            border-radius: 16px;
-            font-size: 16px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            width: 100%;
-            box-shadow: 0 4px 12px rgba(56, 189, 248, 0.2);
-        }
-
-        .generate-btn:hover {
-            background: #0EA5E9;
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(56, 189, 248, 0.3);
-        }
-
-        .reset-btn {
-            background: rgba(244, 63, 94, 0.1);
-            color: #FB7185;
-            border: 1px solid rgba(244, 63, 94, 0.2);
-            padding: 16px 32px;
-            border-radius: 16px;
-            font-size: 16px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .reset-btn:hover {
-            background: #F43F5E;
-            color: #FFFFFF;
-        }
-
-        .reset-btn.hidden {
-            display: none;
-        }
-
-        /* Mobile button improvements */
-        @media (max-width: 480px) {
-            .button-group {
-                flex-direction: column;
-                gap: 12px;
-                width: 100%;
-            }
-
-            .generate-btn, .reset-btn {
-                padding: 14px 32px;
-                font-size: 15px;
-                width: 100%;
-            }
-        }
-
-        .loading {
-            display: none;
-            text-align: center;
-            margin: 20px 0;
-        }
-
-        .progress-bar {
-            width: 100%;
-            height: 8px;
-            background-color: rgba(255, 255, 255, 0.2);
-            border-radius: 4px;
-            overflow: hidden;
-            position: relative;
-            margin-bottom: 15px;
-        }
-
-        .progress-bar::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            height: 100%;
-            width: 40%;
-            background-color: #22C55E;
-            border-radius: 4px;
-            animation: progress-slide 2s linear infinite;
-        }
-
-        @keyframes progress-slide {
-            0% { left: -40%; }
-            100% { left: 100%; }
-        }
-
-        .result-container {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 20px;
-            padding: 30px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            display: none;
-        }
-
-        /* Mobile result container improvements */
-        @media (max-width: 768px) {
-            .result-container {
-                padding: 20px;
-                border-radius: 15px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .result-container {
-                padding: 15px;
-            }
-        }
-
-        .result-section {
-            margin-bottom: 30px;
-        }
-
-        .result-section h3 {
-            color: #00ff88;
-            margin-bottom: 15px;
-            font-size: 1.3rem;
-        }
-
-        .export-section {
-            background: rgba(255, 255, 255, 0.08);
-            border-radius: 15px;
-            padding: 20px;
-            margin-top: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .export-controls {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
-        /* Mobile export controls improvements */
-        @media (max-width: 768px) {
-            .export-controls {
-                grid-template-columns: 1fr;
-                gap: 12px;
-            }
-        }
-
-        .export-select {
-            width: 100%;
-            padding: 10px 12px;
-            background: rgba(255, 255, 255, 0.08);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 8px;
-            color: #e0e0e0;
-            font-size: 14px;
-        }
-
-        .export-select:focus {
-            outline: none;
-            border-color: #00d4ff;
-        }
-
-        .export-buttons {
+        /* ========== TOP BANNER ========== */
+        .topbar {
+            border-bottom: var(--rule);
+            padding: 12px 0;
             display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .export-btn {
-            background: linear-gradient(45deg, #00d4ff, #00ff88);
-            color: #0f0f0f;
-            border: none;
-            padding: 10px 16px;
-            border-radius: 8px;
-            font-size: 14px;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
             font-weight: 500;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
+        }
+        .topbar .meta { color: var(--gray-600); }
+        .topbar .meta strong { color: var(--black); font-weight: 700; }
+        .topbar a { color: var(--black); }
+        .topbar-right { display: flex; align-items: center; gap: 20px; }
+
+        /* ========== BYOK STATUS (topbar) ========== */
+        .byok-status {
+            display: inline-flex;
             align-items: center;
             gap: 8px;
-        }
-
-        .export-btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 15px rgba(0, 212, 255, 0.3);
-        }
-
-        .export-btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .title-options, .subtitle-options {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
-        /* Mobile title/subtitle options improvements */
-        @media (max-width: 768px) {
-            .title-options, .subtitle-options {
-                grid-template-columns: 1fr;
-                gap: 12px;
-            }
-        }
-
-        .option-card {
-            background: rgba(255, 255, 255, 0.08);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 12px;
-            padding: 15px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .option-card:hover {
-            border-color: #00d4ff;
-            transform: translateY(-2px);
-        }
-
-        .option-card.selected {
-            border-color: #00ff88;
-            background: rgba(0, 255, 136, 0.1);
-        }
-
-        .option-title {
+            font-size: 11px;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
             font-weight: 600;
-            margin-bottom: 5px;
+            color: var(--gray-600);
+            border: 1px solid var(--gray-300);
+            padding: 4px 10px;
         }
-
-        .content-display {
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: 12px;
-            padding: 20px;
-            white-space: pre-wrap;
-            line-height: 1.6;
-            font-family: 'Georgia', serif;
+        .byok-status[data-state="ok"]   { color: var(--black); border-color: var(--black); }
+        .byok-status[data-state="missing"] { color: var(--accent); border-color: var(--accent); }
+        .byok-status .byok-lab { font-family: 'JetBrains Mono', monospace; font-weight: 700; }
+        .byok-status .byok-dot {
+            width: 6px; height: 6px;
+            display: inline-block;
+            background: var(--accent);
         }
+        .byok-status[data-state="ok"] .byok-dot { background: var(--black); }
 
-        .chapter-outline {
+        /* ========== BYOK BANNER (no-key warning) ========== */
+        .byok-banner {
+            display: none;
+            background: var(--white);
+            border-bottom: var(--rule);
+            border-top: var(--rule);
+            background-image:
+                repeating-linear-gradient(
+                    45deg,
+                    transparent 0 8px,
+                    rgba(255,0,0,0.06) 8px 9px
+                );
+        }
+        .byok-banner.show { display: block; }
+        .byok-banner-row {
             display: grid;
-            gap: 15px;
+            grid-template-columns: 56px 1fr auto;
+            column-gap: 24px;
+            align-items: center;
+            padding: 20px 0;
+        }
+        .byok-banner-num {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--accent);
+            line-height: 1;
+            text-align: center;
+        }
+        .byok-banner-title {
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            color: var(--black);
+            margin-bottom: 4px;
+        }
+        .byok-banner-msg {
+            font-size: 13px;
+            line-height: 1.5;
+            color: var(--gray-900);
+        }
+        .byok-banner-msg code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            background: var(--gray-100);
+            padding: 1px 6px;
+            border: 1px solid var(--gray-300);
+        }
+        .byok-banner-link {
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: var(--white);
+            background: var(--accent);
+            padding: 14px 20px;
+            border: 1px solid var(--accent);
+        }
+        .byok-banner-link:hover { background: var(--black); border-color: var(--black); text-decoration: none; }
+
+        /* ========== HERO ========== */
+        .hero {
+            border-bottom: var(--rule);
+            padding: 0;
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            column-gap: var(--gutter);
+        }
+        .hero .index {
+            grid-column: 1 / span 1;
+            padding: 24px 0 0 0;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            letter-spacing: 0.1em;
+            color: var(--gray-600);
+        }
+        .hero .headline {
+            grid-column: 2 / span 8;
+            padding: 32px 0 40px 0;
+        }
+        .hero h1 {
+            font-family: 'Inter', sans-serif;
+            font-weight: 800;
+            font-size: clamp(48px, 9vw, 128px);
+            line-height: 0.95;
+            letter-spacing: -0.04em;
+            color: var(--black);
+        }
+        .hero h1 .amp { color: var(--accent); }
+        .hero .lede {
+            grid-column: 10 / span 3;
+            align-self: end;
+            padding: 0 0 40px 0;
+            font-size: 13px;
+            line-height: 1.5;
+            color: var(--gray-900);
+            border-top: var(--rule);
+            padding-top: 12px;
         }
 
-        .chapter-item {
-            background: rgba(255, 255, 255, 0.08);
-            border-radius: 12px;
-            padding: 18px;
-            border-left: 4px solid #00d4ff;
-            margin-bottom: 12px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease;
+        /* ========== SECTION LABEL ========== */
+        .section-label {
+            padding: 14px 0;
+            border-bottom: var(--rule);
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            column-gap: var(--gutter);
+            align-items: center;
+            font-size: 11px;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+        .section-label .num { grid-column: 1 / span 1; color: var(--accent); font-family: 'JetBrains Mono', monospace; }
+        .section-label .title { grid-column: 2 / span 8; }
+        .section-label .meta { grid-column: 10 / span 3; text-align: right; color: var(--gray-600); font-weight: 400; letter-spacing: 0.12em; }
+
+        /* ========== GENERATOR GRID ========== */
+        .generator {
+            padding: 0;
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            column-gap: var(--gutter);
+            border-bottom: var(--rule);
+        }
+        .form-grid {
+            grid-column: 1 / span 12;
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            column-gap: var(--gutter);
+            row-gap: 0;
+        }
+        .form-group {
+            grid-column: span 6;
+            border-top: var(--rule-soft);
+            padding: 16px 0 20px 0;
+        }
+        .form-group.full { grid-column: span 12; }
+        .form-group.half { grid-column: span 6; }
+        .form-group.third { grid-column: span 4; }
+
+        .form-group label {
+            display: block;
+            font-size: 10px;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            font-weight: 600;
+            color: var(--black);
+            margin-bottom: 8px;
+        }
+        .form-group label .req { color: var(--accent); }
+
+        .form-group input[type="text"],
+        .form-group input[type="number"],
+        .form-group input[type="password"],
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            border: none;
+            border-bottom: 1px solid var(--black);
+            background: transparent;
+            padding: 6px 0 8px 0;
+            font-family: 'Inter', sans-serif;
+            font-size: 16px;
+            font-weight: 400;
+            color: var(--black);
+            outline: none;
+            border-radius: 0;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border-bottom: 2px solid var(--accent);
+            padding-bottom: 7px;
+        }
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+            line-height: 1.5;
+        }
+        .form-group select {
+            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1l5 5 5-5' stroke='%23000' stroke-width='1.4' fill='none'/></svg>");
+            background-repeat: no-repeat;
+            background-position: right 0 center;
+            padding-right: 24px;
+        }
+        .form-group input::placeholder,
+        .form-group textarea::placeholder { color: var(--gray-600); }
+
+        .form-group .custom-field {
+            margin-top: 8px;
+        }
+        .optgroup-label {
+            font-weight: 600;
+            font-style: normal;
+            color: var(--gray-600);
         }
 
-        .chapter-item:hover {
-            background: rgba(255, 255, 255, 0.1);
-            transform: translateX(2px);
+        /* Tag input row */
+        .tag-row {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            column-gap: 8px;
+            align-items: end;
+        }
+        .tag-input {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            padding-top: 6px;
+        }
+        .tag-input:empty::before {
+            content: attr(data-empty);
+            color: var(--gray-600);
+            font-size: 14px;
+        }
+        .chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 8px 4px 10px;
+            border: 1px solid var(--black);
+            font-size: 12px;
+            font-weight: 500;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+        .chip .x {
+            cursor: pointer;
+            color: var(--accent);
+            font-weight: 700;
+            line-height: 1;
         }
 
-        .chapter-header {
+        .add-btn {
+            border: 1px solid var(--black);
+            background: var(--white);
+            color: var(--black);
+            padding: 8px 14px;
+            font-family: 'Inter', sans-serif;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            cursor: pointer;
+            border-radius: 0;
+        }
+        .add-btn:hover { background: var(--black); color: var(--white); }
+
+        /* Action row */
+        .action-row {
+            grid-column: 1 / span 12;
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            column-gap: var(--gutter);
+            padding: 24px 0 32px 0;
+            border-top: var(--rule);
+            margin-top: 8px;
+            align-items: center;
+        }
+        .action-row .generate-btn {
+            grid-column: 1 / span 8;
+            background: var(--black);
+            color: var(--white);
+            border: 1px solid var(--black);
+            padding: 18px 24px;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            cursor: pointer;
+            border-radius: 0;
+            transition: background 120ms linear, color 120ms linear;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            cursor: pointer;
-            padding: 5px 0;
-            margin-bottom: 10px;
         }
-
-        .chapter-title-section {
-            flex: 1;
-        }
-
-        .chapter-number {
-            color: #00d4ff;
+        .action-row .generate-btn:hover { background: var(--accent); border-color: var(--accent); }
+        .action-row .generate-btn:disabled { background: var(--gray-300); border-color: var(--gray-300); color: var(--gray-600); cursor: not-allowed; }
+        .action-row .generate-btn .arrow { font-family: 'JetBrains Mono', monospace; font-weight: 400; }
+        .action-row .reset-btn {
+            grid-column: 9 / span 4;
+            background: var(--white);
+            color: var(--black);
+            border: 1px solid var(--black);
+            padding: 18px 24px;
+            font-family: 'Inter', sans-serif;
+            font-size: 12px;
             font-weight: 600;
-            margin-bottom: 8px;
-            font-size: 16px;
-        }
-
-        .chapter-toggle {
-            color: #00d4ff;
-            font-size: 16px;
-            font-weight: bold;
-            transition: all 0.3s ease;
-            margin-left: 12px;
-            width: 28px;
-            height: 28px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 50%;
-            background: rgba(0, 212, 255, 0.1);
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
             cursor: pointer;
-            border: 1px solid rgba(0, 212, 255, 0.3);
+            border-radius: 0;
         }
+        .action-row .reset-btn:hover { background: var(--black); color: var(--white); }
+        .action-row .reset-btn.hidden { display: none; }
 
-        .chapter-toggle:hover {
-            background: rgba(0, 212, 255, 0.2);
-            transform: scale(1.1);
+        /* ========== STATUS / FEEDBACK ========== */
+        .status-bar {
+            padding: 0;
+            border-bottom: var(--rule);
+            display: none;
         }
-
-        .chapter-toggle.collapsed {
-            transform: rotate(0deg);
-        }
-
-        .chapter-toggle.expanded {
-            transform: rotate(90deg);
-        }
-
-        .chapter-content-section {
-            max-height: 0;
-            overflow: hidden;
-            opacity: 0;
-            transform: scaleY(0);
-            transform-origin: top;
-            transition: all 0.4s ease;
-        }
-
-        .chapter-content-section.expanded {
-            max-height: none;
-            opacity: 1;
-            transform: scaleY(1);
-        }
-
-        .chapter-details {
-            margin-bottom: 15px;
-        }
-
-        /* Mobile chapter improvements */
-        @media (max-width: 768px) {
-            .chapter-item {
-                padding: 12px;
-            }
-
-            .chapter-header {
-                padding: 3px 0;
-            }
-
-            .chapter-toggle {
-                font-size: 16px;
-                width: 20px;
-                height: 20px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .chapter-outline {
-                gap: 12px;
-            }
-
-            .chapter-item {
-                padding: 10px;
-            }
-
-            .chapter-header {
-                padding: 2px 0;
-                margin-bottom: 8px;
-            }
-
-            .chapter-toggle {
-                font-size: 14px;
-                width: 18px;
-                height: 18px;
-                margin-left: 5px;
-            }
-        }
-
-        .chapter-actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 10px;
-            flex-wrap: wrap;
-        }
-
-        .generate-chapter-btn {
-            background: linear-gradient(45deg, #00ff88, #00d4ff);
-            color: #0f0f0f;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .generate-chapter-btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 15px rgba(0, 212, 255, 0.3);
-        }
-
-        .generate-chapter-btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .export-chapter-buttons {
-            display: flex;
-            gap: 5px;
-            margin-left: 5px;
-        }
-
-        .export-chapter-btn {
-            background: linear-gradient(45deg, #ff6b6b, #ffa500);
-            color: #ffffff;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .export-chapter-btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
-        }
-
-        .chapter-loading {
-            margin-top: 15px;
-            color: #00ff88;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 12px;
-            background: rgba(0, 255, 136, 0.1);
-            border-radius: 8px;
-            border: 1px solid rgba(0, 255, 136, 0.3);
-        }
-
-        .chapter-progress-bar {
+        .status-bar.show { display: block; }
+        .status-bar .progress {
+            height: 2px;
             width: 100%;
-            height: 6px;
-            background-color: rgba(255, 255, 255, 0.2);
-            border-radius: 3px;
-            overflow: hidden;
+            background: var(--gray-100);
             position: relative;
-            margin-bottom: 8px;
+            overflow: hidden;
         }
-
-        .chapter-progress-bar::after {
+        .status-bar .progress::after {
             content: '';
             position: absolute;
-            top: 0;
-            left: 0;
-            height: 100%;
-            width: 40%;
-            background-color: #22C55E;
-            border-radius: 3px;
-            animation: progress-slide 2s linear infinite;
+            top: 0; left: 0;
+            height: 100%; width: 30%;
+            background: var(--accent);
+            animation: slide 1.6s linear infinite;
         }
-
-        .chapter-content {
-            margin-top: 15px;
-            padding: 20px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 12px;
-            border-left: 4px solid #00ff88;
-            line-height: 1.7;
-            font-size: 14px;
-            color: #e0e0e0;
-            font-family: 'Georgia', serif;
-            word-wrap: break-word;
-            overflow-wrap: break-word;
+        @keyframes slide {
+            0% { left: -30%; }
+            100% { left: 100%; }
         }
+        .status-bar .row {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            column-gap: var(--gutter);
+            padding: 14px 0;
+        }
+        .status-bar .row .lab { grid-column: 1 / span 2; font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--gray-600); }
+        .status-bar .row .msg { grid-column: 3 / span 10; font-size: 14px; font-weight: 500; }
 
-        .error-message {
-            background: rgba(255, 0, 0, 0.1);
-            border: 1px solid rgba(255, 0, 0, 0.3);
-            border-radius: 12px;
-            padding: 15px;
-            color: #ff6b6b;
+        .error-bar {
+            padding: 14px 0;
+            border-bottom: var(--rule);
+            background: var(--white);
+            color: var(--accent);
             display: none;
         }
+        .error-bar.show { display: block; }
+        .error-bar .row { display: grid; grid-template-columns: repeat(12, 1fr); column-gap: var(--gutter); align-items: center; }
+        .error-bar .lab { grid-column: 1 / span 2; font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; font-weight: 700; }
+        .error-bar .msg { grid-column: 3 / span 10; font-size: 14px; font-weight: 500; }
 
-        .hidden {
-            display: none !important;
-        }
-
-        .chapter-count-group {
+        /* ========== RESULT ========== */
+        .result-container {
             display: none;
         }
-
-        .chapter-count-group.show {
-            display: block;
+        .result-container.show { display: block; }
+        .result-block {
+            padding: 0;
+            border-bottom: var(--rule);
         }
-
-        /* Modal/Popup Styles */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(10px);
-            display: flex;
+        .result-head {
+            padding: 14px 0;
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            column-gap: var(--gutter);
             align-items: center;
-            justify-content: center;
-            z-index: 2000;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s ease;
+            font-size: 11px;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            font-weight: 600;
         }
+        .result-head .num { grid-column: 1 / span 1; color: var(--accent); font-family: 'JetBrains Mono', monospace; }
+        .result-head .title { grid-column: 2 / span 8; font-size: 18px; font-weight: 700; letter-spacing: -0.01em; text-transform: none; }
+        .result-head .meta { grid-column: 10 / span 3; text-align: right; color: var(--gray-600); font-weight: 400; letter-spacing: 0.12em; }
 
-        .modal-overlay.show {
-            opacity: 1;
-            visibility: visible;
+        .tag-row-result { padding: 0 0 24px 0; }
+        .tag-row-result .tag-input { padding-top: 0; }
+
+        .option-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            column-gap: var(--gutter);
+            row-gap: 0;
+            padding: 0 0 32px 0;
         }
-
-        .modal-content {
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(240, 240, 240, 0.95) 100%);
-            border-radius: 20px;
-            padding: 30px;
-            max-width: 400px;
-            width: 90%;
-            text-align: center;
-            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            transform: scale(0.9) translateY(20px);
-            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        .option-card {
+            grid-column: span 4;
+            border: 1px solid var(--black);
+            padding: 16px;
+            cursor: pointer;
+            background: var(--white);
+            border-radius: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-height: 96px;
         }
-
-        .modal-overlay.show .modal-content {
-            transform: scale(1) translateY(0);
-        }
-
-        .modal-title {
-            color: #1a1a1a;
-            font-size: 22px;
+        .option-card:hover { background: var(--gray-100); }
+        .option-card.selected { background: var(--black); color: var(--white); }
+        .option-card.selected .option-tag { color: var(--accent); }
+        .option-tag {
+            font-size: 10px;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
             font-weight: 700;
-            margin-bottom: 15px;
-            background: linear-gradient(45deg, #00d4ff, #00ff88);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            color: var(--gray-600);
+        }
+        .option-text {
+            font-size: 16px;
+            line-height: 1.3;
+            font-weight: 500;
         }
 
-        .modal-message {
-            color: #555;
+        .content-display {
+            grid-column: 1 / span 12;
+            padding: 0 0 32px 0;
+            font-family: 'Inter', sans-serif;
             font-size: 16px;
             line-height: 1.6;
-            margin-bottom: 30px;
-            font-weight: 400;
+            white-space: pre-wrap;
+            color: var(--black);
         }
 
-        .modal-buttons {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-            flex-wrap: wrap;
+        .export-block {
+            padding: 0;
+            border-bottom: var(--rule);
         }
-
-        .modal-btn {
-            padding: 14px 28px;
-            border: none;
-            border-radius: 12px;
-            font-size: 16px;
+        .export-block .export-row {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            column-gap: var(--gutter);
+            padding: 24px 0;
+            align-items: end;
+        }
+        .export-block .export-select-group { grid-column: 1 / span 6; }
+        .export-block .export-buttons { grid-column: 7 / span 6; display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+        .export-block label {
+            display: block;
+            font-size: 10px;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
             font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            min-width: 120px;
-            position: relative;
-            overflow: hidden;
+            margin-bottom: 8px;
         }
-
-        .modal-btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
+        .export-select {
             width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-            transition: left 0.5s;
+            border: none;
+            border-bottom: 1px solid var(--black);
+            background: transparent;
+            padding: 6px 0 8px 0;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            color: var(--black);
+            border-radius: 0;
+            -webkit-appearance: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1l5 5 5-5' stroke='%23000' stroke-width='1.4' fill='none'/></svg>");
+            background-repeat: no-repeat;
+            background-position: right 0 center;
+            padding-right: 24px;
+        }
+        .export-btn {
+            border: 1px solid var(--black);
+            background: var(--white);
+            color: var(--black);
+            padding: 12px 16px;
+            font-family: 'Inter', sans-serif;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            cursor: pointer;
+            border-radius: 0;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .export-btn:hover { background: var(--black); color: var(--white); }
+        .export-btn:disabled { background: var(--gray-100); border-color: var(--gray-300); color: var(--gray-600); cursor: not-allowed; }
+
+        /* Chapter list */
+        .chapter-outline { padding: 0 0 32px 0; }
+        .chapter-item {
+            border-top: var(--rule-soft);
+            padding: 0;
+        }
+        .chapter-item:last-child { border-bottom: var(--rule-soft); }
+        .chapter-header {
+            display: grid;
+            grid-template-columns: 80px 1fr 40px;
+            column-gap: 16px;
+            padding: 16px 0;
+            align-items: center;
+            cursor: pointer;
+        }
+        .chapter-header:hover { background: var(--gray-100); }
+        .chapter-num {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: var(--accent);
+            font-weight: 500;
+        }
+        .chapter-titles { line-height: 1.3; }
+        .chapter-titles .ch-title { font-size: 18px; font-weight: 700; letter-spacing: -0.01em; }
+        .chapter-titles .ch-sub { font-size: 13px; color: var(--gray-600); }
+        .chapter-toggle {
+            text-align: right;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: var(--black);
+        }
+        .chapter-content-section {
+            display: none;
+            padding: 0 0 24px 96px;
+        }
+        .chapter-content-section.expanded { display: block; }
+        .chapter-actions { display: flex; gap: 8px; margin: 8px 0 16px 0; flex-wrap: wrap; }
+        .generate-chapter-btn, .export-chapter-btn {
+            border: 1px solid var(--black);
+            background: var(--white);
+            color: var(--black);
+            padding: 10px 14px;
+            font-family: 'Inter', sans-serif;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            cursor: pointer;
+            border-radius: 0;
+        }
+        .generate-chapter-btn:hover, .export-chapter-btn:hover { background: var(--black); color: var(--white); }
+        .generate-chapter-btn:disabled { background: var(--gray-100); border-color: var(--gray-300); color: var(--gray-600); cursor: not-allowed; }
+        .export-chapter-buttons { display: inline-flex; gap: 6px; }
+        .chapter-loading {
+            padding: 8px 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .chapter-loading .bar { flex: 1; height: 2px; background: var(--gray-100); position: relative; overflow: hidden; }
+        .chapter-loading .bar::after {
+            content: ''; position: absolute; top: 0; left: 0; height: 100%; width: 30%; background: var(--accent);
+            animation: slide 1.6s linear infinite;
+        }
+        .chapter-loading .lab { font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; font-weight: 600; }
+        .chapter-content {
+            font-family: 'Inter', sans-serif;
+            font-size: 15px;
+            line-height: 1.6;
+            border-left: 2px solid var(--black);
+            padding: 0 0 0 16px;
         }
 
-        .modal-btn:hover::before {
-            left: 100%;
+        /* ========== FOOTER ========== */
+        .footer {
+            border-top: var(--rule);
+            padding: 24px 0;
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            column-gap: var(--gutter);
+            font-size: 11px;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--gray-600);
         }
+        .footer .col-1 { grid-column: 1 / span 4; }
+        .footer .col-2 { grid-column: 5 / span 4; }
+        .footer .col-3 { grid-column: 9 / span 4; text-align: right; }
+        .footer a { color: var(--black); }
+        .footer .accent-dot { color: var(--accent); }
 
-        .modal-btn-cancel {
-            background: linear-gradient(45deg, #f8f9fa, #e9ecef);
-            color: #6c757d;
-            border: 2px solid #dee2e6;
+        /* ========== MODAL ========== */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.55);
+            display: none;
+            align-items: stretch;
+            justify-content: stretch;
+            z-index: 100;
         }
-
-        .modal-btn-cancel:hover {
-            background: linear-gradient(45deg, #e9ecef, #dee2e6);
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(108, 117, 125, 0.2);
+        .modal-overlay.show { display: flex; }
+        .modal-content {
+            background: var(--white);
+            margin: auto;
+            width: min(560px, calc(100% - 64px));
+            border: 1px solid var(--black);
+            padding: 0;
         }
-
-        .modal-btn-confirm {
-            background: linear-gradient(45deg, #ff4757, #ff3838);
-            color: white;
-            border: 2px solid rgba(255, 71, 87, 0.3);
+        .modal-head {
+            border-bottom: var(--rule);
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            font-weight: 700;
         }
-
-        .modal-btn-confirm:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(255, 71, 87, 0.4);
-            background: linear-gradient(45deg, #ff3838, #ff2828);
+        .modal-head .lab { color: var(--accent); font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+        .modal-body { padding: 24px; }
+        .modal-title { font-size: 28px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.1; margin-bottom: 12px; }
+        .modal-message { font-size: 14px; line-height: 1.5; color: var(--gray-900); }
+        .modal-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            border-top: var(--rule);
         }
+        .modal-actions .modal-btn {
+            background: var(--white);
+            color: var(--black);
+            border: none;
+            border-right: var(--rule);
+            padding: 18px 20px;
+            font-family: 'Inter', sans-serif;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            cursor: pointer;
+        }
+        .modal-actions .modal-btn:last-child { border-right: none; }
+        .modal-actions .modal-btn:hover { background: var(--gray-100); }
+        .modal-actions .modal-btn-confirm { background: var(--black); color: var(--white); }
+        .modal-actions .modal-btn-confirm:hover { background: var(--accent); }
 
-        /* Mobile responsiveness for modal */
-        @media (max-width: 480px) {
-            .modal-content {
-                padding: 25px 20px;
-                margin: 20px;
-                max-width: none;
-                width: calc(100vw - 40px);
-            }
-
-            .modal-title {
-                font-size: 20px;
-            }
-
-            .modal-message {
-                font-size: 15px;
-                margin-bottom: 25px;
-            }
-
-            .modal-buttons {
-                gap: 12px;
-            }
-
-            .modal-btn {
-                padding: 12px 24px;
-                font-size: 15px;
-                min-width: 110px;
-            }
+        /* ========== RESPONSIVE ========== */
+        @media (max-width: 900px) {
+            :root { --gutter: 16px; --pad-x: 20px; }
+            .hero .index, .hero .lede { display: none; }
+            .hero .headline { grid-column: 1 / -1; padding: 24px 0 32px 0; }
+            .section-label .title { grid-column: 2 / -1; }
+            .section-label .meta { display: none; }
+            .form-group { grid-column: 1 / -1; }
+            .form-group.third { grid-column: 1 / -1; }
+            .action-row .generate-btn,
+            .action-row .reset-btn { grid-column: 1 / -1; }
+            .option-card { grid-column: 1 / -1; }
+            .export-block .export-select-group { grid-column: 1 / -1; }
+            .export-block .export-buttons { grid-column: 1 / -1; justify-content: flex-start; margin-top: 12px; }
+            .footer .col-1, .footer .col-2, .footer .col-3 { grid-column: 1 / -1; text-align: left; margin-bottom: 4px; }
+            .chapter-content-section { padding-left: 16px; }
+            .byok-banner-row { grid-template-columns: 1fr; row-gap: 12px; padding: 16px 0; }
+            .byok-banner-num { text-align: left; font-size: 24px; }
+            .topbar-right { gap: 12px; flex-wrap: wrap; }
+            .byok-status { font-size: 10px; padding: 3px 8px; }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <a href="/settings" class="settings-link">Settings</a>
-            <h1><a href="https://azzar.netlify.app" target="_blank" style="color: inherit; text-decoration: none;">Quill™</a></h1>
-            <p>AI-powered writing assistant for articles and novels</p>
+        <div class="topbar">
+            <div class="meta">QUILL <span class="accent-dot">/</span> AI WRITING ASSISTANT <span class="accent-dot">/</span> ED. 02</div>
+            <div class="topbar-right">
+                <span class="byok-status" id="byokStatus" data-state="missing" title="BYOK &mdash; Bring Your Own Key">
+                    <span class="byok-lab">BYOK</span>
+                    <span class="byok-dot" aria-hidden="true"></span>
+                    <span class="byok-state" id="byokStateText">No API Key</span>
+                </span>
+                <a href="/settings">SETTINGS &rarr;</a>
+            </div>
         </div>
 
-        <form class="form-container" id="articleForm">
-            <div class="form-grid">
-                <div class="form-group">
-                    <label for="topic">Topic *</label>
-                    <input type="text" id="topic" name="topic" required placeholder="">
+        <div class="byok-banner" id="byokBanner">
+            <div class="byok-banner-row">
+                <div class="byok-banner-num">!</div>
+                <div class="byok-banner-body">
+                    <div class="byok-banner-title" id="byokBannerTitle">API Key Required</div>
+                    <div class="byok-banner-msg" id="byokBannerMsg">Quill is BYOK &mdash; Bring Your Own Key. Add your Gemini API key in Settings to start generating. The key is stored only in this browser and sent per-request via the <code>X-User-API-Key</code> header. The server never persists it.</div>
                 </div>
-
-                <div class="form-group">
-                    <label for="authorStyle">Author Style to Copy *</label>
-                    <select id="authorStyle" name="authorStyle" required>
-                        <option value="">Select an author</option>
-                        
-                        <optgroup label="📚 Classic & Literary">
-                            <option value="Ernest Hemingway">Ernest Hemingway</option>
-                            <option value="Jane Austen">Jane Austen</option>
-                            <option value="Toni Morrison">Toni Morrison</option>
-                            <option value="Agatha Christie">Agatha Christie</option>
-                            <option value="Gabriel García Márquez">Gabriel García Márquez</option>
-                            <option value="Cormac McCarthy">Cormac McCarthy</option>
-                        </optgroup>
-                        
-                        <optgroup label="⚔️ Fantasy & Sci-Fi">
-                            <option value="J.R.R. Tolkien">J.R.R. Tolkien</option>
-                            <option value="George R.R. Martin">George R.R. Martin</option>
-                            <option value="J.K. Rowling">J.K. Rowling</option>
-                            <option value="Neil Gaiman">Neil Gaiman</option>
-                        </optgroup>
-                        
-                        <optgroup label="🌍 Contemporary & Thriller">
-                            <option value="Stephen King">Stephen King</option>
-                            <option value="Haruki Murakami">Haruki Murakami</option>
-                            <option value="Margaret Atwood">Margaret Atwood</option>
-                            <option value="Zadie Smith">Zadie Smith</option>
-                            <option value="Chimamanda Ngozi Adichie">Chimamanda Ngozi Adichie</option>
-                        </optgroup>
-                        
-                        <optgroup label="🇮🇩 Indonesian Authors">
-                            <option value="Pramoedya Ananta Toer">Pramoedya Ananta Toer</option>
-                            <option value="Dee Lestari">Dee Lestari</option>
-                            <option value="Andrea Hirata">Andrea Hirata</option>
-                            <option value="Goenawan Mohamad">Goenawan Mohamad</option>
-                            <option value="Leila S. Chudori">Leila S. Chudori</option>
-                            <option value="Najwa Shihab">Najwa Shihab</option>
-                        </optgroup>
-                        
-                        <optgroup label="📖 Non-Fiction">
-                            <option value="Yuval Noah Harari">Yuval Noah Harari</option>
-                        </optgroup>
-                        
-                        <optgroup label="✏️ Other">
-                            <option value="custom">Custom (enter below)</option>
-                        </optgroup>
-                    </select>
-                    <input type="text" id="customAuthorStyle" name="customAuthorStyle" placeholder="" style="margin-top: 10px; display: none;">
+                <div class="byok-banner-cta">
+                    <a href="/settings" class="byok-banner-link" id="byokBannerLink">OPEN SETTINGS &rarr;</a>
                 </div>
+            </div>
+        </div>
 
-                <div class="form-group">
-                    <label for="type">Type *</label>
-                    <select id="type" name="type" required>
-                        <option value="">Select type</option>
-                        <option value="article">Article (1800-2000 words)</option>
-                        <option value="shortstory">Short Story (2500-3000 words)</option>
-                        <option value="novel">Novel Outline</option>
-                        <option value="news">News Article (1200-1800 words)</option>
-                        <option value="shortnews">Short News (400-600 words)</option>
-                    </select>
-                </div>
+        <header class="hero">
+            <div class="index">№ 01</div>
+            <div class="headline">
+                <h1>Quill<span class="amp">.</span></h1>
+            </div>
+            <p class="lede">An editorial writing instrument powered by AI. Long-form articles, short stories, news briefs and novel outlines — drafted with author-style precision.</p>
+        </header>
 
-                <div class="form-group newspaper-style-group" id="newspaperStyleGroup" style="display: none;">
-                    <label for="newspaperStyle">Newspaper Style *</label>
-                    <select id="newspaperStyle" name="newspaperStyle">
-                        <option value="">Select newspaper style</option>
-                        <option value="The New York Times">The New York Times</option>
-                        <option value="The Washington Post">The Washington Post</option>
-                        <option value="BBC News">BBC News</option>
-                        <option value="CNN">CNN</option>
-                        <option value="Reuters">Reuters</option>
-                        <option value="Associated Press">Associated Press</option>
-                        <option value="The Guardian">The Guardian</option>
-                        <option value="The Wall Street Journal">The Wall Street Journal</option>
-                        <option value="Fox News">Fox News</option>
-                        <option value="Al Jazeera">Al Jazeera</option>
+        <div class="section-label">
+            <div class="num">02</div>
+            <div class="title">Brief &mdash; Generator</div>
+            <div class="meta">FIELDS 01 / 09</div>
+        </div>
+
+        <form class="generator" id="articleForm" autocomplete="off">
+        <div class="form-grid">
+            <div class="form-group full">
+                <label for="topic">Topic <span class="req">*</span></label>
+                <input type="text" id="topic" name="topic" required placeholder="e.g. The architecture of memory, monsoon economies">
+            </div>
+
+            <div class="form-group half">
+                <label for="authorStyle">Author Style <span class="req">*</span></label>
+                <select id="authorStyle" name="authorStyle" required>
+                    <option value="">Select an author</option>
+                    <optgroup label="Classic &amp; Literary">
+                        <option value="Ernest Hemingway">Ernest Hemingway</option>
+                        <option value="Jane Austen">Jane Austen</option>
+                        <option value="Toni Morrison">Toni Morrison</option>
+                        <option value="Agatha Christie">Agatha Christie</option>
+                        <option value="Gabriel García Márquez">Gabriel García Márquez</option>
+                        <option value="Cormac McCarthy">Cormac McCarthy</option>
+                    </optgroup>
+                    <optgroup label="Fantasy &amp; Sci-Fi">
+                        <option value="J.R.R. Tolkien">J.R.R. Tolkien</option>
+                        <option value="George R.R. Martin">George R.R. Martin</option>
+                        <option value="J.K. Rowling">J.K. Rowling</option>
+                        <option value="Neil Gaiman">Neil Gaiman</option>
+                    </optgroup>
+                    <optgroup label="Contemporary &amp; Thriller">
+                        <option value="Stephen King">Stephen King</option>
+                        <option value="Haruki Murakami">Haruki Murakami</option>
+                        <option value="Margaret Atwood">Margaret Atwood</option>
+                        <option value="Zadie Smith">Zadie Smith</option>
+                        <option value="Chimamanda Ngozi Adichie">Chimamanda Ngozi Adichie</option>
+                    </optgroup>
+                    <optgroup label="Indonesian Authors">
+                        <option value="Pramoedya Ananta Toer">Pramoedya Ananta Toer</option>
+                        <option value="Dee Lestari">Dee Lestari</option>
+                        <option value="Andrea Hirata">Andrea Hirata</option>
+                        <option value="Goenawan Mohamad">Goenawan Mohamad</option>
+                        <option value="Leila S. Chudori">Leila S. Chudori</option>
+                        <option value="Najwa Shihab">Najwa Shihab</option>
+                    </optgroup>
+                    <optgroup label="Non-Fiction">
+                        <option value="Yuval Noah Harari">Yuval Noah Harari</option>
+                    </optgroup>
+                    <optgroup label="Other">
                         <option value="custom">Custom (enter below)</option>
-                    </select>
-                    <input type="text" id="customNewspaperStyle" name="customNewspaperStyle" placeholder="" style="margin-top: 10px; display: none;">
-                </div>
-
-                <div class="form-group">
-                    <label for="language">Language *</label>
-                    <select id="language" name="language" required>
-                        <option value="">Select language</option>
-                        <option value="english">English</option>
-                        <option value="indonesian">Indonesian (Bahasa Indonesia)</option>
-                    </select>
-                </div>
-
-                <div class="form-group chapter-count-group" id="chapterCountGroup">
-                    <label for="chapterCount">Number of Chapters *</label>
-                    <input type="number" id="chapterCount" name="chapterCount" min="1" max="50" placeholder="">
-                </div>
-
-                <div class="form-group">
-                    <label for="tags">Tags</label>
-                    <div class="tag-input-container">
-                        <input type="text" id="tagInput" placeholder="">
-                        <button type="button" class="add-tag-btn" id="addTagBtn">Add</button>
-                    </div>
-                    <div class="tags-container" id="tagsContainer"></div>
-                </div>
-
-                <div class="form-group">
-                    <label for="keywords">Keywords</label>
-                    <div class="tag-input-container">
-                        <input type="text" id="keywordInput" placeholder="">
-                        <button type="button" class="add-tag-btn" id="addKeywordBtn">Add</button>
-                    </div>
-                    <div class="tags-container" id="keywordsContainer"></div>
-                </div>
-
-                <div class="form-group">
-                    <label for="mainIdea">Main Idea/Plot</label>
-                    <textarea id="mainIdea" name="mainIdea" rows="4" placeholder=""></textarea>
-                </div>
+                    </optgroup>
+                </select>
+                <input type="text" class="custom-field" id="customAuthorStyle" name="customAuthorStyle" placeholder="Enter custom author name" style="display: none;">
             </div>
 
-            <div class="button-group">
-            <button type="submit" class="generate-btn" id="generateBtn">
-                Generate Content
-            </button>
-                <button type="button" class="reset-btn hidden" id="resetBtn">
-                    Reset All
+            <div class="form-group half">
+                <label for="type">Type <span class="req">*</span></label>
+                <select id="type" name="type" required>
+                    <option value="">Select type</option>
+                    <option value="article">Article (1800–2000 words)</option>
+                    <option value="shortstory">Short Story (2500–3000 words)</option>
+                    <option value="novel">Novel Outline</option>
+                    <option value="news">News Article (1200–1800 words)</option>
+                    <option value="shortnews">Short News (400–600 words)</option>
+                </select>
+            </div>
+
+            <div class="form-group half newspaper-style-group" id="newspaperStyleGroup" style="display: none;">
+                <label for="newspaperStyle">Newspaper Style <span class="req">*</span></label>
+                <select id="newspaperStyle" name="newspaperStyle">
+                    <option value="">Select newspaper style</option>
+                    <option value="The New York Times">The New York Times</option>
+                    <option value="The Washington Post">The Washington Post</option>
+                    <option value="BBC News">BBC News</option>
+                    <option value="CNN">CNN</option>
+                    <option value="Reuters">Reuters</option>
+                    <option value="Associated Press">Associated Press</option>
+                    <option value="The Guardian">The Guardian</option>
+                    <option value="The Wall Street Journal">The Wall Street Journal</option>
+                    <option value="Fox News">Fox News</option>
+                    <option value="Al Jazeera">Al Jazeera</option>
+                    <option value="custom">Custom (enter below)</option>
+                </select>
+                <input type="text" class="custom-field" id="customNewspaperStyle" name="customNewspaperStyle" placeholder="Enter custom newspaper style" style="display: none;">
+            </div>
+
+            <div class="form-group half">
+                <label for="language">Language <span class="req">*</span></label>
+                <select id="language" name="language" required>
+                    <option value="">Select language</option>
+                    <option value="english">English</option>
+                    <option value="indonesian">Indonesian (Bahasa Indonesia)</option>
+                </select>
+            </div>
+
+            <div class="form-group third chapter-count-group" id="chapterCountGroup">
+                <label for="chapterCount">Chapters <span class="req">*</span></label>
+                <input type="number" id="chapterCount" name="chapterCount" min="1" max="50" placeholder="e.g. 10">
+            </div>
+
+            <div class="form-group third">
+                <label for="tagInput">Tags</label>
+                <div class="tag-row">
+                    <input type="text" id="tagInput" placeholder="Add a tag and press Enter">
+                    <button type="button" class="add-btn" id="addTagBtn">Add</button>
+                </div>
+                <div class="tag-input" id="tagsContainer" data-empty=""></div>
+            </div>
+
+            <div class="form-group third">
+                <label for="keywordInput">Keywords</label>
+                <div class="tag-row">
+                    <input type="text" id="keywordInput" placeholder="Add a keyword and press Enter">
+                    <button type="button" class="add-btn" id="addKeywordBtn">Add</button>
+                </div>
+                <div class="tag-input" id="keywordsContainer" data-empty=""></div>
+            </div>
+
+            <div class="form-group full">
+                <label for="mainIdea">Main Idea / Plot</label>
+                <textarea id="mainIdea" name="mainIdea" rows="3" placeholder="Describe the main idea, plot or concept the AI should build upon."></textarea>
+            </div>
+
+            <div class="action-row">
+                <button type="submit" class="generate-btn" id="generateBtn">
+                    <span>Generate Content</span>
+                    <span class="arrow">&rarr;</span>
                 </button>
+                <button type="button" class="reset-btn hidden" id="resetBtn">Reset All</button>
             </div>
-        </form>
-
-        <div class="loading" id="loading">
-            <div class="progress-bar"></div>
-            <p>Generating your content with AI...</p>
         </div>
+    </form>
 
-        <div class="error-message" id="errorMessage"></div>
-
-        <div class="result-container" id="resultContainer">
-            <!-- Results will be dynamically inserted here -->
+    <div class="status-bar" id="loading">
+        <div class="row">
+            <div class="lab">Status</div>
+            <div class="msg" id="loadingMsg">Generating your content with AI&hellip;</div>
         </div>
+        <div class="progress"></div>
+    </div>
 
-        <!-- Modal for confirmations -->
-        <div class="modal-overlay" id="confirmationModal">
-            <div class="modal-content">
+    <div class="error-bar" id="errorMessage">
+        <div class="row">
+            <div class="lab">Error</div>
+            <div class="msg" id="errorMessageText"></div>
+        </div>
+    </div>
+
+    <div class="result-container" id="resultContainer"></div>
+
+    <footer class="footer">
+        <div class="col-1">Quill&trade; <span class="accent-dot">&middot;</span> Ed. 02 / 2026</div>
+        <div class="col-2">Set in Inter &amp; JetBrains Mono</div>
+        <div class="col-3">By <a href="https://azzar.netlify.app/porto" target="_blank">LilyOpenCMS</a></div>
+    </footer>
+    </div>
+
+    <div class="modal-overlay" id="confirmationModal">
+        <div class="modal-content">
+            <div class="modal-head">
+                <span class="lab">CONFIRM</span>
+                <span>ESC TO CLOSE</span>
+            </div>
+            <div class="modal-body">
                 <h3 class="modal-title" id="modalTitle">Reset All Data</h3>
                 <p class="modal-message" id="modalMessage">Are you sure you want to reset all data?</p>
-                <div class="modal-buttons">
-                    <button class="modal-btn modal-btn-cancel" id="modalCancel"></button>
-                    <button class="modal-btn modal-btn-confirm" id="modalConfirm"></button>
-                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="modal-btn modal-btn-cancel" id="modalCancel">Cancel</button>
+                <button class="modal-btn modal-btn-confirm" id="modalConfirm">Confirm</button>
             </div>
         </div>
     </div>
@@ -940,12 +961,12 @@ export function generateMainPageHTML(): string {
         // Language strings
         const uiLanguages = {
             english: {
-                title: 'Quill™',
-                subtitle: 'AI-powered writing assistant for articles and novels',
-                settings: 'Settings',
+                title: 'Quill.',
+                subtitle: 'An editorial writing instrument powered by AI. Long-form articles, short stories, news briefs and novel outlines \u2014 drafted with author-style precision.',
+                settings: 'SETTINGS \u2192',
                 settingsDescription: 'Configure your Quill writing assistant',
                 topicLabel: 'Topic *',
-                topicPlaceholder: 'e.g. romance, horror, philosophy',
+                topicPlaceholder: 'e.g. The architecture of memory, monsoon economies',
                 tagsLabel: 'Tags',
                 tagsPlaceholder: 'Add a tag and press Enter',
                 keywordsLabel: 'Keywords',
@@ -964,103 +985,46 @@ export function generateMainPageHTML(): string {
                 typeShortStory: 'Short Story',
                 typeNews: 'News Article',
                 typeNovel: 'Novel Outline',
-                chapterCountLabel: 'Number of Chapters',
-                languageLabel: 'Content Language *',
-                mainIdeaLabel: 'Main Idea/Plot',
-                mainIdeaPlaceholder: 'Describe your main idea, plot, or concept that you want the AI to build upon. This will help generate content that aligns with your specific vision.',
+                chapterCountLabel: 'Chapters *',
+                languageLabel: 'Language *',
+                mainIdeaLabel: 'Main Idea / Plot',
+                mainIdeaPlaceholder: 'Describe the main idea, plot or concept the AI should build upon.',
                 generateButton: 'Generate Content',
                 resetButton: 'Reset All',
                 resetConfirmTitle: 'Reset All Data',
                 resetConfirmMessage: 'Are you sure you want to reset all data? This will clear your form and generated content.',
                 cancelButton: 'Cancel',
                 resetModalButton: 'Reset',
-                generating: 'Generating your content with AI...',
+                generating: 'Generating your content with AI\u2026',
                 loadingFacts: [
-                    'Did you know? The quill pen was invented in the 6th century...',
-                    'Crafting your story with AI precision...',
-                    'The first quills came from swan feathers...',
-                    'AI is weaving your narrative masterpiece...',
-                    'Ancient scribes used reed pens before quills...',
-                    'Memorizing your words with intelligent algorithms...',
-                    'Quill pens can write up to 10,000 words per day...',
-                    'Transforming ideas into beautiful prose...',
-                    'The quill revolutionized writing in medieval Europe...',
-                    'Shakespeare wrote 37 plays and 154 sonnets...',
-                    'The typewriter was invented in 1868...',
-                    'AI is learning from millions of literary masterpieces...',
-                    'The longest novel ever written is 9,609,000 words...',
-                    'Famous authors like Hemingway wrote standing up...',
-                    'The first computer novel was written in 1952...',
-                    'AI can analyze writing styles of any author...',
-                    'The quill pen was used for over 1,000 years...',
-                    'Jane Austen wrote her novels in the 19th century...',
-                    'Digital writing tools have evolved rapidly...',
-                    'The art of storytelling dates back to ancient caves...',
-                    'AI helps writers overcome creative blocks...',
-                    'The first fountain pen was invented in 1884...',
-                    'Literature has shaped human culture for millennia...',
-                    'Modern AI continues the tradition of great storytellers...',
-                    'Writing by hand improves memory and creativity...',
-                    'The ballpoint pen was invented in 1938...',
-                    'AI analyzes themes, plots, and character development...',
-                    'The printing press revolutionized knowledge sharing...',
-                    'Every great writer started as a beginner...',
-                    'AI preserves writing traditions while innovating...',
-                    'The first writing system was cuneiform, invented by Sumerians around 3500 BCE...',
-                    'Shakespeare created 1,700+ new words still used in modern English...',
-                    'The novel form emerged in 18th century England with works like Robinson Crusoe...',
-                    'Hieroglyphs were used for over 3,000 years in ancient Egypt...',
-                    'The first dictionary was compiled by Robert Cawdrey in 1604...',
-                    'Sanskrit is the oldest language still continuously used...',
-                    'The Rosetta Stone helped decipher Egyptian hieroglyphs in 1799...',
-                    'All languages share universal grammar patterns according to linguistic research...',
-                    'The first programming language was created in 1883 by Ada Lovelace...',
-                    'AI language models can now translate between over 100 languages...',
-                    'The Oxford English Dictionary contains 600,000+ words and phrases...',
-                    'Edgar Allan Poe invented the modern detective story genre...',
-                    'Frankenstein (1818) karya Mary Shelley dianggap sebagai novel fiksi ilmiah pertama...',
-                    'The quill pen was used for over 1,000 years, from ancient times to the 19th century...',
-                    'Monastic scribes preserved ancient texts through the European Dark Ages...',
-                    'The first newspaper was published in Strasbourg in 1605...',
-                    'Dante Alighieri chose to write The Divine Comedy in Italian instead of Latin...',
-                    'The first typewriter patent was granted to Henry Mill in 1714...',
-                    'AI can now detect writing styles with over 95% accuracy...',
-                    'The oldest surviving printed book is the Diamond Sutra from 868 CE...',
-                    'Writing systems evolved independently in at least 4 ancient civilizations...',
-                    'The first e-book was created by Michael Hart in 1971...',
-                    'AI language models are trained on billions of text samples from human writing...',
-                    'Writing systems developed independently in China, Mesopotamia, Egypt, and Mesoamerica...',
-                    'The invention of paper by the Chinese revolutionized global communication...',
-                    'Calligraphy became a highly respected art form in many Asian cultures...',
-                    'The first printing press was invented by Johannes Gutenberg in 1450...',
-                    'Literature has been used as propaganda since ancient Roman times...',
-                    'The shortest story ever written is just six words long...',
-                    'Writing on clay tablets began over 5,000 years ago...',
-                    'The first modern novel is considered to be Don Quixote by Cervantes...',
-                    'Writing helped preserve oral traditions and cultural histories...',
-                    'The first encyclopedia was published in China during the Ming Dynasty...',
-                    'Typography evolved from handwritten scripts to digital fonts...',
-                    'Writing systems use between 20 to 100 symbols for complete communication...',
-                    'The first copyright law was established in Britain in 1710...',
-                    'Literature reflects the social and political climate of its era...',
-                    'Writing tools evolved from stone styluses to computer keyboards...',
-                    'The first newspaper was published in Germany in 1609...',
-                    'Fairy tales were originally oral stories before being written down...',
-                    'Writing enables time travel through preserved human thoughts...',
-                    'The first public library was established in ancient Nineveh...',
-                    'Emily Dickinson wrote over 1,800 poems, mostly discovered after her death...',
-                    'The word "novel" comes from Italian "novella" meaning "new story"...',
-                    'Mark Twain was the first author to submit a typewritten manuscript...',
-                    'The Great Wall of China was built using written construction plans...',
-                    'Virginia Woolf revolutionized stream-of-consciousness writing...'
+                    'The quill pen was invented in the 6th century.',
+                    'The first quills came from swan feathers.',
+                    'Shakespeare wrote 37 plays and 154 sonnets.',
+                    'Hemingway wrote standing up.',
+                    'The first newspaper was published in Strasbourg, 1605.',
+                    'The novel form emerged in 18th century England.',
+                    'AI can analyze writing styles of any author.',
+                    'Typography evolved from handwritten scripts to digital fonts.',
+                    'Writing systems developed independently in four ancient civilizations.',
+                    'The first printing press was invented by Gutenberg in 1450.',
+                    'Mark Twain was the first author to submit a typewritten manuscript.',
+                    'Literature has been used as propaganda since ancient Rome.',
+                    'The shortest story ever written is just six words long.',
+                    'Writing on clay tablets began over 5,000 years ago.',
+                    'The first copyright law was established in Britain in 1710.'
                 ],
                 apiKeyRequired: 'Please set your Gemini API key in Settings first.',
+                byokKeySet: 'Key Set',
+                byokKeyMissing: 'No API Key',
+                byokBannerTitle: 'Bring Your Own Key',
+                byokBannerMsg: 'Quill is BYOK — Bring Your Own Key. Add your Gemini API key in Settings to start generating. The key is stored only in this browser and sent per-request via the <code>X-User-API-Key</code> header. The server never persists it.',
+                byokBannerCta: 'Open Settings →',
                 missingFields: 'Missing required fields',
                 tagsRequired: 'Please add at least one tag',
                 exportMarkdown: 'Export as Markdown',
                 exportRTF: 'Export as RTF',
-                generateChapter: 'Generate Chapter Content',
-                generatingChapter: 'Generating...',
+                generateChapter: 'Generate Chapter',
+                generatingChapter: 'Generating\u2026',
                 regenerateChapter: 'Regenerate Chapter',
                 exportChapter: 'Export Chapter',
                 selectTitle: 'Select Title',
@@ -1071,8 +1035,8 @@ export function generateMainPageHTML(): string {
                 chapter: 'Chapter',
                 refinedTags: 'Refined Tags',
                 content: 'Content',
-                backToGenerator: '← Back to Generator',
-                languageSettings: 'Language Settings',
+                backToGenerator: '\u2190 Back to Generator',
+                languageSettings: 'Language',
                 interfaceLanguage: 'Interface Language',
                 languageHelp: 'Choose the language for the user interface',
                 apiConfiguration: 'Gemini AI Configuration',
@@ -1089,15 +1053,16 @@ export function generateMainPageHTML(): string {
                 apiKeyQuotaExceeded: 'API quota exceeded. Please check your Gemini API billing/limits.',
                 apiKeyInvalid: 'Invalid API key. Please check that your Gemini API key is correct and enabled.',
                 networkError: 'Network error. Please check your internet connection and try again.',
-                pleaseEnterApiKey: 'Please enter an API key'
+                pleaseEnterApiKey: 'Please enter an API key',
+                apiKeyRemoved: 'API key removed successfully.'
             },
             indonesian: {
-                title: 'Quill™',
-                subtitle: 'Asisten penulisan bertenaga AI untuk artikel dan novel',
-                settings: 'Pengaturan',
+                title: 'Quill.',
+                subtitle: 'Instrumen penulisan editorial bertenaga AI. Artikel panjang, cerita pendek, berita singkat, dan rangkuman novel \u2014 disusun dengan presisi gaya penulis.',
+                settings: 'PENGATURAN \u2192',
                 settingsDescription: 'Konfigurasikan asisten penulisan Quill Anda',
                 topicLabel: 'Topik *',
-                topicPlaceholder: 'contoh: romansa, horor, filsafat',
+                topicPlaceholder: 'cth. Arsitektur memori, ekonomi monsoon',
                 tagsLabel: 'Tag',
                 tagsPlaceholder: 'Tambahkan tag dan tekan Enter',
                 keywordsLabel: 'Kata Kunci',
@@ -1110,116 +1075,64 @@ export function generateMainPageHTML(): string {
                 customNewspaperPlaceholder: 'Masukkan gaya koran kustom',
                 selectLanguage: 'Pilih bahasa',
                 addButton: 'Tambah',
-                chapterCountPlaceholder: 'contoh: 10',
+                chapterCountPlaceholder: 'cth. 10',
                 typeLabel: 'Tipe *',
                 typeArticle: 'Artikel',
                 typeShortStory: 'Cerita Pendek',
                 typeNews: 'Artikel Berita',
                 typeNovel: 'Rangkuman Novel',
-                chapterCountLabel: 'Jumlah Bab',
-                languageLabel: 'Bahasa Konten *',
-                mainIdeaLabel: 'Ide Utama/Alur',
-                mainIdeaPlaceholder: 'Jelaskan ide utama, alur, atau konsep yang ingin Anda bangun oleh AI. Ini akan membantu menghasilkan konten yang selaras dengan visi spesifik Anda.',
+                chapterCountLabel: 'Jumlah Bab *',
+                languageLabel: 'Bahasa *',
+                mainIdeaLabel: 'Ide Utama / Alur',
+                mainIdeaPlaceholder: 'Jelaskan ide utama, alur, atau konsep yang ingin dibangun oleh AI.',
                 generateButton: 'Hasilkan Konten',
                 resetButton: 'Reset Semua',
                 resetConfirmTitle: 'Reset Semua Data',
-                resetConfirmMessage: 'Apakah Anda yakin ingin mereset semua data? Ini akan menghapus formulir dan konten yang dihasilkan.',
+                resetConfirmMessage: 'Apakah Anda yakin ingin mereset semua data? Formulir dan konten akan dihapus.',
                 cancelButton: 'Batal',
                 resetModalButton: 'Reset',
-                generating: 'Menghasilkan konten Anda dengan AI...',
+                generating: 'Menghasilkan konten Anda dengan AI\u2026',
                 loadingFacts: [
-                    'Tahukah Anda? Pena quill ditemukan pada abad ke-6...',
-                    'Membuat cerita Anda dengan presisi AI...',
-                    'Quill pertama berasal dari bulu angsa...',
-                    'AI sedang menenun masterpiece naratif Anda...',
-                    'Para penulis kuno menggunakan pena reed sebelum quill...',
-                    'Memoles kata-kata Anda dengan algoritma cerdas...',
-                    'Pena quill dapat menulis hingga 10.000 kata per hari...',
-                    'Mengubah ide menjadi prosa yang indah...',
-                    'Quill merevolusi penulisan di Eropa abad pertengahan...',
-                    'Shakespeare menulis 37 drama dan 154 sonnets...',
-                    'Mesin tik ditemukan pada tahun 1868...',
-                    'AI belajar dari jutaan karya sastra masterpiece...',
-                    'Novel terpanjang pernah ditulis berjumlah 9,609,000 kata...',
-                    'Penulis terkenal seperti Hemingway menulis sambil berdiri...',
-                    'Novel komputer pertama ditulis pada tahun 1952...',
-                    'AI dapat menganalisis gaya tulisan penulis mana pun...',
-                    'Pena quill digunakan selama lebih dari 1.000 tahun...',
-                    'Jane Austen menulis novelnya pada abad ke-19...',
-                    'Alat tulis digital berkembang dengan pesat...',
-                    'Seni bercerita dimulai sejak gua-gua kuno...',
-                    'AI membantu penulis mengatasi blok kreatif...',
-                    'Pena fountain pertama ditemukan pada tahun 1884...',
-                    'Sastra telah membentuk budaya manusia selama ribuan tahun...',
-                    'AI modern melanjutkan tradisi pencerita hebat...',
-                    'Menulis dengan tangan meningkatkan memori dan kreativitas...',
-                    'Pena ballpoint ditemukan pada tahun 1938...',
-                    'AI menganalisis tema, plot, dan perkembangan karakter...',
-                    'Mesin cetak merevolusi berbagi pengetahuan...',
-                    'Setiap penulis hebat pernah menjadi pemula...',
-                    'AI melestarikan tradisi tulis sambil berinovasi...',
-                    'Sistem tulis pertama adalah kuneiform, ditemukan bangsa Sumeria sekitar 3500 SM...',
-                    'Shakespeare menciptakan 1.700+ kata baru yang masih digunakan dalam bahasa Inggris modern...',
-                    'Bentuk novel muncul di Inggris abad ke-18 dengan karya seperti Robinson Crusoe...',
-                    'Hieroglif digunakan selama lebih dari 3.000 tahun di Mesir kuno...',
-                    'Kamus pertama disusun oleh Robert Cawdrey pada tahun 1604...',
-                    'Sanskerta adalah bahasa tertua yang masih terus digunakan di dunia...',
-                    'Batu Rosetta membantu memecahkan hieroglif Mesir pada tahun 1799...',
-                    'Semua bahasa memiliki pola tata bahasa universal menurut penelitian linguistik...',
-                    'Bahasa pemrograman pertama dibuat pada tahun 1883 oleh Ada Lovelace...',
-                    'Model bahasa AI kini dapat menerjemahkan antara lebih dari 100 bahasa...',
-                    'Kamus Bahasa Inggris Oxford berisi 600.000+ kata dan frasa...',
-                    'Edgar Allan Poe menciptakan genre cerita detektif modern...',
-                    'Frankenstein (1818) karya Mary Shelley dianggap sebagai novel fiksi ilmiah pertama...',
-                    'Pena quill digunakan selama lebih dari 1.000 tahun, dari zaman kuno hingga abad ke-19...',
-                    'Para penulis biara melestarikan teks kuno melalui Abad Kegelapan Eropa...',
-                    'Surat kabar pertama diterbitkan di Strasbourg pada tahun 1605...',
-                    'Dante Alighieri memilih menulis The Divine Comedy dalam bahasa Italia bukan Latin...',
-                    'Paten mesin tik pertama diberikan kepada Henry Mill pada tahun 1714...',
-                    'AI kini dapat mendeteksi gaya tulisan dengan akurasi lebih dari 95%...',
-                    'Buku cetak tertua yang masih ada adalah Diamond Sutra dari tahun 868 M...',
-                    'Sistem tulis berevolusi secara independen di setidaknya 4 peradaban kuno...',
-                    'E-book pertama dibuat oleh Michael Hart pada tahun 1971...',
-                    'Model bahasa AI dilatih dengan miliaran sampel teks dari tulisan manusia...',
-                    'Sistem tulis berkembang secara independen di Cina, Mesopotamia, Mesir, dan Mesoamerika...',
-                    'Penemuan kertas oleh bangsa Cina merevolusi komunikasi global...',
-                    'Kaligrafi menjadi bentuk seni yang sangat dihormati di banyak budaya Asia...',
-                    'Mesin cetak pertama ditemukan oleh Johannes Gutenberg pada tahun 1450...',
-                    'Sastra telah digunakan sebagai propaganda sejak zaman Romawi kuno...',
-                    'Cerita terpendek yang pernah ditulis hanya terdiri dari enam kata...',
-                    'Penulisan di atas tablet tanah liat dimulai lebih dari 5.000 tahun yang lalu...',
-                    'Novel modern pertama dianggap sebagai Don Quixote karya Cervantes...',
-                    'Penulisan membantu melestarikan tradisi lisan dan sejarah budaya...',
-                    'Ensiklopedia pertama diterbitkan di Cina selama Dinasti Ming...',
-                    'Tipografi berkembang dari naskah tulisan tangan ke font digital...',
-                    'Sistem tulis menggunakan antara 20 hingga 100 simbol untuk komunikasi lengkap...',
-                    'Hukum hak cipta pertama didirikan di Inggris pada tahun 1710...',
-                    'Sastra mencerminkan iklim sosial dan politik zamannya...',
-                    'Alat tulis berkembang dari stylus batu ke keyboard komputer...',
-                    'Surat kabar pertama diterbitkan di Jerman pada tahun 1609...',
-                    'Dongeng awalnya adalah cerita lisan sebelum ditulis...',
-                    'Penulisan memungkinkan perjalanan waktu melalui pikiran manusia yang terlestarikan...',
-                    'Perpustakaan umum pertama didirikan di Nineveh kuno...'
+                    'Pena quill ditemukan pada abad ke-6.',
+                    'Quill pertama berasal dari bulu angsa.',
+                    'Shakespeare menulis 37 drama dan 154 soneta.',
+                    'Hemingway menulis sambil berdiri.',
+                    'Surat kabar pertama diterbitkan di Strasbourg, 1605.',
+                    'Bentuk novel muncul di Inggris abad ke-18.',
+                    'AI dapat menganalisis gaya tulisan penulis mana pun.',
+                    'Tipografi berkembang dari naskah tulisan tangan ke font digital.',
+                    'Sistem tulis berkembang independen di empat peradaban kuno.',
+                    'Mesin cetak pertama ditemukan Gutenberg pada 1450.',
+                    'Mark Twain adalah penulis pertama yang menyerahkan naskah ketik.',
+                    'Sastra telah digunakan sebagai propaganda sejak Romawi kuno.',
+                    'Cerita terpendek yang pernah ditulis hanya enam kata.',
+                    'Penulisan di tablet tanah liat dimulai lebih dari 5.000 tahun lalu.',
+                    'Hukum hak cipta pertama didirikan di Inggris pada 1710.'
                 ],
                 apiKeyRequired: 'Silakan atur kunci API Gemini Anda di Pengaturan terlebih dahulu.',
-                missingFields: 'Kolom yang diperlukan tidak lengkap',
+                byokKeySet: 'Kunci Disetel',
+                byokKeyMissing: 'Tanpa Kunci',
+                byokBannerTitle: 'Bawa Kunci Anda Sendiri',
+                byokBannerMsg: 'Quill adalah BYOK — Bawa Kunci Anda Sendiri. Tambahkan kunci API Gemini Anda di Pengaturan untuk mulai menghasilkan. Kunci hanya disimpan di peramban ini dan dikirim per-request lewat header <code>X-User-API-Key</code>. Server tidak pernah menyimpannya.',
+                byokBannerCta: 'Buka Pengaturan →',
+                missingFields: 'Kolom wajib belum lengkap',
                 tagsRequired: 'Silakan tambahkan setidaknya satu tag',
                 exportMarkdown: 'Ekspor sebagai Markdown',
                 exportRTF: 'Ekspor sebagai RTF',
-                generateChapter: 'Hasilkan Konten Bab',
-                generatingChapter: 'Menghasilkan...',
-                regenerateChapter: 'Hasilkan Ulang Bab',
+                generateChapter: 'Hasilkan Bab',
+                generatingChapter: 'Menghasilkan\u2026',
+                regenerateChapter: 'Hasilkan Ulang',
                 exportChapter: 'Ekspor Bab',
                 selectTitle: 'Pilih Judul',
                 selectSubtitle: 'Pilih Subjudul',
                 novelTitle: 'Judul Novel',
                 synopsis: 'Sinopsis',
-                outline: 'Outline',
+                outline: 'Rangkuman',
                 chapter: 'Bab',
                 refinedTags: 'Tag yang Dimurnikan',
                 content: 'Konten',
-                backToGenerator: '← Kembali ke Generator',
-                languageSettings: 'Pengaturan Bahasa',
+                backToGenerator: '\u2190 Kembali ke Generator',
+                languageSettings: 'Bahasa',
                 interfaceLanguage: 'Bahasa Antarmuka',
                 languageHelp: 'Pilih bahasa untuk antarmuka pengguna',
                 apiConfiguration: 'Konfigurasi Gemini AI',
@@ -1228,14 +1141,16 @@ export function generateMainPageHTML(): string {
                 apiKeyLabel: 'Kunci API Gemini *',
                 apiKeyPlaceholder: 'Masukkan kunci API Gemini Anda',
                 saveApiKey: 'Simpan Kunci API',
+                removeApiKey: 'Hapus Kunci API',
                 apiKeySaved: 'Kunci API berhasil disimpan!',
                 apiKeyVerified: 'Kunci API diverifikasi dan berhasil disimpan!',
                 apiKeyVerificationFailed: 'Kunci API disimpan tetapi verifikasi gagal: ',
                 apiKeySaveError: 'Kunci API disimpan tetapi tidak dapat diverifikasi: ',
-                apiKeyQuotaExceeded: 'Kuota API terlampaui. Silakan periksa tagihan/batas Gemini API Anda.',
-                apiKeyInvalid: 'Kunci API tidak valid. Silakan periksa bahwa kunci API Gemini Anda benar dan diaktifkan.',
-                networkError: 'Kesalahan jaringan. Silakan periksa koneksi internet Anda dan coba lagi.',
-                pleaseEnterApiKey: 'Silakan masukkan kunci API'
+                apiKeyQuotaExceeded: 'Kuota API terlampaui. Periksa tagihan/batas Gemini API Anda.',
+                apiKeyInvalid: 'Kunci API tidak valid. Periksa kunci API Gemini Anda.',
+                networkError: 'Kesalahan jaringan. Periksa koneksi internet Anda.',
+                pleaseEnterApiKey: 'Silakan masukkan kunci API',
+                apiKeyRemoved: 'Kunci API berhasil dihapus.'
             }
         };
 
@@ -1251,23 +1166,89 @@ export function generateMainPageHTML(): string {
             const customNewspaperStyle = document.getElementById('customNewspaperStyle');
             const generateBtn = document.getElementById('generateBtn');
             const loading = document.getElementById('loading');
+            const loadingMsg = document.getElementById('loadingMsg');
             const errorMessage = document.getElementById('errorMessage');
+            const errorMessageText = document.getElementById('errorMessageText');
             const resultContainer = document.getElementById('resultContainer');
             const modal = document.getElementById('confirmationModal');
             const modalTitle = document.getElementById('modalTitle');
             const modalMessage = document.getElementById('modalMessage');
             const modalCancel = document.getElementById('modalCancel');
             const modalConfirm = document.getElementById('modalConfirm');
-            // Load saved language preference
+            const byokStatus = document.getElementById('byokStatus');
+            const byokStateText = document.getElementById('byokStateText');
+            const byokBanner = document.getElementById('byokBanner');
+            const byokBannerTitle = document.getElementById('byokBannerTitle');
+            const byokBannerMsg = document.getElementById('byokBannerMsg');
+            const byokBannerLink = document.getElementById('byokBannerLink');
+
             const savedLanguage = localStorage.getItem('uiLanguage') || 'english';
 
-            // Function to update UI language
+            // ---------- BYOK status sync ----------
+            function syncByokStatus() {
+                const key = (localStorage.getItem('geminiApiKey') || '').trim();
+                const has = key.length > 0;
+                const lang = localStorage.getItem('uiLanguage') || 'english';
+                const t = uiLanguages[lang];
+                if (byokStatus) {
+                    byokStatus.setAttribute('data-state', has ? 'ok' : 'missing');
+                    byokStateText.textContent = has ? t.byokKeySet : t.byokKeyMissing;
+                }
+                if (byokBanner) {
+                    byokBanner.classList.toggle('show', !has);
+                }
+                if (byokBannerTitle) byokBannerTitle.textContent = t.byokBannerTitle;
+                if (byokBannerMsg) byokBannerMsg.innerHTML = t.byokBannerMsg;
+                if (byokBannerLink) byokBannerLink.textContent = t.byokBannerCta;
+            }
+
+            // Read a fresh key each call (so a Settings save takes effect immediately
+            // if the user navigated back without a full reload).
+            function getApiKeyOrRedirect() {
+                const key = (localStorage.getItem('geminiApiKey') || '').trim();
+                if (!key) {
+                    const lang = localStorage.getItem('uiLanguage') || 'english';
+                    showError(uiLanguages[lang].apiKeyRequired);
+                    // Surface the banner + make sure the badge is fresh.
+                    syncByokStatus();
+                    return null;
+                }
+                return key;
+            }
+
+            // Shared fetch wrapper for AI endpoints: sends the key in the
+            // X-User-API-Key header (BYOK) and never in the body.
+            async function callByokEndpoint(url, body) {
+                const key = getApiKeyOrRedirect();
+                if (!key) return null;
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-User-API-Key': key,
+                    },
+                    body: JSON.stringify(body),
+                });
+                if (response.status === 400) {
+                    let payload = null;
+                    try { payload = await response.json(); } catch (_) { /* noop */ }
+                    if (payload && payload.code === 'BYOK_KEY_REQUIRED') {
+                        const lang = localStorage.getItem('uiLanguage') || 'english';
+                        showError(uiLanguages[lang].apiKeyRequired);
+                        syncByokStatus();
+                        return null;
+                    }
+                }
+                return response;
+            }
+
+
             function updateUILanguage(lang) {
                 const texts = uiLanguages[lang];
-                document.querySelector('h1').textContent = texts.title;
-                document.querySelector('p').textContent = texts.subtitle;
-                document.querySelector('.settings-link').textContent = texts.settings;
-                document.querySelector('label[for="topic"]').textContent = texts.topicLabel;
+                document.querySelector('h1').innerHTML = texts.title.replace('.', '<span class="amp">.</span>');
+                document.querySelector('.lede').textContent = texts.subtitle;
+                document.querySelector('.settings-link, .topbar a').textContent = texts.settings;
+                document.querySelector('label[for="topic"]').innerHTML = texts.topicLabel.replace('*', '<span class="req">*</span>');
                 document.querySelector('#topic').placeholder = texts.topicPlaceholder;
                 document.querySelector('label[for="tags"]').textContent = texts.tagsLabel;
                 document.querySelector('#tagInput').placeholder = texts.tagsPlaceholder;
@@ -1275,41 +1256,38 @@ export function generateMainPageHTML(): string {
                 document.querySelector('label[for="keywords"]').textContent = texts.keywordsLabel;
                 document.querySelector('#keywordInput').placeholder = texts.keywordsPlaceholder;
                 document.querySelector('#addKeywordBtn').textContent = texts.addButton;
-                document.querySelector('label[for="authorStyle"]').textContent = texts.authorStyleLabel;
+                document.querySelector('label[for="authorStyle"]').innerHTML = texts.authorStyleLabel.replace('*', '<span class="req">*</span>');
                 document.querySelector('#authorStyle option[value=""]').textContent = texts.selectAuthor;
                 document.querySelector('#customAuthorStyle').placeholder = texts.customAuthorPlaceholder;
-                document.querySelector('label[for="newspaperStyle"]').textContent = texts.newspaperStyleLabel;
+                document.querySelector('label[for="newspaperStyle"]').innerHTML = texts.newspaperStyleLabel.replace('*', '<span class="req">*</span>');
                 document.querySelector('#newspaperStyle option[value=""]').textContent = texts.selectNewspaper;
                 document.querySelector('#customNewspaperStyle').placeholder = texts.customNewspaperPlaceholder;
-                document.querySelector('label[for="type"]').textContent = texts.typeLabel;
+                document.querySelector('label[for="type"]').innerHTML = texts.typeLabel.replace('*', '<span class="req">*</span>');
                 document.querySelector('#type option[value="article"]').textContent = texts.typeArticle;
                 document.querySelector('#type option[value="shortstory"]').textContent = texts.typeShortStory;
                 document.querySelector('#type option[value="news"]').textContent = texts.typeNews;
                 document.querySelector('#type option[value="novel"]').textContent = texts.typeNovel;
-                document.querySelector('label[for="chapterCount"]').textContent = texts.chapterCountLabel;
+                document.querySelector('label[for="chapterCount"]').innerHTML = texts.chapterCountLabel.replace('*', '<span class="req">*</span>');
                 document.querySelector('#chapterCount').placeholder = texts.chapterCountPlaceholder;
-                document.querySelector('label[for="language"]').textContent = texts.languageLabel;
+                document.querySelector('label[for="language"]').innerHTML = texts.languageLabel.replace('*', '<span class="req">*</span>');
                 document.querySelector('#language option[value=""]').textContent = texts.selectLanguage;
                 document.querySelector('label[for="mainIdea"]').textContent = texts.mainIdeaLabel;
                 document.querySelector('#mainIdea').placeholder = texts.mainIdeaPlaceholder;
-                document.querySelector('#generateBtn').textContent = texts.generateButton;
+                document.querySelector('#generateBtn span:first-child').textContent = texts.generateButton;
                 document.querySelector('#resetBtn').textContent = texts.resetButton;
-                // Only update loading text if not currently cycling through facts
                 if (!loadingInterval) {
-                    document.querySelector('#loading p').textContent = texts.generating;
+                    loadingMsg.textContent = texts.generating;
                 }
-
-                // Store language preference
                 localStorage.setItem('uiLanguage', lang);
             }
 
-            // Loading text cycling functionality
+            // Loading text cycling
             let loadingInterval;
             let shuffledFacts = [];
             let currentFactIndex = 0;
 
             function shuffleArray(array) {
-                const shuffled = [...array];
+                const shuffled = array.slice();
                 for (let i = shuffled.length - 1; i > 0; i--) {
                     const j = Math.floor(Math.random() * (i + 1));
                     [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
@@ -1321,35 +1299,26 @@ export function generateMainPageHTML(): string {
                 const texts = uiLanguages[lang];
                 const facts = texts.loadingFacts;
                 if (!facts || facts.length === 0) return;
-
-                // Shuffle facts for random order each time
                 shuffledFacts = shuffleArray(facts);
                 currentFactIndex = 0;
-                const loadingTextElement = document.querySelector('#loading p');
-
-                // Show first fact immediately
-                loadingTextElement.textContent = shuffledFacts[0];
-
-                // Start cycling through shuffled facts with varied timing
+                loadingMsg.textContent = shuffledFacts[0];
                 loadingInterval = setInterval(() => {
                     currentFactIndex = (currentFactIndex + 1) % shuffledFacts.length;
-                    loadingTextElement.textContent = shuffledFacts[currentFactIndex];
-                }, 2800 + Math.random() * 800); // Random timing between 2.8-3.6 seconds
+                    loadingMsg.textContent = shuffledFacts[currentFactIndex];
+                }, 2800 + Math.random() * 800);
             }
 
             function stopLoadingFacts() {
                 if (loadingInterval) {
                     clearInterval(loadingInterval);
                     loadingInterval = null;
-                    // Reset to default generating text
                     const currentLang = localStorage.getItem('uiLanguage') || 'english';
-                    const texts = uiLanguages[currentLang];
-                    document.querySelector('#loading p').textContent = texts.generating;
+                    loadingMsg.textContent = uiLanguages[currentLang].generating;
                 }
             }
 
-            // Initialize language
             updateUILanguage(savedLanguage);
+            syncByokStatus();
 
             // Tag and keyword management
             let tags = [];
@@ -1377,12 +1346,14 @@ export function generateMainPageHTML(): string {
                     container.innerHTML = '';
                     array.forEach((item, index) => {
                         const tagElement = document.createElement('div');
-                        tagElement.className = 'tag';
-                        tagElement.innerHTML = \`
-                            \${item}
-                            <span class="tag-remove" onclick="removeItem(\${index}, '\${array === tags ? 'tags' : 'keywords'}')">&times;</span>
-                        \`;
+                        tagElement.className = 'chip';
+                        tagElement.innerHTML = item + ' <span class="x" data-index="' + index + '">&times;</span>';
                         container.appendChild(tagElement);
+                    });
+                    container.querySelectorAll('.x').forEach(function(el) {
+                        el.addEventListener('click', function(e) {
+                            removeItem(parseInt(e.target.getAttribute('data-index'), 10));
+                        });
                     });
                 }
 
@@ -1396,17 +1367,6 @@ export function generateMainPageHTML(): string {
                 addBtn.addEventListener('click', function() {
                     addItem(input.value.trim());
                 });
-
-                // Make removeItem available globally for onclick
-                window.removeItem = function(index, type) {
-                    if (type === 'tags') {
-                        tags.splice(index, 1);
-                        renderItems();
-                    } else {
-                        keywords.splice(index, 1);
-                        renderItems();
-                    }
-                };
             }
 
             setupTagSystem('tagInput', 'tagsContainer', tags, 'addTagBtn');
@@ -1432,102 +1392,69 @@ export function generateMainPageHTML(): string {
 
             function loadFormData() {
                 const savedData = localStorage.getItem('quillFormData');
-                if (savedData) {
-                    const formData = JSON.parse(savedData);
+                if (!savedData) return;
+                const formData = JSON.parse(savedData);
+                document.getElementById('topic').value = formData.topic || '';
+                document.getElementById('authorStyle').value = formData.authorStyle || '';
+                document.getElementById('customAuthorStyle').value = formData.customAuthorStyle || '';
+                document.getElementById('type').value = formData.type || '';
+                document.getElementById('newspaperStyle').value = formData.newspaperStyle || '';
+                document.getElementById('customNewspaperStyle').value = formData.customNewspaperStyle || '';
+                document.getElementById('language').value = formData.language || '';
+                document.getElementById('chapterCount').value = formData.chapterCount || '';
+                document.getElementById('mainIdea').value = formData.mainIdea || '';
 
-                    document.getElementById('topic').value = formData.topic || '';
-                    document.getElementById('authorStyle').value = formData.authorStyle || '';
-                    document.getElementById('customAuthorStyle').value = formData.customAuthorStyle || '';
-                    document.getElementById('type').value = formData.type || '';
-                    document.getElementById('newspaperStyle').value = formData.newspaperStyle || '';
-                    document.getElementById('customNewspaperStyle').value = formData.customNewspaperStyle || '';
-                    document.getElementById('language').value = formData.language || '';
-                    document.getElementById('chapterCount').value = formData.chapterCount || '';
-                    document.getElementById('mainIdea').value = formData.mainIdea || '';
-
-                    // Restore tags and keywords
-                    if (formData.tags) {
-                        tags.length = 0;
-                        tags.push(...formData.tags);
-                    }
-                    if (formData.keywords) {
-                        keywords.length = 0;
-                        keywords.push(...formData.keywords);
-                    }
-
-                    // Update UI for tags and keywords
-                    setupTagSystem('tagInput', 'tagsContainer', tags, 'addTagBtn');
-                    setupTagSystem('keywordInput', 'keywordsContainer', keywords, 'addKeywordBtn');
-
-                    // Show/hide chapter count group based on type
-                    const chapterCountGroup = document.getElementById('chapterCountGroup');
-                    if (formData.type === 'novel') {
-                        chapterCountGroup.classList.add('show');
-                    } else {
-                        chapterCountGroup.classList.remove('show');
-                    }
-
-                    // Show/hide custom author style
-                    const customAuthorStyle = document.getElementById('customAuthorStyle');
-                    if (formData.authorStyle === 'custom') {
-                        customAuthorStyle.style.display = 'block';
-                        customAuthorStyle.required = true;
-                    } else {
-                        customAuthorStyle.style.display = 'none';
-                        customAuthorStyle.required = false;
-                    }
-
-                    // Show/hide newspaper style group based on type
-                    const newspaperStyleGroup = document.getElementById('newspaperStyleGroup');
-                    if (formData.type === 'news' || formData.type === 'shortnews') {
-                        newspaperStyleGroup.style.display = 'block';
-                        document.getElementById('newspaperStyle').required = true;
-                    } else {
-                        newspaperStyleGroup.style.display = 'none';
-                        document.getElementById('newspaperStyle').required = false;
-                    }
-
-                    // Show/hide custom newspaper style
-                    const customNewspaperStyle = document.getElementById('customNewspaperStyle');
-                    if (formData.newspaperStyle === 'custom') {
-                        customNewspaperStyle.style.display = 'block';
-                        customNewspaperStyle.required = true;
-                    } else {
-                        customNewspaperStyle.style.display = 'none';
-                        customNewspaperStyle.required = false;
-                    }
+                if (formData.tags) {
+                    tags.length = 0;
+                    tags.push.apply(tags, formData.tags);
                 }
+                if (formData.keywords) {
+                    keywords.length = 0;
+                    keywords.push.apply(keywords, formData.keywords);
+                }
+                setupTagSystem('tagInput', 'tagsContainer', tags, 'addTagBtn');
+                setupTagSystem('keywordInput', 'keywordsContainer', keywords, 'addKeywordBtn');
+
+                const ccg = document.getElementById('chapterCountGroup');
+                if (formData.type === 'novel') ccg.classList.add('show'); else ccg.classList.remove('show');
+
+                const cas = document.getElementById('customAuthorStyle');
+                if (formData.authorStyle === 'custom') { cas.style.display = 'block'; cas.required = true; }
+                else { cas.style.display = 'none'; cas.required = false; }
+
+                const nsg = document.getElementById('newspaperStyleGroup');
+                if (formData.type === 'news' || formData.type === 'shortnews') {
+                    nsg.style.display = 'block';
+                    document.getElementById('newspaperStyle').required = true;
+                } else {
+                    nsg.style.display = 'none';
+                    document.getElementById('newspaperStyle').required = false;
+                }
+
+                const cns = document.getElementById('customNewspaperStyle');
+                if (formData.newspaperStyle === 'custom') { cns.style.display = 'block'; cns.required = true; }
+                else { cns.style.display = 'none'; cns.required = false; }
             }
 
             function saveResults(result, type) {
-                const resultsData = {
-                    result: result,
-                    type: type,
-                    timestamp: Date.now()
-                };
+                const resultsData = { result: result, type: type, timestamp: Date.now() };
                 localStorage.setItem('quillResults', JSON.stringify(resultsData));
             }
 
             function loadResults() {
                 const savedResults = localStorage.getItem('quillResults');
-                if (savedResults) {
-                    const resultsData = JSON.parse(savedResults);
-                    displayResults(resultsData.result, resultsData.type);
-                    // Show reset button when results are loaded
-                    document.getElementById('resetBtn').classList.remove('hidden');
-                }
+                if (!savedResults) return;
+                const resultsData = JSON.parse(savedResults);
+                displayResults(resultsData.result, resultsData.type);
+                document.getElementById('resetBtn').classList.remove('hidden');
             }
 
             function clearAllData() {
                 localStorage.removeItem('quillFormData');
                 localStorage.removeItem('quillResults');
-
-                // Clear form
                 document.getElementById('articleForm').reset();
                 tags.length = 0;
                 keywords.length = 0;
-
-                // Clear UI
                 document.getElementById('tagsContainer').innerHTML = '';
                 document.getElementById('keywordsContainer').innerHTML = '';
                 document.getElementById('chapterCountGroup').classList.remove('show');
@@ -1537,138 +1464,74 @@ export function generateMainPageHTML(): string {
                 document.getElementById('newspaperStyle').required = false;
                 document.getElementById('customNewspaperStyle').style.display = 'none';
                 document.getElementById('customNewspaperStyle').required = false;
-
-                // Clear results
                 document.getElementById('resultContainer').innerHTML = '';
-                document.getElementById('resultContainer').style.display = 'none';
-
-                // Clear error messages
-                document.getElementById('errorMessage').style.display = 'none';
-
-                // Hide reset button
+                document.getElementById('resultContainer').classList.remove('show');
+                document.getElementById('errorMessage').classList.remove('show');
                 document.getElementById('resetBtn').classList.add('hidden');
             }
 
-            // Type selection handling
             typeSelect.addEventListener('change', function() {
-                if (this.value === 'novel') {
-                    chapterCountGroup.classList.add('show');
-                } else {
-                    chapterCountGroup.classList.remove('show');
-                }
-
-                if (this.value === 'news') {
+                if (this.value === 'novel') chapterCountGroup.classList.add('show');
+                else chapterCountGroup.classList.remove('show');
+                if (this.value === 'news' || this.value === 'shortnews') {
                     newspaperStyleGroup.style.display = 'block';
                     document.getElementById('newspaperStyle').required = true;
                 } else {
                     newspaperStyleGroup.style.display = 'none';
                     document.getElementById('newspaperStyle').required = false;
                 }
+                saveFormData();
             });
 
-            // Author style handling
             authorStyleSelect.addEventListener('change', function() {
-                if (this.value === 'custom') {
-                    customAuthorStyle.style.display = 'block';
-                    customAuthorStyle.required = true;
-                } else {
-                    customAuthorStyle.style.display = 'none';
-                    customAuthorStyle.required = false;
-                }
+                if (this.value === 'custom') { customAuthorStyle.style.display = 'block'; customAuthorStyle.required = true; }
+                else { customAuthorStyle.style.display = 'none'; customAuthorStyle.required = false; }
                 saveFormData();
             });
 
-            // Newspaper style handling
             newspaperStyleSelect.addEventListener('change', function() {
-                if (this.value === 'custom') {
-                    customNewspaperStyle.style.display = 'block';
-                    customNewspaperStyle.required = true;
-                } else {
-                    customNewspaperStyle.style.display = 'none';
-                    customNewspaperStyle.required = false;
-                }
+                if (this.value === 'custom') { customNewspaperStyle.style.display = 'block'; customNewspaperStyle.required = true; }
+                else { customNewspaperStyle.style.display = 'none'; customNewspaperStyle.required = false; }
                 saveFormData();
             });
 
-            // Type selection handling
-            typeSelect.addEventListener('change', function() {
-                if (this.value === 'novel') {
-                    chapterCountGroup.classList.add('show');
-                } else {
-                    chapterCountGroup.classList.remove('show');
-                }
-                saveFormData();
-            });
-
-            // Add auto-save functionality to all form inputs
-            const formInputs = document.querySelectorAll('input, select, textarea');
-            formInputs.forEach(input => {
+            document.querySelectorAll('input, select, textarea').forEach(function(input) {
                 input.addEventListener('input', saveFormData);
                 input.addEventListener('change', saveFormData);
             });
 
-            // Modal functionality
-            function showModal(title, message, onConfirm) {
+            function showModal(title, message, onConfirm, cancelText, confirmText) {
                 modalTitle.textContent = title;
                 modalMessage.textContent = message;
+                modalCancel.textContent = cancelText || 'Cancel';
+                modalConfirm.textContent = confirmText || 'Confirm';
                 modal.classList.add('show');
-
-                function closeModal() {
-                    modal.classList.remove('show');
-                }
-
+                function closeModal() { modal.classList.remove('show'); }
                 modalCancel.onclick = closeModal;
-
-                modalConfirm.onclick = function() {
-                    closeModal();
-                    onConfirm();
-                };
-
-                // Close on overlay click
-                modal.onclick = function(e) {
-                    if (e.target === modal) {
-                        closeModal();
-                    }
-                };
-
-                // Close on Escape key
+                modalConfirm.onclick = function() { closeModal(); onConfirm(); };
+                modal.onclick = function(e) { if (e.target === modal) closeModal(); };
                 document.addEventListener('keydown', function escHandler(e) {
-                    if (e.key === 'Escape') {
-                        closeModal();
-                        document.removeEventListener('keydown', escHandler);
-                    }
+                    if (e.key === 'Escape') { closeModal(); document.removeEventListener('keydown', escHandler); }
                 });
             }
 
-            // Reset button functionality
             document.getElementById('resetBtn').addEventListener('click', function() {
                 const currentLang = localStorage.getItem('uiLanguage') || 'english';
                 const texts = uiLanguages[currentLang];
-
-                showModal(texts.resetConfirmTitle || 'Reset All Data',
-                         texts.resetConfirmMessage,
-                         function() {
-                    clearAllData();
-                }, texts.cancelButton || 'Cancel', texts.resetModalButton || 'Reset');
+                showModal(texts.resetConfirmTitle || 'Reset All Data', texts.resetConfirmMessage, function() { clearAllData(); }, texts.cancelButton, texts.resetModalButton);
             });
 
             function showError(message) {
-                errorMessage.textContent = message;
-                errorMessage.style.display = 'block';
+                errorMessageText.textContent = message;
+                errorMessage.classList.add('show');
                 errorMessage.scrollIntoView({ behavior: 'smooth' });
             }
 
-            // Form submission
             form.addEventListener('submit', async function(e) {
                 e.preventDefault();
-
                 const formData = new FormData(form);
-                const apiKey = localStorage.getItem('geminiApiKey');
-                if (!apiKey) {
-                    const currentLang = localStorage.getItem('uiLanguage') || 'english';
-                    showError(uiLanguages[currentLang].apiKeyRequired);
-                    return;
-                }
+                const apiKey = getApiKeyOrRedirect();
+                if (!apiKey) return;
 
                 const data = {
                     topic: formData.get('topic'),
@@ -1677,77 +1540,57 @@ export function generateMainPageHTML(): string {
                     authorStyle: authorStyleSelect.value === 'custom' ? customAuthorStyle.value : authorStyleSelect.value,
                     type: formData.get('type'),
                     newspaperStyle: newspaperStyleSelect.value === 'custom' ? customNewspaperStyle.value : newspaperStyleSelect.value,
-                    chapterCount: formData.get('chapterCount') ? parseInt(formData.get('chapterCount')) : undefined,
+                    chapterCount: formData.get('chapterCount') ? parseInt(formData.get('chapterCount'), 10) : undefined,
                     language: formData.get('language'),
                     mainIdea: formData.get('mainIdea') || undefined,
-                    apiKey: apiKey
                 };
 
-                // Show loading
-                loading.style.display = 'block';
+                loading.classList.add('show');
                 generateBtn.disabled = true;
-                errorMessage.style.display = 'none';
-                resultContainer.style.display = 'none';
-
-                // Start cycling loading facts
+                errorMessage.classList.remove('show');
+                resultContainer.classList.remove('show');
                 const currentLang = localStorage.getItem('uiLanguage') || 'english';
                 startLoadingFacts(currentLang);
 
                 try {
-                    const response = await fetch('/api/generate', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify(data)
-                    });
-
+                    const response = await callByokEndpoint('/api/generate', data);
+                    if (!response) return; // BYOK missing-key branch already handled
                     const result = await response.json();
-
-                    if (!response.ok) {
-                        throw new Error(result.error || 'Failed to generate content');
-                    }
-
+                    if (!response.ok) throw new Error(result.error || 'Failed to generate content');
                     displayResults(result, data.type);
                     saveResults(result, data.type);
-
-                    // Show reset button when content is generated
                     document.getElementById('resetBtn').classList.remove('hidden');
+                    syncByokStatus();
                 } catch (error) {
                     const currentLang = localStorage.getItem('uiLanguage') || 'english';
                     const texts = uiLanguages[currentLang];
                     let errorMessage = error.message;
-
-                    // Provide more user-friendly error messages
-                    if (error.message.includes('quota exceeded') || error.message.includes('429')) {
-                        errorMessage = texts.apiKeyQuotaExceeded;
-                    } else if (error.message.includes('403') || error.message.includes('access denied') || error.message.includes('unauthorized')) {
-                        errorMessage = texts.apiKeyInvalid;
-                    } else if (error.message.includes('network') || error.message.includes('fetch')) {
-                        errorMessage = texts.networkError;
-                    }
-
+                    if (error.message.includes('quota exceeded') || error.message.includes('429')) errorMessage = texts.apiKeyQuotaExceeded;
+                    else if (error.message.includes('403') || error.message.includes('access denied') || error.message.includes('unauthorized')) errorMessage = texts.apiKeyInvalid;
+                    else if (error.message.includes('network') || error.message.includes('fetch')) errorMessage = texts.networkError;
                     showError(errorMessage);
                 } finally {
-                    loading.style.display = 'none';
+                    loading.classList.remove('show');
                     generateBtn.disabled = false;
-                    // Stop cycling loading facts
                     stopLoadingFacts();
                 }
             });
 
             function displayResults(result, type) {
                 resultContainer.innerHTML = '';
-
-                if (type === 'article' || type === 'shortstory' || type === 'news') {
+                if (type === 'article' || type === 'shortstory' || type === 'news' || type === 'shortnews') {
                     displayArticleResults(result);
                 } else {
                     displayNovelResults(result);
                 }
-
-                resultContainer.style.display = 'block';
+                resultContainer.classList.add('show');
                 resultContainer.scrollIntoView({ behavior: 'smooth' });
             }
+
+            function resultHead(num, title, meta) {
+                return '<div class="result-block"><div class="result-head"><div class="num">' + num + '</div><div class="title">' + title + '</div><div class="meta">' + (meta || '') + '</div></div>';
+            }
+            function resultFoot() { return '</div>'; }
 
             function displayArticleResults(result) {
                 const currentLang = localStorage.getItem('uiLanguage') || 'english';
@@ -1755,84 +1598,51 @@ export function generateMainPageHTML(): string {
                 let html = '';
 
                 if (result.refinedTags && result.refinedTags.length > 0) {
-                    html += \`
-                        <div class="result-section">
-                            <h3>\${texts.refinedTags}</h3>
-                            <div class="tags-container">
-                                \${result.refinedTags.map(tag => \`<div class="tag">\${tag}</div>\`).join('')}
-                            </div>
-                        </div>
-                    \`;
+                    html += resultHead('03', texts.refinedTags, 'TAGS / ' + result.refinedTags.length);
+                    html += '<div class="tag-row-result"><div class="tag-input">' + result.refinedTags.map(function(t) { return '<div class="chip">' + t + '</div>'; }).join('') + '</div></div>';
+                    html += resultFoot();
                 }
 
                 if (result.titleSelection && result.titleSelection.length > 0) {
-                    html += \`
-                        <div class="result-section">
-                            <h3>\${texts.selectTitle}</h3>
-                            <div class="title-options">
-                                \${result.titleSelection.map((title, index) =>
-                                    \`<div class="option-card" onclick="selectOption(this, 'title', \${index})">
-                                        <div class="option-title">Option \${index + 1}</div>
-                                        <div>\${title}</div>
-                                    </div>\`
-                                ).join('')}
-                            </div>
-                        </div>
-                    \`;
+                    html += resultHead('04', texts.selectTitle, 'OPTIONS / ' + result.titleSelection.length);
+                    html += '<div class="option-grid">';
+                    result.titleSelection.forEach(function(title, index) {
+                        html += '<div class="option-card" data-type="title" data-index="' + index + '"><div class="option-tag">OPTION ' + String(index + 1).padStart(2, '0') + '</div><div class="option-text">' + title + '</div></div>';
+                    });
+                    html += '</div>' + resultFoot();
                 }
 
                 if (result.subtitleSelection && result.subtitleSelection.length > 0) {
-                    html += \`
-                        <div class="result-section">
-                            <h3>\${texts.selectSubtitle}</h3>
-                            <div class="title-options">
-                                \${result.subtitleSelection.map((subtitle, index) =>
-                                    \`<div class="option-card" onclick="selectOption(this, 'subtitle', \${index})">
-                                        <div class="option-title">Option \${index + 1}</div>
-                                        <div>\${subtitle}</div>
-                                    </div>\`
-                                ).join('')}
-                            </div>
-                        </div>
-                    \`;
+                    html += resultHead('05', texts.selectSubtitle, 'OPTIONS / ' + result.subtitleSelection.length);
+                    html += '<div class="option-grid">';
+                    result.subtitleSelection.forEach(function(subtitle, index) {
+                        html += '<div class="option-card" data-type="subtitle" data-index="' + index + '"><div class="option-tag">OPTION ' + String(index + 1).padStart(2, '0') + '</div><div class="option-text">' + subtitle + '</div></div>';
+                    });
+                    html += '</div>' + resultFoot();
                 }
 
                 if (result.content) {
-                    html += \`
-                        <div class="result-section">
-                            <h3>\${texts.content}</h3>
-                            <div class="content-display">\${result.content}</div>
-                        </div>
-
-                        <div class="export-section">
-                            <h3>Export Your Content</h3>
-                            <div class="export-controls">
-                                <select id="selectedTitle" class="export-select">
-                                    <option value="">\${texts.selectTitle}...</option>
-                                    \${result.titleSelection ? result.titleSelection.map((title, index) =>
-                                        \`<option value="\${title}">\${title}</option>\`
-                                    ).join('') : ''}
-                                </select>
-                                <select id="selectedSubtitle" class="export-select">
-                                    <option value="">\${texts.selectSubtitle}...</option>
-                                    \${result.subtitleSelection ? result.subtitleSelection.map((subtitle, index) =>
-                                        \`<option value="\${subtitle}">\${subtitle}</option>\`
-                                    ).join('') : ''}
-                                </select>
-                            </div>
-                            <div class="export-buttons">
-                                <button class="export-btn" onclick="exportAsMarkdown()">
-                                    📄 \${texts.exportMarkdown}
-                                </button>
-                                <button class="export-btn" onclick="exportAsRTF()">
-                                    📝 \${texts.exportRTF || 'Export as RTF'}
-                                </button>
-                            </div>
-                        </div>
-                    \`;
+                    html += resultHead('06', texts.content, 'BODY');
+                    html += '<div class="content-display">' + result.content + '</div>';
+                    html += '<div class="export-block"><div class="export-row">';
+                    html += '<div class="export-select-group"><label for="selectedTitle">' + texts.selectTitle + '</label><select id="selectedTitle" class="export-select"><option value="">' + texts.selectTitle + '\u2026</option>';
+                    if (result.titleSelection) {
+                        result.titleSelection.forEach(function(t) { html += '<option value="' + t + '">' + t + '</option>'; });
+                    }
+                    html += '</select></div>';
+                    html += '<div class="export-select-group" style="grid-column: 1 / -1; margin-top: 16px;"><label for="selectedSubtitle">' + texts.selectSubtitle + '</label><select id="selectedSubtitle" class="export-select"><option value="">' + texts.selectSubtitle + '\u2026</option>';
+                    if (result.subtitleSelection) {
+                        result.subtitleSelection.forEach(function(s) { html += '<option value="' + s + '">' + s + '</option>'; });
+                    }
+                    html += '</select></div>';
+                    html += '<div class="export-buttons"><button class="export-btn" id="exportMdBtn">&#8595; ' + texts.exportMarkdown + '</button><button class="export-btn" id="exportRtfBtn">&#8595; ' + (texts.exportRTF || 'Export as RTF') + '</button></div>';
+                    html += '</div></div>';
+                    html += resultFoot();
                 }
 
                 resultContainer.innerHTML = html;
+                bindOptionSelection();
+                bindExportButtons();
             }
 
             function displayNovelResults(result) {
@@ -1841,550 +1651,319 @@ export function generateMainPageHTML(): string {
                 let html = '';
 
                 if (result.titleSelection && result.titleSelection.length > 0) {
-                    html += \`
-                        <div class="result-section">
-                            <h3>\${texts.selectTitle}</h3>
-                            <div class="title-options">
-                                \${result.titleSelection.map((title, index) =>
-                                    \`<div class="option-card" onclick="selectOption(this, 'title', \${index})">
-                                        <div class="option-title">Option \${index + 1}</div>
-                                        <div>\${title}</div>
-                                    </div>\`
-                                ).join('')}
-                            </div>
-                        </div>
-                    \`;
+                    html += resultHead('03', texts.selectTitle, 'OPTIONS / ' + result.titleSelection.length);
+                    html += '<div class="option-grid">';
+                    result.titleSelection.forEach(function(title, index) {
+                        html += '<div class="option-card" data-type="title" data-index="' + index + '"><div class="option-tag">OPTION ' + String(index + 1).padStart(2, '0') + '</div><div class="option-text">' + title + '</div></div>';
+                    });
+                    html += '</div>' + resultFoot();
                 }
 
                 if (result.synopsis) {
-                    html += \`
-                        <div class="result-section">
-                            <h3>\${texts.synopsis}</h3>
-                            <div class="content-display">\${result.synopsis}</div>
-                        </div>
-                    \`;
+                    html += resultHead('04', texts.synopsis, 'NARRATIVE');
+                    html += '<div class="content-display">' + result.synopsis + '</div>' + resultFoot();
                 }
 
                 if (result.outline && result.outline.length > 0) {
-                    html += \`
-                        <div class="result-section">
-                            <h3>\${texts.outline}</h3>
-                            <div class="chapter-outline">
-                                  \${result.outline.map(chapter => \`
-                                      <div class="chapter-item">
-                                        <div class="chapter-header" onclick="toggleChapter(\${chapter.chapterNumber})">
-                                            <div class="chapter-title-section">
-                                                <div class="chapter-number">\${texts.chapter} \${chapter.chapterNumber}: \${chapter.title}</div>
-                                                <div>\${chapter.subtitle}</div>
-                                            </div>
-                                            <div class="chapter-toggle collapsed" id="chapter-toggle-\${chapter.chapterNumber}">▶</div>
-                                        </div>
-                                        <div class="chapter-content-section" id="chapter-content-section-\${chapter.chapterNumber}">
-                                            <div class="chapter-details">
-                                                <div class="chapter-actions">
-                                                    <button class="generate-chapter-btn"
-                                                            data-chapter-number="\${chapter.chapterNumber}"
-                                                            data-chapter-title="\${chapter.title.split('"').join('&quot;')}"
-                                                            data-chapter-subtitle="\${chapter.subtitle.split('"').join('&quot;')}"
-                                                            data-novel-title="\${result.titleSelection ? result.titleSelection[0].split('"').join('&quot;') : ''}"
-                                                            data-novel-synopsis="\${result.synopsis ? result.synopsis.substring(0, 100).split('"').join('&quot;') : ''}"
-                                                            onclick="generateChapter(this)">
-                                                        \${texts.generateChapter}
-                                                    </button>
-                                                    <div class="export-chapter-buttons" id="export-chapter-\${chapter.chapterNumber}-btn" style="display: none;">
-                                                        <button class="export-chapter-btn"
-                                                            data-chapter-number="\${chapter.chapterNumber}"
-                                                            data-chapter-title="\${chapter.title.split('"').join('&quot;')}"
-                                                            data-chapter-subtitle="\${chapter.subtitle.split('"').join('&quot;')}"
-                                                            onclick="exportChapterMarkdown(this)">
-                                                            📄 MD
-                                                        </button>
-                                                        <button class="export-chapter-btn"
-                                                            data-chapter-number="\${chapter.chapterNumber}"
-                                                            data-chapter-title="\${chapter.title.split('"').join('&quot;')}"
-                                                            data-chapter-subtitle="\${chapter.subtitle.split('"').join('&quot;')}"
-                                                            onclick="exportChapterRTF(this)">
-                                                            📝 RTF
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                                <div class="chapter-loading" id="chapter-\${chapter.chapterNumber}-loading" style="display: none;">
-                                                    <div class="chapter-progress-bar"></div>
-                                                </div>
-                                                <div class="chapter-content" id="chapter-\${chapter.chapterNumber}-content" style="display: none;"></div>
-                                            </div>
-                                        </div>
-                                      </div>
-                                  \`).join('')}
-                            </div>
-                        </div>
+                    html += resultHead('05', texts.outline, 'CHAPTERS / ' + result.outline.length);
+                    html += '<div class="chapter-outline">';
+                    result.outline.forEach(function(chapter) {
+                        html += '<div class="chapter-item">';
+                        html += '<div class="chapter-header" data-chapter="' + chapter.chapterNumber + '">';
+                        html += '<div class="chapter-num">CH / ' + String(chapter.chapterNumber).padStart(2, '0') + '</div>';
+                        html += '<div class="chapter-titles"><div class="ch-title">' + chapter.title + '</div><div class="ch-sub">' + chapter.subtitle + '</div></div>';
+                        html += '<div class="chapter-toggle" id="chapter-toggle-' + chapter.chapterNumber + '">&rarr;</div>';
+                        html += '</div>';
+                        html += '<div class="chapter-content-section" id="chapter-content-section-' + chapter.chapterNumber + '">';
+                        html += '<div class="chapter-details">';
+                        html += '<div class="chapter-actions">';
+                        html += '<button class="generate-chapter-btn" data-chapter-number="' + chapter.chapterNumber + '" data-chapter-title="' + chapter.title.replace(/"/g, '&quot;') + '" data-chapter-subtitle="' + chapter.subtitle.replace(/"/g, '&quot;') + '" data-novel-title="' + (result.titleSelection ? result.titleSelection[0].replace(/"/g, '&quot;') : '') + '" data-novel-synopsis="' + (result.synopsis ? result.synopsis.substring(0, 100).replace(/"/g, '&quot;') : '') + '">' + texts.generateChapter + '</button>';
+                        html += '<div class="export-chapter-buttons" id="export-chapter-' + chapter.chapterNumber + '-btn" style="display: none;">';
+                        html += '<button class="export-chapter-btn" data-chapter-number="' + chapter.chapterNumber + '" data-chapter-title="' + chapter.title.replace(/"/g, '&quot;') + '" data-chapter-subtitle="' + chapter.subtitle.replace(/"/g, '&quot;') + '" data-export="md">MD</button>';
+                        html += '<button class="export-chapter-btn" data-chapter-number="' + chapter.chapterNumber + '" data-chapter-title="' + chapter.title.replace(/"/g, '&quot;') + '" data-chapter-subtitle="' + chapter.subtitle.replace(/"/g, '&quot;') + '" data-export="rtf">RTF</button>';
+                        html += '</div></div>';
+                        html += '<div class="chapter-loading" id="chapter-' + chapter.chapterNumber + '-loading" style="display: none;"><div class="bar"></div><div class="lab">GENERATING</div></div>';
+                        html += '<div class="chapter-content" id="chapter-' + chapter.chapterNumber + '-content" style="display: none;"></div>';
+                        html += '</div></div></div>';
+                    });
+                    html += '</div>';
 
-                        <div class="export-section">
-                            <h3>Export Your Novel</h3>
-                            <div class="export-controls">
-                                <select id="selectedNovelTitle" class="export-select">
-                                    <option value="">\${texts.selectTitle}...</option>
-                                    \${result.titleSelection ? result.titleSelection.map((title, index) =>
-                                        \`<option value="\${title}">\${title}</option>\`
-                                    ).join('') : ''}
-                                </select>
-                            </div>
-                            <div class="export-buttons">
-                                <button class="export-btn" onclick="exportNovelAsMarkdown()">
-                                    📄 \${texts.exportMarkdown}
-                                </button>
-                            </div>
-                        </div>
-                    \`;
+                    html += '<div class="export-block"><div class="export-row">';
+                    html += '<div class="export-select-group"><label for="selectedNovelTitle">' + texts.selectTitle + '</label><select id="selectedNovelTitle" class="export-select"><option value="">' + texts.selectTitle + '\u2026</option>';
+                    if (result.titleSelection) {
+                        result.titleSelection.forEach(function(t) { html += '<option value="' + t + '">' + t + '</option>'; });
+                    }
+                    html += '</select></div>';
+                    html += '<div class="export-buttons"><button class="export-btn" id="exportNovelMdBtn">&#8595; ' + texts.exportMarkdown + '</button></div>';
+                    html += '</div></div>';
+
+                    html += resultFoot();
                 }
 
                 resultContainer.innerHTML = html;
+                bindOptionSelection();
+                bindChapterToggles();
+                bindChapterGenerate();
+                bindExportButtons();
             }
 
-            // Load saved data on page load
-            loadFormData();
-            loadResults();
-        });
-
-        function selectOption(element, type, index) {
-            // Remove selected class from all options of this type
-            const container = element.closest('.title-options, .subtitle-options');
-            container.querySelectorAll('.option-card').forEach(card => {
-                card.classList.remove('selected');
-            });
-
-            // Add selected class to clicked option
-            element.classList.add('selected');
-        }
-
-        function exportAsMarkdown() {
-            const selectedTitle = document.getElementById('selectedTitle').value;
-            const selectedSubtitle = document.getElementById('selectedSubtitle').value;
-
-            if (!selectedTitle) {
-                alert('Please select a title first.');
-                return;
-            }
-
-            // Get the content from the result
-            const contentElement = document.querySelector('.content-display');
-            if (!contentElement) {
-                alert('No content found to export.');
-                return;
-            }
-
-            const content = contentElement.textContent || contentElement.innerText;
-
-            // Create markdown content
-            let markdown = \`# \${selectedTitle}\n\n\`;
-            if (selectedSubtitle) {
-                markdown += \`## \${selectedSubtitle}\n\n\`;
-            }
-            markdown += content;
-
-            // Create and download file
-            const blob = new Blob([markdown], { type: 'text/markdown' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = \`\${selectedTitle.replace(/[^a-z0-9]/g, '_').toLowerCase()}.md\`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        }
-
-        async function exportAsRTF() {
-            const selectedTitle = document.getElementById('selectedTitle').value;
-            const selectedSubtitle = document.getElementById('selectedSubtitle').value;
-
-            if (!selectedTitle) {
-                const currentLang = localStorage.getItem('uiLanguage') || 'english';
-                const texts = uiLanguages[currentLang];
-                alert(texts.selectTitle || 'Please select a title first.');
-                return;
-            }
-
-            // Get the content from the result
-            const contentElement = document.querySelector('.content-display');
-            if (!contentElement) {
-                alert('No content found to export.');
-                return;
-            }
-
-            const content = contentElement.textContent || contentElement.innerText;
-
-            try {
-                const response = await fetch('/api/export-rtf', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        title: selectedTitle,
-                        subtitle: selectedSubtitle || '',
-                        content: content
-                    })
+            function bindOptionSelection() {
+                document.querySelectorAll('.option-card').forEach(function(card) {
+                    card.addEventListener('click', function() {
+                        const type = this.getAttribute('data-type');
+                        document.querySelectorAll('.option-card[data-type="' + type + '"]').forEach(function(c) { c.classList.remove('selected'); });
+                        this.classList.add('selected');
+                    });
                 });
+            }
 
-                if (!response.ok) {
-                    throw new Error('Export failed');
-                }
+            function bindChapterToggles() {
+                document.querySelectorAll('.chapter-header').forEach(function(h) {
+                    h.addEventListener('click', function(e) {
+                        if (e.target.closest('button')) return;
+                        const n = this.getAttribute('data-chapter');
+                        const sec = document.getElementById('chapter-content-section-' + n);
+                        const tog = document.getElementById('chapter-toggle-' + n);
+                        if (sec.classList.contains('expanded')) {
+                            sec.classList.remove('expanded');
+                            tog.innerHTML = '&rarr;';
+                        } else {
+                            sec.classList.add('expanded');
+                            tog.innerHTML = '&darr;';
+                        }
+                    });
+                });
+            }
 
-                // Create download link for RTF file
-                const blob = await response.blob();
+            function bindChapterGenerate() {
+                document.querySelectorAll('.generate-chapter-btn').forEach(function(btn) {
+                    btn.addEventListener('click', function() { generateChapter(this); });
+                });
+                document.querySelectorAll('.export-chapter-btn').forEach(function(btn) {
+                    btn.addEventListener('click', function() {
+                        const fmt = this.getAttribute('data-export');
+                        if (fmt === 'md') exportChapterMarkdown(this);
+                        else exportChapterRTF(this);
+                    });
+                });
+            }
+
+            function bindExportButtons() {
+                const md = document.getElementById('exportMdBtn');
+                if (md) md.addEventListener('click', exportAsMarkdown);
+                const rtf = document.getElementById('exportRtfBtn');
+                if (rtf) rtf.addEventListener('click', exportAsRTF);
+                const nmd = document.getElementById('exportNovelMdBtn');
+                if (nmd) nmd.addEventListener('click', exportNovelAsMarkdown);
+            }
+
+            function exportAsMarkdown() {
+                const selectedTitle = document.getElementById('selectedTitle').value;
+                const selectedSubtitle = document.getElementById('selectedSubtitle').value;
+                if (!selectedTitle) { alert('Please select a title first.'); return; }
+                const contentElement = document.querySelector('.content-display');
+                if (!contentElement) { alert('No content found to export.'); return; }
+                const content = contentElement.textContent || contentElement.innerText;
+                let markdown = '# ' + selectedTitle + '\n\n';
+                if (selectedSubtitle) markdown += '## ' + selectedSubtitle + '\n\n';
+                markdown += content;
+                const blob = new Blob([markdown], { type: 'text/markdown' });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = \`\${selectedTitle.replace(/[^a-z0-9]/g, '_').toLowerCase()}.rtf\`;
+                a.download = selectedTitle.replace(/[^a-z0-9]/g, '_').toLowerCase() + '.md';
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
                 URL.revokeObjectURL(url);
-
-            } catch (error) {
-                console.error('RTF export error:', error);
-                alert('RTF export failed. Please try again.');
-            }
-        }
-
-
-        function toggleChapter(chapterNumber) {
-            const contentSection = document.getElementById(\`chapter-content-section-\${chapterNumber}\`);
-            const toggleButton = document.getElementById(\`chapter-toggle-\${chapterNumber}\`);
-
-            if (contentSection.classList.contains('expanded')) {
-                // Collapse
-                contentSection.classList.remove('expanded');
-                toggleButton.classList.remove('expanded');
-                toggleButton.classList.add('collapsed');
-                toggleButton.textContent = '▶';
-            } else {
-                // Expand
-                contentSection.classList.add('expanded');
-                toggleButton.classList.remove('collapsed');
-                toggleButton.classList.add('expanded');
-                toggleButton.textContent = '▼';
-            }
-        }
-
-        async function generateChapter(button) {
-            const chapterNumber = parseInt(button.getAttribute('data-chapter-number'));
-            const chapterTitle = button.getAttribute('data-chapter-title');
-            const chapterSubtitle = button.getAttribute('data-chapter-subtitle');
-            const novelTitle = button.getAttribute('data-novel-title');
-            const novelSynopsis = button.getAttribute('data-novel-synopsis');
-
-            const loadingDiv = document.getElementById(\`chapter-\${chapterNumber}-loading\`);
-            const contentDiv = document.getElementById(\`chapter-\${chapterNumber}-content\`);
-
-            // Get the API key from localStorage
-            const apiKey = localStorage.getItem('geminiApiKey');
-            if (!apiKey) {
-                alert('Please set your Gemini API key in Settings first.');
-                return;
             }
 
-            // Show loading state
-            button.disabled = true;
-            const currentLang = localStorage.getItem('uiLanguage') || 'english';
-            const texts = uiLanguages[currentLang];
-            button.textContent = texts.generatingChapter;
-            loadingDiv.style.display = 'flex';
+            async function exportAsRTF() {
+                const selectedTitle = document.getElementById('selectedTitle').value;
+                const selectedSubtitle = document.getElementById('selectedSubtitle').value;
+                if (!selectedTitle) { alert('Please select a title first.'); return; }
+                const contentElement = document.querySelector('.content-display');
+                if (!contentElement) { alert('No content found to export.'); return; }
+                const content = contentElement.textContent || contentElement.innerText;
+                try {
+                    const response = await fetch('/api/export-rtf', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ title: selectedTitle, subtitle: selectedSubtitle || '', content: content })
+                    });
+                    if (!response.ok) throw new Error('Export failed');
+                    const blob = await response.blob();
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = selectedTitle.replace(/[^a-z0-9]/g, '_').toLowerCase() + '.rtf';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                } catch (error) {
+                    console.error('RTF export error:', error);
+                    alert('RTF export failed. Please try again.');
+                }
+            }
 
-            try {
-                // Collect previous chapters data for context
-                const previousChapters = collectPreviousChapters(chapterNumber);
+            function exportNovelAsMarkdown() {
+                const selectedTitle = document.getElementById('selectedNovelTitle').value;
+                if (!selectedTitle) { alert('Please select a novel title first.'); return; }
+                const chapters = [];
+                document.querySelectorAll('.chapter-item').forEach(function(item, index) {
+                    const n = index + 1;
+                    const titleEl = item.querySelector('.ch-title');
+                    const contentEl = item.querySelector('.chapter-content');
+                    chapters.push({
+                        number: n,
+                        title: titleEl ? titleEl.textContent : 'Chapter ' + n,
+                        content: contentEl && contentEl.style.display !== 'none' ? contentEl.textContent : '[Chapter content not generated yet]'
+                    });
+                });
+                let markdown = '# ' + selectedTitle + '\n\n';
+                const synopsisElement = document.querySelector('.content-display');
+                if (synopsisElement) {
+                    const synopsis = synopsisElement.textContent || synopsisElement.innerText;
+                    markdown += '## Synopsis\n\n' + synopsis + '\n\n';
+                }
+                chapters.forEach(function(c) {
+                    markdown += '## ' + c.title + '\n\n' + c.content + '\n\n---\n\n';
+                });
+                const blob = new Blob([markdown], { type: 'text/markdown' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = selectedTitle.replace(/[^a-z0-9]/g, '_').toLowerCase() + '.md';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
 
-                const response = await fetch('/api/generate-chapter', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
+            async function generateChapter(button) {
+                const chapterNumber = parseInt(button.getAttribute('data-chapter-number'), 10);
+                const chapterTitle = button.getAttribute('data-chapter-title');
+                const chapterSubtitle = button.getAttribute('data-chapter-subtitle');
+                const novelTitle = button.getAttribute('data-novel-title');
+                const novelSynopsis = button.getAttribute('data-novel-synopsis');
+                const loadingDiv = document.getElementById('chapter-' + chapterNumber + '-loading');
+                const contentDiv = document.getElementById('chapter-' + chapterNumber + '-content');
+                const apiKey = getApiKeyOrRedirect();
+                if (!apiKey) return;
+                button.disabled = true;
+                const currentLang = localStorage.getItem('uiLanguage') || 'english';
+                const texts = uiLanguages[currentLang];
+                button.textContent = texts.generatingChapter;
+                loadingDiv.style.display = 'flex';
+                try {
+                    const response = await callByokEndpoint('/api/generate-chapter', {
                         chapterNumber: chapterNumber,
                         chapterTitle: chapterTitle,
                         chapterSubtitle: chapterSubtitle,
                         novelTitle: novelTitle,
                         novelSynopsis: novelSynopsis,
-                        previousChapters: previousChapters,
-                        apiKey: apiKey
-                    })
-                });
-
-                if (!response.ok) {
-                    throw new Error('Chapter generation failed');
+                        previousChapters: collectPreviousChapters(chapterNumber),
+                    });
+                    if (!response) return; // BYOK missing-key branch already handled
+                    if (!response.ok) throw new Error('Chapter generation failed');
+                    const result = await response.json();
+                    loadingDiv.style.display = 'none';
+                    contentDiv.style.display = 'block';
+                    contentDiv.innerHTML = result.content.replace(/\n/g, '<br>');
+                    const exportBtn = document.getElementById('export-chapter-' + chapterNumber + '-btn');
+                    if (exportBtn) exportBtn.style.display = 'inline-flex';
+                    setTimeout(function() {
+                        const sec = document.getElementById('chapter-content-section-' + chapterNumber);
+                        const tog = document.getElementById('chapter-toggle-' + chapterNumber);
+                        if (!sec.classList.contains('expanded')) {
+                            sec.classList.add('expanded');
+                            tog.innerHTML = '&darr;';
+                        }
+                    }, 100);
+                    button.textContent = texts.regenerateChapter;
+                    button.disabled = false;
+                    syncByokStatus();
+                } catch (error) {
+                    alert('Chapter generation failed. Please try again.');
+                    console.error('Chapter generation error:', error);
+                    const currentLang = localStorage.getItem('uiLanguage') || 'english';
+                    button.disabled = false;
+                    button.textContent = uiLanguages[currentLang].generateChapter;
+                    loadingDiv.style.display = 'none';
                 }
-
-                const result = await response.json();
-
-                // Hide loading, show content
-                loadingDiv.style.display = 'none';
-                contentDiv.style.display = 'block';
-                contentDiv.innerHTML = result.content.replace(new RegExp('\\n', 'g'), '<br>');
-
-                // Store chapter content for future context
-                storeChapterContent(chapterNumber, chapterTitle, result.content);
-
-                // Show export button
-                const exportBtn = document.getElementById(\`export-chapter-\${chapterNumber}-btn\`);
-                if (exportBtn) {
-                    exportBtn.style.display = 'inline-flex';
-                }
-
-                // Auto-expand the chapter to show the generated content with a small delay for smooth animation
-                setTimeout(() => {
-                const contentSection = document.getElementById(\`chapter-content-section-\${chapterNumber}\`);
-                const toggleButton = document.getElementById(\`chapter-toggle-\${chapterNumber}\`);
-                if (!contentSection.classList.contains('expanded')) {
-                    toggleChapter(chapterNumber);
-                }
-                }, 100);
-
-                // Update button
-                const currentLang = localStorage.getItem('uiLanguage') || 'english';
-                const texts = uiLanguages[currentLang];
-                button.textContent = texts.regenerateChapter;
-                button.disabled = false;
-
-            } catch (error) {
-                alert('Chapter generation failed. Please try again.');
-                console.error('Chapter generation error:', error);
-
-                // Reset button and hide loading
-                const currentLang = localStorage.getItem('uiLanguage') || 'english';
-                const texts = uiLanguages[currentLang];
-                button.disabled = false;
-                button.textContent = texts.generateChapter;
-                loadingDiv.style.display = 'none';
             }
-        }
 
-        // Helper functions for chapter context management
-        function collectPreviousChapters(currentChapterNumber) {
-            const previousChapters = [];
-
-            // Get all chapter items
-            const chapterItems = document.querySelectorAll('.chapter-item');
-            chapterItems.forEach((item, index) => {
-                const chapterNum = index + 1;
-                if (chapterNum < currentChapterNumber) {
-                    const chapterTitleElement = item.querySelector('.chapter-number');
-                    const chapterTitle = (chapterTitleElement && chapterTitleElement.textContent) ? chapterTitleElement.textContent : 'Chapter ' + chapterNum;
-                    const contentElement = document.getElementById('chapter-' + chapterNum + '-content');
-
-                    if (contentElement && contentElement.style.display !== 'none') {
-                        const content = contentElement.textContent || contentElement.innerText;
-                        if (content && content.length > 50) { // Only include substantial content
-                            // Extract key events from the chapter content
-                            const keyEvents = extractKeyEvents(content);
-
-                            previousChapters.push({
-                                chapterNumber: chapterNum,
-                                title: chapterTitle,
-                                content: content,
-                                keyEvents: keyEvents
-                            });
+            function collectPreviousChapters(currentChapterNumber) {
+                const previousChapters = [];
+                document.querySelectorAll('.chapter-item').forEach(function(item, index) {
+                    const n = index + 1;
+                    if (n < currentChapterNumber) {
+                        const titleEl = item.querySelector('.ch-title');
+                        const title = titleEl ? titleEl.textContent : 'Chapter ' + n;
+                        const contentElement = document.getElementById('chapter-' + n + '-content');
+                        if (contentElement && contentElement.style.display !== 'none') {
+                            const content = contentElement.textContent || contentElement.innerText;
+                            if (content && content.length > 50) {
+                                previousChapters.push({ chapterNumber: n, title: title, content: content, keyEvents: [] });
+                            }
                         }
                     }
-                }
-            });
-
-            return previousChapters;
-        }
-
-        function storeChapterContent(chapterNumber, chapterTitle, content) {
-            // Store in localStorage with novel context
-            const novelKey = 'novel_' + Date.now(); // Use timestamp as novel identifier
-            const chapterKey = novelKey + '_chapter_' + chapterNumber;
-
-            const chapterData = {
-                chapterNumber: chapterNumber,
-                title: chapterTitle,
-                content: content,
-                timestamp: Date.now()
-            };
-
-            localStorage.setItem(chapterKey, JSON.stringify(chapterData));
-        }
-
-        function extractKeyEvents(content) {
-            // Simple extraction of potential key events from chapter content
-            const sentences = content.split(/[.!?]+/).filter(s => s.trim().length > 20);
-            const keyEvents = [];
-
-            // Look for sentences that might indicate plot progression
-            sentences.forEach(sentence => {
-                const trimmed = sentence.trim();
-                // Look for action-oriented sentences or revelations
-                if (trimmed.length > 30 && (
-                    trimmed.includes('discovered') ||
-                    trimmed.includes('revealed') ||
-                    trimmed.includes('realized') ||
-                    trimmed.includes('decided') ||
-                    trimmed.includes('confronted') ||
-                    trimmed.includes('arrived') ||
-                    trimmed.includes('found') ||
-                    trimmed.includes('learned')
-                )) {
-                    keyEvents.push(trimmed.substring(0, 200) + (trimmed.length > 200 ? '...' : ''));
-                }
-            });
-
-            return keyEvents.slice(0, 5); // Limit to 5 key events per chapter
-        }
-
-        async function exportChapterMarkdown(button) {
-            const chapterNumber = parseInt(button.getAttribute('data-chapter-number'));
-            const chapterTitle = button.getAttribute('data-chapter-title');
-            const chapterSubtitle = button.getAttribute('data-chapter-subtitle');
-
-            const contentElement = document.getElementById(\`chapter-\${chapterNumber}-content\`);
-
-            if (!contentElement || contentElement.style.display === 'none') {
-                const currentLang = localStorage.getItem('uiLanguage') || 'english';
-                const texts = uiLanguages[currentLang];
-                alert(texts.chapterNotGenerated || 'No chapter content found to export. Please generate the chapter first.');
-                return;
-            }
-
-            const content = contentElement.textContent || contentElement.innerText;
-
-            // Export as Markdown (client-side)
-            const markdown = \`# Chapter \${chapterNumber}: \${chapterTitle}\n\n## \${chapterSubtitle}\n\n\${content}\n\n---\n\`;
-
-            const blob = new Blob([markdown], { type: 'text/markdown' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = \`\${chapterTitle.replace(/[^a-z0-9]/g, '_').toLowerCase()}_chapter_\${chapterNumber}.md\`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        }
-
-        async function exportChapterRTF(button) {
-            const chapterNumber = parseInt(button.getAttribute('data-chapter-number'));
-            const chapterTitle = button.getAttribute('data-chapter-title');
-            const chapterSubtitle = button.getAttribute('data-chapter-subtitle');
-
-            const contentElement = document.getElementById(\`chapter-\${chapterNumber}-content\`);
-
-            if (!contentElement || contentElement.style.display === 'none') {
-                const currentLang = localStorage.getItem('uiLanguage') || 'english';
-                const texts = uiLanguages[currentLang];
-                alert(texts.chapterNotGenerated || 'No chapter content found to export. Please generate the chapter first.');
-                return;
-            }
-
-            const content = contentElement.textContent || contentElement.innerText;
-
-            try {
-                const response = await fetch('/api/export-chapter-rtf', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        chapterNumber: chapterNumber,
-                        chapterTitle: chapterTitle,
-                        chapterSubtitle: chapterSubtitle,
-                        content: content
-                    })
                 });
+                return previousChapters;
+            }
 
-                if (!response.ok) {
-                    throw new Error('Chapter RTF export failed');
-                }
-
-                // Create download link for RTF file
-                const blob = await response.blob();
+            function exportChapterMarkdown(button) {
+                const chapterNumber = parseInt(button.getAttribute('data-chapter-number'), 10);
+                const chapterTitle = button.getAttribute('data-chapter-title');
+                const chapterSubtitle = button.getAttribute('data-chapter-subtitle');
+                const contentElement = document.getElementById('chapter-' + chapterNumber + '-content');
+                if (!contentElement || contentElement.style.display === 'none') { alert('No chapter content found. Generate the chapter first.'); return; }
+                const content = contentElement.textContent || contentElement.innerText;
+                const markdown = '# Chapter ' + chapterNumber + ': ' + chapterTitle + '\n\n## ' + chapterSubtitle + '\n\n' + content + '\n\n---\n';
+                const blob = new Blob([markdown], { type: 'text/markdown' });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = \`\${chapterTitle.replace(/[^a-z0-9]/g, '_').toLowerCase()}_chapter_\${chapterNumber}.rtf\`;
+                a.download = chapterTitle.replace(/[^a-z0-9]/g, '_').toLowerCase() + '_chapter_' + chapterNumber + '.md';
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
                 URL.revokeObjectURL(url);
-
-            } catch (error) {
-                console.error('Chapter RTF export error:', error);
-                alert('Chapter RTF export failed. Please try again.');
-            }
-        }
-
-        function exportNovelAsMarkdown() {
-            const selectedTitle = document.getElementById('selectedNovelTitle').value;
-
-            if (!selectedTitle) {
-                alert('Please select a novel title first.');
-                return;
             }
 
-            // Collect all chapter content
-            const chapters = [];
-            const chapterItems = document.querySelectorAll('.chapter-item');
-
-            chapterItems.forEach((item, index) => {
-                const chapterNumber = index + 1;
-                const chapterTitle = item.querySelector('.chapter-number').textContent;
-                const chapterContent = item.querySelector('.chapter-content');
-
-                chapters.push({
-                    number: chapterNumber,
-                    title: chapterTitle,
-                    content: chapterContent && chapterContent.style.display !== 'none' ?
-                        chapterContent.textContent : '[Chapter content not generated yet]'
-                });
-            });
-
-            // Create markdown content
-            let markdown = \`# \${selectedTitle}\n\n\`;
-
-            // Add synopsis if available
-            const synopsisElement = document.querySelector('.content-display');
-            if (synopsisElement) {
-                const synopsis = synopsisElement.textContent || synopsisElement.innerText;
-                markdown += \`## Synopsis\n\n\${synopsis}\n\n\`;
+            async function exportChapterRTF(button) {
+                const chapterNumber = parseInt(button.getAttribute('data-chapter-number'), 10);
+                const chapterTitle = button.getAttribute('data-chapter-title');
+                const chapterSubtitle = button.getAttribute('data-chapter-subtitle');
+                const contentElement = document.getElementById('chapter-' + chapterNumber + '-content');
+                if (!contentElement || contentElement.style.display === 'none') { alert('No chapter content found. Generate the chapter first.'); return; }
+                const content = contentElement.textContent || contentElement.innerText;
+                try {
+                    const response = await fetch('/api/export-chapter-rtf', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ chapterNumber: chapterNumber, chapterTitle: chapterTitle, chapterSubtitle: chapterSubtitle, content: content })
+                    });
+                    if (!response.ok) throw new Error('Chapter RTF export failed');
+                    const blob = await response.blob();
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = chapterTitle.replace(/[^a-z0-9]/g, '_').toLowerCase() + '_chapter_' + chapterNumber + '.rtf';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                } catch (error) {
+                    console.error('Chapter RTF export error:', error);
+                    alert('Chapter RTF export failed. Please try again.');
+                }
             }
 
-            // Add chapters
-            chapters.forEach(chapter => {
-                markdown += \`## \${chapter.title}\n\n\${chapter.content}\n\n---\n\n\`;
-            });
-
-            // Create and download file
-            const blob = new Blob([markdown], { type: 'text/markdown' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = \`\${selectedTitle.replace(/[^a-z0-9]/g, '_').toLowerCase()}.md\`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        }
-
-        // Footer
-        const footer = document.createElement('footer');
-        footer.style.position = 'fixed';
-        footer.style.bottom = '0';
-        footer.style.left = '0';
-        footer.style.right = '0';
-        footer.style.background = 'rgba(0, 0, 0, 0.8)';
-        footer.style.color = '#00d4ff';
-        footer.style.textAlign = 'center';
-        footer.style.padding = '10px';
-        footer.style.fontSize = '12px';
-        footer.style.borderTop = '1px solid rgba(0, 212, 255, 0.3)';
-        footer.style.backdropFilter = 'blur(5px)';
-        footer.style.zIndex = '1000';
-        footer.style.pointerEvents = 'none';
-        footer.innerHTML = 'Quill™ by <a href="https://azzar.netlify.app/porto" target="_blank" style="color: #00ff88; text-decoration: none; pointer-events: auto;">LilyOpenCMS</a>';
-        document.body.appendChild(footer);
-
+            loadFormData();
+            loadResults();
+        });
     </script>
 </body>
 </html>`;
@@ -2396,484 +1975,535 @@ export function generateSettingsPageHTML(): string {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quill™ - Settings</title>
+    <title>Quill — Settings</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        :root {
+            --black: #000000;
+            --white: #FFFFFF;
+            --paper: #F5F5F5;
+            --gray-100: #F5F5F5;
+            --gray-300: #D4D4D4;
+            --gray-600: #737373;
+            --gray-900: #1A1A1A;
+            --accent: #FF0000;
+            --rule: 1px solid #000000;
+            --rule-soft: 1px solid #D4D4D4;
+            --gutter: 24px;
+            --container-max: 1280px;
+            --pad-x: 32px;
         }
 
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { background: var(--white); color: var(--black); }
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 100%);
-            color: #e0e0e0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            font-weight: 400;
+            font-size: 15px;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
             min-height: 100vh;
-            padding: 20px;
-            padding-bottom: 50px; /* Space for footer */
         }
+        a { color: inherit; text-decoration: none; }
+        a:hover { text-decoration: underline; text-underline-offset: 4px; }
 
         .container {
-            max-width: 600px;
+            max-width: var(--container-max);
             margin: 0 auto;
+            padding-left: var(--pad-x);
+            padding-right: var(--pad-x);
+            width: 100%;
         }
 
-        .header {
-            text-align: center;
-            margin-bottom: 40px;
-            position: relative;
+        .topbar {
+            border-bottom: var(--rule);
+            padding: 12px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            font-weight: 500;
+        }
+        .topbar .meta { color: var(--gray-600); }
+        .topbar .meta strong { color: var(--black); font-weight: 700; }
+        .topbar a { color: var(--black); }
+        .topbar-right { display: flex; align-items: center; gap: 20px; }
+
+        /* BYOK status badge (settings page) */
+        .byok-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 11px;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            font-weight: 600;
+            color: var(--gray-600);
+            border: 1px solid var(--gray-300);
+            padding: 4px 10px;
+        }
+        .byok-status[data-state="ok"]   { color: var(--black); border-color: var(--black); }
+        .byok-status[data-state="missing"] { color: var(--accent); border-color: var(--accent); }
+        .byok-status .byok-lab { font-family: 'JetBrains Mono', monospace; font-weight: 700; }
+        .byok-status .byok-dot { width: 6px; height: 6px; display: inline-block; background: var(--accent); }
+        .byok-status[data-state="ok"] .byok-dot { background: var(--black); }
+
+        /* BYOK notice (settings page, above the API key form) */
+        .byok-notice {
+            display: grid;
+            grid-template-columns: 88px 1fr;
+            column-gap: 24px;
+            align-items: start;
+            border-top: var(--rule-soft);
+            border-bottom: var(--rule-soft);
+            padding: 20px 0;
+            margin-top: 4px;
+            background-image:
+                repeating-linear-gradient(
+                    45deg,
+                    transparent 0 8px,
+                    rgba(255,0,0,0.04) 8px 9px
+                );
+        }
+        .byok-notice-num {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.18em;
+            color: var(--accent);
+            padding: 4px 10px;
+            border: 1px solid var(--accent);
+            display: inline-block;
+            align-self: start;
+            justify-self: start;
+        }
+        .byok-notice-title {
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            color: var(--black);
+            margin-bottom: 6px;
+        }
+        .byok-notice-msg {
+            font-size: 13px;
+            line-height: 1.5;
+            color: var(--gray-900);
+        }
+        .byok-notice-msg code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            background: var(--gray-100);
+            padding: 1px 6px;
+            border: 1px solid var(--gray-300);
         }
 
-        .settings-link {
-            position: absolute;
-            top: 0;
-            right: 0;
-            color: #00d4ff;
-            text-decoration: none;
-            font-size: 16px;
-            transition: color 0.3s ease;
+        .hero {
+            border-bottom: var(--rule);
+            padding: 0;
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            column-gap: var(--gutter);
         }
-
-        .settings-link:hover {
-            color: #00ff88;
+        .hero .index {
+            grid-column: 1 / span 1;
+            padding: 24px 0 0 0;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            letter-spacing: 0.1em;
+            color: var(--gray-600);
         }
-
-        .header h1 {
-            font-size: 2.5rem;
-            font-weight: 300;
-            margin-bottom: 10px;
-            background: linear-gradient(45deg, #00d4ff, #00ff88);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+        .hero .headline {
+            grid-column: 2 / span 8;
+            padding: 32px 0 40px 0;
         }
-
-        .header p {
-            font-size: 1.1rem;
-            opacity: 0.8;
+        .hero h1 {
+            font-family: 'Inter', sans-serif;
+            font-weight: 800;
+            font-size: clamp(40px, 7vw, 96px);
+            line-height: 0.95;
+            letter-spacing: -0.04em;
+            color: var(--black);
+        }
+        .hero h1 .amp { color: var(--accent); }
+        .hero .lede {
+            grid-column: 10 / span 3;
+            align-self: end;
+            padding: 0 0 40px 0;
+            font-size: 13px;
+            line-height: 1.5;
+            color: var(--gray-900);
+            border-top: var(--rule);
+            padding-top: 12px;
         }
 
         .nav {
-            text-align: center;
-            margin-bottom: 30px;
+            border-bottom: var(--rule);
+            padding: 14px 0;
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            column-gap: var(--gutter);
+            font-size: 11px;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            font-weight: 600;
+            align-items: center;
         }
-
-        .nav a {
-            color: #00d4ff;
-            text-decoration: none;
-            padding: 10px 20px;
-            border-radius: 8px;
-            transition: all 0.3s ease;
-        }
-
-        .nav a:hover {
-            background: rgba(0, 212, 255, 0.1);
-        }
+        .nav .num { grid-column: 1 / span 1; color: var(--accent); font-family: 'JetBrains Mono', monospace; }
+        .nav .title { grid-column: 2 / span 6; }
+        .nav .back { grid-column: 9 / span 4; text-align: right; }
+        .nav a { color: var(--black); }
 
         .settings-container {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 20px;
-            padding: 30px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            column-gap: var(--gutter);
+            padding: 0;
         }
-
         .settings-section {
-            margin-bottom: 30px;
+            grid-column: 1 / span 12;
+            border-bottom: var(--rule);
+            padding: 0 0 32px 0;
         }
-
-        .settings-section h3 {
-            color: #00ff88;
-            margin-bottom: 15px;
-            font-size: 1.3rem;
+        .section-head {
+            padding: 14px 0;
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            column-gap: var(--gutter);
+            align-items: center;
+            font-size: 11px;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            font-weight: 600;
         }
-
-        /* Mobile settings improvements */
-        @media (max-width: 768px) {
-            .settings-container {
-                padding: 20px;
-                border-radius: 15px;
-            }
-
-            .settings-section {
-                margin-bottom: 25px;
-            }
-
-            .settings-section h3 {
-                font-size: 1.2rem;
-                margin-bottom: 12px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .settings-container {
-                padding: 15px;
-            }
-
-            .settings-section h3 {
-                font-size: 1.1rem;
-            }
-        }
+        .section-head .num { grid-column: 1 / span 1; color: var(--accent); font-family: 'JetBrains Mono', monospace; }
+        .section-head .title { grid-column: 2 / span 8; font-size: 20px; font-weight: 700; letter-spacing: -0.01em; text-transform: none; }
+        .section-head .meta { grid-column: 10 / span 3; text-align: right; color: var(--gray-600); font-weight: 400; letter-spacing: 0.12em; }
 
         .form-group {
-            margin-bottom: 20px;
+            padding: 16px 0;
+            border-top: var(--rule-soft);
         }
-
-        .language-select {
-            width: 100%;
-            padding: 12px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 8px;
-            color: #fff;
-            font-size: 16px;
-            transition: all 0.3s ease;
-        }
-
-        .language-select:focus {
-            outline: none;
-            border-color: #00d4ff;
-            box-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
-        }
-
-        label {
+        .form-group label {
             display: block;
+            font-size: 10px;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            font-weight: 600;
             margin-bottom: 8px;
-            font-weight: 500;
-            color: #00d4ff;
         }
-
-        input[type="password"], input[type="text"] {
+        .form-group .req { color: var(--accent); }
+        .form-group input[type="text"],
+        .form-group input[type="password"],
+        .form-group select {
             width: 100%;
-            padding: 12px 16px;
-            background: rgba(255, 255, 255, 0.08);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 8px;
-            color: #e0e0e0;
-            font-size: 14px;
-            transition: all 0.3s ease;
-        }
-
-        input:focus {
+            border: none;
+            border-bottom: 1px solid var(--black);
+            background: transparent;
+            padding: 6px 0 8px 0;
+            font-family: 'Inter', sans-serif;
+            font-size: 16px;
+            color: var(--black);
             outline: none;
-            border-color: #00d4ff;
-            box-shadow: 0 0 0 2px rgba(0, 212, 255, 0.2);
+            border-radius: 0;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+        .form-group input:focus,
+        .form-group select:focus { border-bottom: 2px solid var(--accent); padding-bottom: 7px; }
+        .form-group select {
+            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1l5 5 5-5' stroke='%23000' stroke-width='1.4' fill='none'/></svg>");
+            background-repeat: no-repeat;
+            background-position: right 0 center;
+            padding-right: 24px;
+        }
+        .form-group small {
+            display: block;
+            margin-top: 8px;
+            font-size: 12px;
+            color: var(--gray-600);
+            letter-spacing: 0.02em;
         }
 
+        .info-block {
+            border-top: var(--rule-soft);
+            padding: 16px 0;
+        }
+        .info-block h4 {
+            font-size: 10px;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: var(--black);
+        }
+        .info-block ol {
+            list-style: none;
+            counter-reset: step;
+        }
+        .info-block ol li {
+            counter-increment: step;
+            padding: 6px 0 6px 32px;
+            position: relative;
+            font-size: 14px;
+            border-bottom: 1px dotted var(--gray-300);
+        }
+        .info-block ol li:last-child { border-bottom: none; }
+        .info-block ol li::before {
+            content: counter(step, decimal-leading-zero);
+            position: absolute;
+            left: 0;
+            top: 6px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: var(--accent);
+        }
+        .info-block a { color: var(--black); border-bottom: 1px solid var(--black); }
+        .info-block a:hover { color: var(--accent); border-bottom-color: var(--accent); text-decoration: none; }
+
+        .action-row {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            column-gap: var(--gutter);
+            padding: 16px 0 0 0;
+        }
         .save-btn {
-            background: linear-gradient(45deg, #00d4ff, #00ff88);
-            color: #0f0f0f;
-            border: none;
-            padding: 16px 32px;
-            border-radius: 12px;
-            font-size: 16px;
-            font-weight: 600;
+            grid-column: 1 / span 6;
+            background: var(--black);
+            color: var(--white);
+            border: 1px solid var(--black);
+            padding: 18px 24px;
+            font-family: 'Inter', sans-serif;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
             cursor: pointer;
-            transition: all 0.3s ease;
-            width: 100%;
-            margin-top: 20px;
+            border-radius: 0;
         }
-
-        .save-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(0, 212, 255, 0.3);
-        }
-
-        .save-btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
-
+        .save-btn:hover { background: var(--accent); border-color: var(--accent); }
         .remove-btn {
-            background: linear-gradient(45deg, #ff4757, #ff3838);
-            color: #ffffff;
-            border: none;
-            padding: 16px 32px;
-            border-radius: 12px;
-            font-size: 16px;
-            font-weight: 600;
+            grid-column: 7 / span 6;
+            background: var(--white);
+            color: var(--black);
+            border: 1px solid var(--black);
+            padding: 18px 24px;
+            font-family: 'Inter', sans-serif;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
             cursor: pointer;
-            transition: all 0.3s ease;
-            width: 100%;
-            margin-top: 20px;
+            border-radius: 0;
         }
-
-        .remove-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(255, 71, 87, 0.3);
-        }
-
-        .remove-btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
+        .remove-btn:hover { background: var(--black); color: var(--white); }
+        .save-btn:disabled, .remove-btn:disabled { background: var(--gray-100); border-color: var(--gray-300); color: var(--gray-600); cursor: not-allowed; }
 
         .status-message {
-            margin-top: 15px;
-            padding: 12px;
-            border-radius: 8px;
+            padding: 12px 0;
+            font-size: 13px;
+            font-weight: 500;
             display: none;
+            border-top: var(--rule-soft);
+            margin-top: 12px;
         }
+        .status-success { color: var(--black); border-top-color: var(--black); }
+        .status-error { color: var(--accent); border-top-color: var(--accent); }
 
-        .status-success {
-            background: rgba(0, 255, 136, 0.1);
-            border: 1px solid #00ff88;
-            color: #00ff88;
-        }
-
-        .status-error {
-            background: rgba(255, 0, 0, 0.1);
-            border: 1px solid #ff6b6b;
-            color: #ff6b6b;
-        }
-
-        .info-box {
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 20px;
-            border-left: 4px solid #00d4ff;
-        }
-
-        .info-box h4 {
-            color: #00d4ff;
-            margin-bottom: 10px;
-        }
-
-        .info-box p {
-            opacity: 0.8;
-            line-height: 1.5;
-        }
-
-        /* Mobile info-box improvements */
-        @media (max-width: 768px) {
-            .info-box {
-                padding: 15px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .info-box {
-                padding: 12px;
-            }
-        }
-
-        /* Modal/Popup Styles */
         .modal-overlay {
             position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(10px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 2000;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s ease;
+            inset: 0;
+            background: rgba(0,0,0,0.55);
+            display: none;
+            align-items: stretch;
+            justify-content: stretch;
+            z-index: 100;
         }
-
-        .modal-overlay.show {
-            opacity: 1;
-            visibility: visible;
-        }
-
+        .modal-overlay.show { display: flex; }
         .modal-content {
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(240, 240, 240, 0.95) 100%);
-            border-radius: 20px;
-            padding: 30px;
-            max-width: 400px;
-            width: 90%;
-            text-align: center;
-            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            transform: scale(0.9) translateY(20px);
-            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            background: var(--white);
+            margin: auto;
+            width: min(560px, calc(100% - 64px));
+            border: 1px solid var(--black);
         }
-
-        .modal-overlay.show .modal-content {
-            transform: scale(1) translateY(0);
-        }
-
-        .modal-title {
-            color: #1a1a1a;
-            font-size: 22px;
-            font-weight: 700;
-            margin-bottom: 15px;
-            background: linear-gradient(45deg, #00d4ff, #00ff88);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .modal-message {
-            color: #555;
-            font-size: 16px;
-            line-height: 1.6;
-            margin-bottom: 30px;
-            font-weight: 400;
-        }
-
-        .modal-buttons {
+        .modal-head {
+            border-bottom: var(--rule);
+            padding: 16px 24px;
             display: flex;
-            gap: 15px;
-            justify-content: center;
-            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            font-weight: 700;
         }
-
-        .modal-btn {
-            padding: 14px 28px;
+        .modal-head .lab { color: var(--accent); font-family: 'JetBrains Mono', monospace; }
+        .modal-body { padding: 24px; }
+        .modal-title { font-size: 28px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.1; margin-bottom: 12px; }
+        .modal-message { font-size: 14px; line-height: 1.5; color: var(--gray-900); }
+        .modal-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            border-top: var(--rule);
+        }
+        .modal-actions .modal-btn {
+            background: var(--white);
+            color: var(--black);
             border: none;
-            border-radius: 12px;
-            font-size: 16px;
-            font-weight: 600;
+            border-right: var(--rule);
+            padding: 18px 20px;
+            font-family: 'Inter', sans-serif;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
             cursor: pointer;
-            transition: all 0.3s ease;
-            min-width: 120px;
-            position: relative;
-            overflow: hidden;
         }
+        .modal-actions .modal-btn:last-child { border-right: none; }
+        .modal-actions .modal-btn:hover { background: var(--gray-100); }
+        .modal-actions .modal-btn-confirm { background: var(--black); color: var(--white); }
+        .modal-actions .modal-btn-confirm:hover { background: var(--accent); }
 
-        .modal-btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-            transition: left 0.5s;
+        .footer {
+            border-top: var(--rule);
+            padding: 24px 0;
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            column-gap: var(--gutter);
+            font-size: 11px;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--gray-600);
         }
+        .footer .col-1 { grid-column: 1 / span 4; }
+        .footer .col-2 { grid-column: 5 / span 4; }
+        .footer .col-3 { grid-column: 9 / span 4; text-align: right; }
+        .footer a { color: var(--black); }
+        .footer .accent-dot { color: var(--accent); }
 
-        .modal-btn:hover::before {
-            left: 100%;
-        }
-
-        .modal-btn-cancel {
-            background: linear-gradient(45deg, #f8f9fa, #e9ecef);
-            color: #6c757d;
-            border: 2px solid #dee2e6;
-        }
-
-        .modal-btn-cancel:hover {
-            background: linear-gradient(45deg, #e9ecef, #dee2e6);
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(108, 117, 125, 0.2);
-        }
-
-        .modal-btn-confirm {
-            background: linear-gradient(45deg, #ff4757, #ff3838);
-            color: white;
-            border: 2px solid rgba(255, 71, 87, 0.3);
-        }
-
-        .modal-btn-confirm:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(255, 71, 87, 0.4);
-            background: linear-gradient(45deg, #ff3838, #ff2828);
-        }
-
-        /* Mobile responsiveness for modal */
-        @media (max-width: 480px) {
-            .modal-content {
-                padding: 25px 20px;
-                margin: 20px;
-                max-width: none;
-                width: calc(100vw - 40px);
-            }
-
-            .modal-title {
-                font-size: 20px;
-            }
-
-            .modal-message {
-                font-size: 15px;
-                margin-bottom: 25px;
-            }
-
-            .modal-buttons {
-                gap: 12px;
-            }
-
-            .modal-btn {
-                padding: 12px 24px;
-                font-size: 15px;
-                min-width: 110px;
-            }
+        @media (max-width: 900px) {
+            :root { --gutter: 16px; --pad-x: 20px; }
+            .hero .index, .hero .lede { display: none; }
+            .hero .headline { grid-column: 1 / -1; padding: 24px 0 32px 0; }
+            .nav .title { grid-column: 2 / -1; }
+            .nav .back { grid-column: 1 / -1; text-align: left; margin-top: 4px; }
+            .section-head .title { grid-column: 2 / -1; font-size: 18px; }
+            .section-head .meta { display: none; }
+            .save-btn, .remove-btn { grid-column: 1 / -1; margin-bottom: 8px; }
+            .footer .col-1, .footer .col-2, .footer .col-3 { grid-column: 1 / -1; text-align: left; margin-bottom: 4px; }
+            .byok-notice { grid-template-columns: 1fr; row-gap: 12px; }
+            .byok-notice-num { justify-self: start; }
+            .topbar-right { gap: 12px; flex-wrap: wrap; }
+            .byok-status { font-size: 10px; padding: 3px 8px; }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h1>Quill™ Settings</h1>
-            <p id="settingsDescription">Configure your Quill writing assistant</p>
+        <div class="topbar">
+            <div class="meta">QUILL <span class="accent-dot">/</span> SETTINGS <span class="accent-dot">/</span> ED. 02</div>
+            <div class="topbar-right">
+                <span class="byok-status" id="byokStatus" data-state="missing" title="BYOK &mdash; Bring Your Own Key">
+                    <span class="byok-lab">BYOK</span>
+                    <span class="byok-dot" aria-hidden="true"></span>
+                    <span class="byok-state" id="byokStateText">No API Key</span>
+                </span>
+                <a href="/">&larr; BACK TO GENERATOR</a>
+            </div>
         </div>
 
+        <header class="hero">
+            <div class="index">№ S.01</div>
+            <div class="headline">
+                <h1>Settings<span class="amp">.</span></h1>
+            </div>
+            <p class="lede">Configure the language of the interface and your Gemini API key. All values are stored locally in this browser.</p>
+        </header>
+
         <div class="nav">
-            <a href="/">← Back to Generator</a>
+            <div class="num">01</div>
+            <div class="title">Configuration</div>
+            <div class="back"><a href="/">&larr; Back to Generator</a></div>
         </div>
 
         <div class="settings-container">
-            <div class="settings-section">
-                <h3>Language Settings</h3>
+        <section class="settings-section">
+            <div class="section-head">
+                <div class="num">02</div>
+                <div class="title">Language</div>
+                <div class="meta">UI / LOCALE</div>
+            </div>
+            <div class="form-group">
+                <label for="uiLanguage">Interface Language</label>
+                <select id="uiLanguage">
+                    <option value="english">English</option>
+                    <option value="indonesian">Bahasa Indonesia</option>
+                </select>
+                <small>Choose the language for the user interface.</small>
+            </div>
+        </section>
 
+        <section class="settings-section">
+            <div class="section-head">
+                <div class="num">03</div>
+                <div class="title">Gemini AI Configuration</div>
+                <div class="meta">CREDENTIALS</div>
+            </div>
+            <div class="byok-notice" id="byokNotice">
+                <div class="byok-notice-num">BYOK</div>
+                <div class="byok-notice-body">
+                    <div class="byok-notice-title" id="byokNoticeTitle">Bring Your Own Key</div>
+                    <div class="byok-notice-msg" id="byokNoticeMsg">Quill is BYOK — Bring Your Own Key. The server has no default Gemini key, so every visitor must provide their own. Your key is stored only in this browser (<code>localStorage</code>) and is sent per-request as the <code>X-User-API-Key</code> header. The server never persists, logs, or shares it.</div>
+                </div>
+            </div>
+            <div class="info-block">
+                <h4>How to get your API key</h4>
+                <ol id="apiStepsList">
+                    <li><a href="https://aistudio.google.com/app/apikey" target="_blank">Go to Google AI Studio</a></li>
+                    <li>Sign in with your Google account</li>
+                    <li>Create a new API key</li>
+                    <li>Copy the key and paste it below</li>
+                </ol>
+            </div>
+            <form id="apiKeyForm">
                 <div class="form-group">
-                    <label for="uiLanguage">Interface Language</label>
-                    <select id="uiLanguage" class="language-select">
-                        <option value="english">English</option>
-                        <option value="indonesian">Bahasa Indonesia</option>
-                    </select>
-                    <small style="color: #888; display: block; margin-top: 5px;">Choose the language for the user interface</small>
+                    <label for="apiKey">Gemini API Key <span class="req">*</span></label>
+                    <input type="password" id="apiKey" required>
                 </div>
-            </div>
-
-            <div class="settings-section">
-                <h3>Gemini AI Configuration</h3>
-
-                <div class="info-box">
-                    <h4>How to get your API key:</h4>
-                    <p>1. Go to <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color: #00d4ff;">Google AI Studio</a><br>
-                    2. Sign in with your Google account<br>
-                    3. Create a new API key<br>
-                    4. Copy the key and paste it below</p>
+                <div class="action-row">
+                    <button type="submit" class="save-btn" id="saveBtn">Save API Key</button>
+                    <button type="button" class="remove-btn" id="removeBtn">Remove API Key</button>
                 </div>
-
-                <form id="apiKeyForm">
-                    <div class="form-group">
-                        <label for="apiKey">Gemini API Key *</label>
-                        <input type="password" id="apiKey" placeholder="" required>
-                    </div>
-
-                    <button type="submit" class="save-btn" id="saveBtn">
-                        Save API Key
-                    </button>
-                    <button type="button" class="remove-btn" id="removeBtn">
-                        Remove API Key
-                    </button>
-                </form>
-
                 <div class="status-message" id="statusMessage"></div>
-            </div>
+            </form>
+        </section>
+    </div>
 
-            <!-- Modal for confirmations -->
-            <div class="modal-overlay" id="confirmationModal">
-                <div class="modal-content">
-                    <h3 class="modal-title" id="modalTitle">Remove API Key</h3>
-                    <p class="modal-message" id="modalMessage">Are you sure you want to remove your API key?</p>
-                    <div class="modal-buttons">
-                        <button class="modal-btn modal-btn-cancel" id="modalCancel"></button>
-                        <button class="modal-btn modal-btn-confirm" id="modalConfirm"></button>
-                    </div>
-                </div>
+    <footer class="footer">
+        <div class="col-1">Quill&trade; <span class="accent-dot">&middot;</span> Ed. 02 / 2026</div>
+        <div class="col-2">Set in Inter &amp; JetBrains Mono</div>
+        <div class="col-3">By <a href="https://azzar.netlify.app/porto" target="_blank">LilyOpenCMS</a></div>
+    </footer>
+    </div>
+
+    <div class="modal-overlay" id="confirmationModal">
+        <div class="modal-content">
+            <div class="modal-head">
+                <span class="lab">CONFIRM</span>
+                <span>ESC TO CLOSE</span>
+            </div>
+            <div class="modal-body">
+                <h3 class="modal-title" id="modalTitle">Remove API Key</h3>
+                <p class="modal-message" id="modalMessage">Are you sure you want to remove your API key?</p>
+            </div>
+            <div class="modal-actions">
+                <button class="modal-btn modal-btn-cancel" id="modalCancel">Cancel</button>
+                <button class="modal-btn modal-btn-confirm" id="modalConfirm">Confirm</button>
             </div>
         </div>
     </div>
@@ -2891,217 +2521,196 @@ export function generateSettingsPageHTML(): string {
             const modalMessage = document.getElementById('modalMessage');
             const modalCancel = document.getElementById('modalCancel');
             const modalConfirm = document.getElementById('modalConfirm');
+            const byokStatus = document.getElementById('byokStatus');
+            const byokStateText = document.getElementById('byokStateText');
+            const byokNoticeTitle = document.getElementById('byokNoticeTitle');
+            const byokNoticeMsg = document.getElementById('byokNoticeMsg');
 
-            // Language strings
+            function syncByokStatus() {
+                const has = !!(localStorage.getItem('geminiApiKey') || '').trim();
+                const lang = localStorage.getItem('uiLanguage') || 'english';
+                const t = languages[lang];
+                if (byokStatus) {
+                    byokStatus.setAttribute('data-state', has ? 'ok' : 'missing');
+                    byokStateText.textContent = has ? t.byokKeySet : t.byokKeyMissing;
+                }
+                if (byokNoticeTitle) byokNoticeTitle.textContent = t.byokNoticeTitle;
+                if (byokNoticeMsg) byokNoticeMsg.innerHTML = t.byokNoticeMsg;
+            }
+            window.syncByokStatus = syncByokStatus;
+
             const languages = {
                 english: {
-                    navBack: '← Back to Generator',
-                    title: 'Quill™ Settings',
-                    settingsDescription: 'Configure your Quill writing assistant',
-                    languageTitle: 'Language Settings',
-                    languageLabel: 'Interface Language',
-                    languageHelp: 'Choose the language for the user interface',
+                    title: 'Settings.',
+                    lede: 'Configure the language of the interface and your Gemini API key. All values are stored locally in this browser.',
+                    back: '\u2190 Back to Generator',
+                    languageTitle: 'Language',
+                    interfaceLanguage: 'Interface Language',
+                    languageHelp: 'Choose the language for the user interface.',
                     apiTitle: 'Gemini AI Configuration',
-                    apiInstructions: 'How to get your API key:',
-                    apiSteps: ['<a href="https://aistudio.google.com/app/apikey" target="_blank" style="color: #00d4ff; text-decoration: underline;">Go to Google AI Studio</a>', 'Sign in with your Google account', 'Create a new API key', 'Copy the key and paste it below'],
-                    apiKeyLabel: 'Gemini API Key *',
-                    apiKeyPlaceholder: 'Enter your Gemini API key',
+                    apiInstructions: 'How to get your API key',
+                    apiSteps: [
+                        '<a href="https://aistudio.google.com/app/apikey" target="_blank">Go to Google AI Studio</a>',
+                        'Sign in with your Google account',
+                        'Create a new API key',
+                        'Copy the key and paste it below'
+                    ],
+                    apiKeyLabel: 'Gemini API Key',
                     saveButton: 'Save API Key',
                     removeButton: 'Remove API Key',
                     removeConfirmTitle: 'Remove API Key',
                     removeConfirmMessage: 'Are you sure you want to remove the API key?',
                     cancelButton: 'Cancel',
                     removeModalButton: 'Remove',
-                    apiKeySaved: 'API key saved successfully!',
-                    apiKeyVerified: 'API key verified and saved successfully!',
+                    apiKeySaved: 'API key saved successfully.',
+                    apiKeyVerified: 'API key verified and saved successfully.',
                     apiKeyVerificationFailed: 'API key saved but verification failed: ',
                     apiKeySaveError: 'API key saved but could not verify: ',
-                    pleaseEnterApiKey: 'Please enter an API key'
+                    apiKeyRemoved: 'API key removed successfully.',
+                    pleaseEnterApiKey: 'Please enter an API key',
+                    byokKeySet: 'Key Set',
+                    byokKeyMissing: 'No API Key',
+                    byokNoticeTitle: 'Bring Your Own Key',
+                    byokNoticeMsg: 'Quill is BYOK — Bring Your Own Key. The server has no default Gemini key, so every visitor must provide their own. Your key is stored only in this browser (<code>localStorage</code>) and is sent per-request as the <code>X-User-API-Key</code> header. The server never persists, logs, or shares it.'
                 },
                 indonesian: {
-                    navBack: '← Kembali ke Generator',
-                    title: 'Pengaturan Quill™',
-                    settingsDescription: 'Konfigurasikan asisten penulisan Quill Anda',
-                    languageTitle: 'Pengaturan Bahasa',
-                    languageLabel: 'Bahasa Antarmuka',
-                    languageHelp: 'Pilih bahasa untuk antarmuka pengguna',
+                    title: 'Pengaturan.',
+                    lede: 'Konfigurasikan bahasa antarmuka dan kunci API Gemini Anda. Semua nilai disimpan secara lokal di peramban ini.',
+                    back: '\u2190 Kembali ke Generator',
+                    languageTitle: 'Bahasa',
+                    interfaceLanguage: 'Bahasa Antarmuka',
+                    languageHelp: 'Pilih bahasa untuk antarmuka pengguna.',
                     apiTitle: 'Konfigurasi Gemini AI',
-                    apiInstructions: 'Cara mendapatkan kunci API:',
-                    apiSteps: ['<a href="https://aistudio.google.com/app/apikey" target="_blank" style="color: #00d4ff; text-decoration: underline;">Kunjungi Google AI Studio</a>', 'Masuk dengan akun Google Anda', 'Buat kunci API baru', 'Salin kunci dan tempel di bawah'],
-                    apiKeyLabel: 'Kunci API Gemini *',
-                    apiKeyPlaceholder: 'Masukkan kunci API Gemini Anda',
+                    apiInstructions: 'Cara mendapatkan kunci API',
+                    apiSteps: [
+                        '<a href="https://aistudio.google.com/app/apikey" target="_blank">Kunjungi Google AI Studio</a>',
+                        'Masuk dengan akun Google Anda',
+                        'Buat kunci API baru',
+                        'Salin kunci dan tempel di bawah'
+                    ],
+                    apiKeyLabel: 'Kunci API Gemini',
                     saveButton: 'Simpan Kunci API',
                     removeButton: 'Hapus Kunci API',
                     removeConfirmTitle: 'Hapus Kunci API',
                     removeConfirmMessage: 'Apakah Anda yakin ingin menghapus kunci API?',
                     cancelButton: 'Batal',
                     removeModalButton: 'Hapus',
-                    apiKeySaved: 'Kunci API berhasil disimpan!',
-                    apiKeyVerified: 'Kunci API diverifikasi dan berhasil disimpan!',
+                    apiKeySaved: 'Kunci API berhasil disimpan.',
+                    apiKeyVerified: 'Kunci API diverifikasi dan berhasil disimpan.',
                     apiKeyVerificationFailed: 'Kunci API disimpan tetapi verifikasi gagal: ',
                     apiKeySaveError: 'Kunci API disimpan tetapi tidak dapat diverifikasi: ',
-                    pleaseEnterApiKey: 'Silakan masukkan kunci API'
+                    apiKeyRemoved: 'Kunci API berhasil dihapus.',
+                    pleaseEnterApiKey: 'Silakan masukkan kunci API',
+                    byokKeySet: 'Kunci Disetel',
+                    byokKeyMissing: 'Tanpa Kunci',
+                    byokNoticeTitle: 'Bawa Kunci Anda Sendiri',
+                    byokNoticeMsg: 'Quill adalah BYOK — Bawa Kunci Anda Sendiri. Server tidak memiliki kunci Gemini bawaan, jadi setiap pengunjung harus menyediakan kuncinya sendiri. Kunci Anda hanya disimpan di peramban ini (<code>localStorage</code>) dan dikirim per-request sebagai header <code>X-User-API-Key</code>. Server tidak pernah menyimpan, mencatat, atau membagikannya.'
                 }
             };
 
-            // Load saved language preference
             const savedLanguage = localStorage.getItem('uiLanguage') || 'english';
             languageSelect.value = savedLanguage;
 
-            // Modal functionality
-            function showModal(title, message, onConfirm, cancelText = 'Cancel', confirmText = 'Confirm') {
+            function showModal(title, message, onConfirm, cancelText, confirmText) {
                 modalTitle.textContent = title;
                 modalMessage.textContent = message;
-                modalCancel.textContent = cancelText;
-                modalConfirm.textContent = confirmText;
+                modalCancel.textContent = cancelText || 'Cancel';
+                modalConfirm.textContent = confirmText || 'Confirm';
                 modal.classList.add('show');
-
-                function closeModal() {
-                    modal.classList.remove('show');
-                }
-
+                function closeModal() { modal.classList.remove('show'); }
                 modalCancel.onclick = closeModal;
-
-                modalConfirm.onclick = function() {
-                    closeModal();
-                    onConfirm();
-                };
-
-                // Close on overlay click
-                modal.onclick = function(e) {
-                    if (e.target === modal) {
-                        closeModal();
-                    }
-                };
-
-                // Close on Escape key
+                modalConfirm.onclick = function() { closeModal(); onConfirm(); };
+                modal.onclick = function(e) { if (e.target === modal) closeModal(); };
                 document.addEventListener('keydown', function escHandler(e) {
-                    if (e.key === 'Escape') {
-                        closeModal();
-                        document.removeEventListener('keydown', escHandler);
-                    }
+                    if (e.key === 'Escape') { closeModal(); document.removeEventListener('keydown', escHandler); }
                 });
             }
 
-            // Load saved API key
             const savedApiKey = localStorage.getItem('geminiApiKey');
             if (savedApiKey) {
                 apiKeyInput.value = savedApiKey;
-                // Show remove button if API key exists
                 removeBtn.style.display = 'inline-block';
             } else {
                 removeBtn.style.display = 'none';
             }
+            syncByokStatus();
 
-            // Remove API key functionality
-            removeBtn.addEventListener('click', function() {
-                const currentLang = localStorage.getItem('uiLanguage') || 'english';
-                const texts = languages[currentLang];
-
-                showModal(texts.removeConfirmTitle, texts.removeConfirmMessage, function() {
-                    localStorage.removeItem('geminiApiKey');
-                    apiKeyInput.value = '';
-                    removeBtn.style.display = 'none';
-                    showStatus(texts.apiKeyRemoved || 'API key removed successfully.', 'success');
-                }, texts.cancelButton || 'Cancel', texts.removeModalButton || 'Remove');
-            });
-
-            // Function to update UI language
             function updateLanguage(lang) {
                 const texts = languages[lang];
-                document.querySelector('.nav a').textContent = texts.navBack;
-                document.querySelector('h1').textContent = texts.title;
-                document.querySelector('#settingsDescription').textContent = texts.settingsDescription;
-                document.querySelectorAll('.settings-section h3')[0].textContent = texts.languageTitle;
-                document.querySelector('label[for="uiLanguage"]').textContent = texts.languageLabel;
-                document.querySelector('.settings-section small').textContent = texts.languageHelp;
-                document.querySelectorAll('.settings-section h3')[1].textContent = texts.apiTitle;
-                document.querySelector('.info-box h4').textContent = texts.apiInstructions;
-                const steps = document.querySelector('.info-box p');
-                steps.innerHTML = texts.apiSteps.map((step, index) => (index + 1) + '. ' + step).join('<br>');
-                document.querySelector('label[for="apiKey"]').textContent = texts.apiKeyLabel;
-                apiKeyInput.placeholder = texts.apiKeyPlaceholder;
+                document.querySelector('h1').innerHTML = texts.title.replace('.', '<span class="amp">.</span>');
+                document.querySelector('.lede').textContent = texts.lede;
+                document.querySelectorAll('.section-head .title')[0].textContent = texts.languageTitle;
+                document.querySelector('label[for="uiLanguage"]').textContent = texts.interfaceLanguage;
+                document.querySelector('label[for="uiLanguage"]').nextElementSibling.nextElementSibling.textContent = texts.languageHelp;
+                document.querySelectorAll('.section-head .title')[1].textContent = texts.apiTitle;
+                document.querySelector('.info-block h4').textContent = texts.apiInstructions;
+                const stepsList = document.getElementById('apiStepsList');
+                stepsList.innerHTML = texts.apiSteps.map(function(s) { return '<li>' + s + '</li>'; }).join('');
+                document.querySelector('label[for="apiKey"]').innerHTML = texts.apiKeyLabel + ' <span class="req">*</span>';
                 saveBtn.textContent = texts.saveButton;
-
-                // Store language preference
+                removeBtn.textContent = texts.removeButton;
                 localStorage.setItem('uiLanguage', lang);
             }
 
-            // Initialize language
             updateLanguage(savedLanguage);
 
-            // Handle language change
             languageSelect.addEventListener('change', function() {
                 updateLanguage(this.value);
+                syncByokStatus();
             });
 
-            // Remove API key functionality
             removeBtn.addEventListener('click', function() {
                 const currentLang = localStorage.getItem('uiLanguage') || 'english';
                 const texts = languages[currentLang];
-
                 showModal(texts.removeConfirmTitle, texts.removeConfirmMessage, function() {
                     localStorage.removeItem('geminiApiKey');
                     apiKeyInput.value = '';
                     removeBtn.style.display = 'none';
-                    showStatus(texts.apiKeyRemoved || 'API key removed successfully.', 'success');
-                }, texts.cancelButton || 'Cancel', texts.removeModalButton || 'Remove');
+                    showStatus(texts.apiKeyRemoved, 'success');
+                    syncByokStatus();
+                }, texts.cancelButton, texts.removeModalButton);
             });
 
-            // Save API key
             apiKeyForm.addEventListener('submit', async function(e) {
                 e.preventDefault();
-
                 const currentLang = localStorage.getItem('uiLanguage') || 'english';
                 const texts = languages[currentLang];
-
                 const apiKey = apiKeyInput.value.trim();
                 if (!apiKey) {
                     showStatus(texts.pleaseEnterApiKey, 'error');
                     return;
                 }
-
-                // Save to localStorage
                 localStorage.setItem('geminiApiKey', apiKey);
                 showStatus(texts.apiKeySaved, 'success');
-
-                // Show remove button
                 removeBtn.style.display = 'inline-block';
                 removeBtn.textContent = texts.removeButton;
-
-                // Test the API key
+                syncByokStatus();
                 try {
                     const response = await fetch('/api/test-key', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
+                            'X-User-API-Key': apiKey,
                         },
-                        body: JSON.stringify({ apiKey })
+                        body: JSON.stringify({ apiKey: apiKey })
                     });
-
                     if (response.ok) {
                         showStatus(texts.apiKeyVerified, 'success');
                     } else {
                         const result = await response.json();
-                        let errorMessage = result.error || 'Unknown error';
-
-                        // Provide more user-friendly error messages
+                        let errorMessage = (result && result.error) || 'Unknown error';
                         if (errorMessage.includes('quota exceeded') || errorMessage.includes('429')) {
-                            errorMessage = texts.apiKeyQuotaExceeded;
+                            errorMessage = (texts.apiKeyQuotaExceeded || 'API quota exceeded.');
                         } else if (errorMessage.includes('403') || errorMessage.includes('access denied') || errorMessage.includes('unauthorized')) {
-                            errorMessage = texts.apiKeyInvalid;
+                            errorMessage = (texts.apiKeyInvalid || 'Invalid API key.');
                         }
-
                         showStatus(texts.apiKeyVerificationFailed + errorMessage, 'error');
                     }
                 } catch (error) {
                     let errorMessage = error.message;
-
-                    // Provide more user-friendly error messages for network issues
                     if (error.message.includes('network') || error.message.includes('fetch')) {
-                        errorMessage = texts.networkError;
+                        errorMessage = (texts.networkError || 'Network error.');
                     }
-
                     showStatus(texts.apiKeySaveError + errorMessage, 'error');
                 }
             });
@@ -3110,31 +2719,9 @@ export function generateSettingsPageHTML(): string {
                 statusMessage.textContent = message;
                 statusMessage.className = 'status-message status-' + type;
                 statusMessage.style.display = 'block';
-
-                setTimeout(() => {
-                    statusMessage.style.display = 'none';
-                }, 5000);
+                setTimeout(function() { statusMessage.style.display = 'none'; }, 5000);
             }
         });
-
-        // Footer
-        const footer = document.createElement('footer');
-        footer.style.position = 'fixed';
-        footer.style.bottom = '0';
-        footer.style.left = '0';
-        footer.style.right = '0';
-        footer.style.background = 'rgba(0, 0, 0, 0.8)';
-        footer.style.color = '#00d4ff';
-        footer.style.textAlign = 'center';
-        footer.style.padding = '10px';
-        footer.style.fontSize = '12px';
-        footer.style.borderTop = '1px solid rgba(0, 212, 255, 0.3)';
-        footer.style.backdropFilter = 'blur(5px)';
-        footer.style.zIndex = '1000';
-        footer.style.pointerEvents = 'none';
-        footer.innerHTML = 'Quill™ by <a href="https://azzar.netlify.app/porto" target="_blank" style="color: #00ff88; text-decoration: none; pointer-events: auto;">LilyOpenCMS</a>';
-        document.body.appendChild(footer);
-
     </script>
 </body>
 </html>`;

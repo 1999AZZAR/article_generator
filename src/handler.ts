@@ -11,7 +11,48 @@ export interface GenerateRequest {
   chapterCount?: number;
   language: 'english' | 'indonesian';
   mainIdea?: string;
+  // Back-compat: legacy clients send the key in the body. New clients use the
+  // `X-User-API-Key` header (see resolveUserApiKey).
   apiKey?: string;
+}
+
+// ============================================================
+// BYOK (Bring Your Own Key) helpers
+// ============================================================
+// Resolution order:
+//   1. `X-User-API-Key` request header  (preferred — keeps body for content)
+//   2. `apiKey` field on the JSON body   (legacy / convenience)
+//   3. `env.GEMINI_API_KEY`              (self-hosted server default, opt-in)
+//
+// In strict BYOK mode (no `env.GEMINI_API_KEY` set) every visitor must provide
+// their own key. The key is used once for the outbound Gemini call and never
+// logged, persisted, or reflected back to the client.
+function resolveUserApiKey(
+  request: Request,
+  env: { GEMINI_API_KEY?: string },
+  bodyKey?: string,
+): string | undefined {
+  const headerKey = request.headers.get('X-User-API-Key')?.trim();
+  if (headerKey) return headerKey;
+  if (bodyKey && bodyKey.trim()) return bodyKey.trim();
+  if (env.GEMINI_API_KEY && env.GEMINI_API_KEY.trim()) return env.GEMINI_API_KEY.trim();
+  return undefined;
+}
+
+function byokRequiredResponse(): Response {
+  return new Response(
+    JSON.stringify({
+      error: 'BYOK: A Gemini API key is required. Add yours in Settings to continue.',
+      code: 'BYOK_KEY_REQUIRED',
+    }),
+    {
+      status: 400,
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+      },
+    },
+  );
 }
 
 export interface ArticleResponse {
@@ -32,7 +73,7 @@ export interface NovelResponse {
 }
 
 
-export async function handleRequest(request: Request, env: { GEMINI_API_KEY: string }): Promise<Response> {
+export async function handleRequest(request: Request, env: { GEMINI_API_KEY?: string }): Promise<Response> {
   // Handle CORS
   if (request.method === 'OPTIONS') {
     return new Response(null, {
@@ -40,7 +81,7 @@ export async function handleRequest(request: Request, env: { GEMINI_API_KEY: str
       headers: {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Allow-Headers': 'Content-Type, X-User-API-Key',
       },
     });
   }
@@ -65,15 +106,11 @@ export async function handleRequest(request: Request, env: { GEMINI_API_KEY: str
           content: string;
           keyEvents?: string[];
         }>;
-        apiKey?: string;
       } = await request.json();
 
-      const apiKey = body.apiKey || env.GEMINI_API_KEY;
+      const apiKey = resolveUserApiKey(request, env);
       if (!apiKey) {
-        return new Response(JSON.stringify({ error: 'Gemini API key is required' }), {
-          status: 400,
-          headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
-        });
+        return byokRequiredResponse();
       }
 
       const chapterContent = await generateChapterContent({
@@ -243,12 +280,9 @@ export async function handleRequest(request: Request, env: { GEMINI_API_KEY: str
         });
       }
 
-      const apiKey = body.apiKey || env.GEMINI_API_KEY;
+      const apiKey = resolveUserApiKey(request, env);
       if (!apiKey) {
-        return new Response(JSON.stringify({ error: 'Gemini API key is required. Please set it in settings or environment.' }), {
-          status: 400,
-          headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
-        });
+        return byokRequiredResponse();
       }
 
       let result;
