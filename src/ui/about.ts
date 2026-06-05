@@ -3,34 +3,39 @@ import { renderHead, renderFooter, renderTopbar, getTopbarStrings, FOOTER_STRING
 import { SPECIMEN_JS } from './specimen';
 
 const PAGE_CSS = `
-.about-hero {
+.hero {
     padding: 64px 0 48px;
     border-bottom: var(--rule);
     display: grid;
     grid-template-columns: repeat(12, 1fr);
+    column-gap: var(--gutter);
 }
-.about-hero .index {
-    grid-column: 1 / 3;
+.hero .index {
+    grid-column: 1 / span 2;
     font-size: 14px;
     font-weight: 700;
 }
-.about-hero .headline {
-    grid-column: 3 / 11;
+.hero .headline {
+    grid-column: 3 / span 7;
 }
-.about-hero h1 {
-    font-size: 48px;
+.hero h1 {
+    font-family: 'Inter', sans-serif;
     font-weight: 800;
-    letter-spacing: -0.02em;
-    line-height: 1;
+    font-size: clamp(48px, 9vw, 128px);
+    line-height: 0.95;
+    letter-spacing: -0.04em;
+    color: var(--black);
     margin: 0;
 }
-.about-hero .lede {
-    grid-column: 3 / 10;
-    font-size: 16px;
+.hero h1 .amp { color: var(--accent); }
+.hero .lede {
+    grid-column: 10 / span 3;
+    align-self: end;
+    font-size: 13px;
     line-height: 1.5;
-    margin: 0;
-    padding-top: 24px;
     color: var(--gray-600);
+    border-top: var(--rule);
+    padding-top: 12px;
 }
 
 .about-content {
@@ -97,10 +102,10 @@ const BODY_HTML = `
 <div class="container">
     ${renderTopbar('about', 'english')}
 
-    <header class="about-hero">
-        <div class="index">&#8470; 00</div>
+    <header class="hero">
+        <div class="index">№ 03</div>
         <div class="headline">
-            <h1 id="heroTitle">About<span class="brand-tm">™</span><span class="amp">.</span></h1>
+            <h1 id="heroTitle">About<span class="amp">.</span></h1>
         </div>
         <p class="lede" id="heroLede">An editorial writing instrument for the neural era. High-fidelity author style mimicry meeting Swiss typographic precision.</p>
     </header>

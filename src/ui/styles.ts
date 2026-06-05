@@ -1341,6 +1341,11 @@ export const COMMON_JS = `
         } else {
             trigger.hidden = true;
             signIn.hidden = false;
+            // Also close dropdown if it was open
+            const dd = document.getElementById('accountDropdown');
+            if (dd) dd.hidden = true;
+            const back = document.getElementById('accountBackdrop');
+            if (back) back.hidden = true;
         }
     };
 
@@ -1356,6 +1361,9 @@ export const COMMON_JS = `
             const txt = document.getElementById('byokStateText');
             if (txt) txt.textContent = has ? tb.byokSet : tb.byokMissing;
         }
+        // Banner support (Main page)
+        const banner = document.getElementById('byokBanner');
+        if (banner) banner.classList.toggle('show', !has);
     };
 
     window.setupAccountMenu = function() {

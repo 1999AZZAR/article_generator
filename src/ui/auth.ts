@@ -18,36 +18,55 @@ const FIREBASE_CONFIG = {
 };
 
 const PAGE_CSS = `
-/* Auth page layout (uses the .auth-page rules in styles.ts) */
-.auth-section-label {
-    border-top: var(--rule);
-    padding: 14px 0;
+.hero {
+    padding: 64px 0 48px;
+    border-bottom: var(--rule);
     display: grid;
     grid-template-columns: repeat(12, 1fr);
     column-gap: var(--gutter);
-    font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; font-weight: 600;
-    align-items: center;
 }
-.auth-section-label .num { grid-column: 1 / span 1; color: var(--accent); font-family: 'JetBrains Mono', monospace; }
-.auth-section-label .title { grid-column: 2 / span 8; }
-.auth-section-label .meta { grid-column: 10 / span 3; text-align: right; color: var(--gray-600); font-weight: 400; letter-spacing: 0.12em; }
+.hero .index {
+    grid-column: 1 / span 2;
+    font-size: 14px;
+    font-weight: 700;
+}
+.hero .headline {
+    grid-column: 3 / span 7;
+}
+.hero h1 {
+    font-family: 'Inter', sans-serif;
+    font-weight: 800;
+    font-size: clamp(48px, 9vw, 128px);
+    line-height: 0.95;
+    letter-spacing: -0.04em;
+    color: var(--black);
+    margin: 0;
+}
+.hero h1 .amp { color: var(--accent); }
+.hero .lede {
+    grid-column: 10 / span 3;
+    align-self: end;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--gray-600);
+    border-top: var(--rule);
+    padding-top: 12px;
+}
 `;
 
 const BODY_HTML = `
 <div class="container">
     ${renderTopbar('login', 'english')}
 
-    <div class="auth-section-label">
-        <div class="num">01</div>
-        <div class="title" id="sectionTitle">Account</div>
-        <div class="meta">FIREBASE</div>
-    </div>
+    <header class="hero">
+        <div class="index">№ 04</div>
+        <div class="headline">
+            <h1 id="introTitle">Sign in<span class="amp">.</span></h1>
+        </div>
+        <p class="lede" id="introBody">Quill™ is BYOK. Sign in to keep your Gemini API key and saved articles tied to your account across devices. The server never sees or stores your key — it lives only in this browser.</p>
+    </header>
 
     <main class="auth-page">
-        <div class="auth-intro">
-            <h2 id="introTitle">Sign in to Quill<span class="brand-tm">™</span>.</h2>
-            <p id="introBody">Quill<span class="brand-tm">™</span> is BYOK. Sign in to keep your Gemini API key and saved articles tied to your account across devices. The server never sees or stores your key — it lives only in this browser.</p>
-        </div>
 
         <div class="auth-card">
             <div class="auth-tabs" role="tablist">
@@ -163,7 +182,7 @@ const SCRIPT = `
             window.syncByokStatus();
         }
         const introTitle = document.getElementById('introTitle');
-        introTitle.innerHTML = t.introTitle.replace(/\\./, '<span class="amp">.</span>');
+        introTitle.innerHTML = t.introTitle.replace(/\\\\./, '<span class="amp">.</span>');
         document.getElementById('introBody').innerHTML = t.introBody;
         document.getElementById('tabSignIn').textContent = t.signInTab;
         document.getElementById('tabSignUp').textContent = t.signUpTab;

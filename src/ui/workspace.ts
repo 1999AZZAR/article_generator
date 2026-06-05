@@ -3,38 +3,39 @@ import { renderHead, renderFooter, renderTopbar, getTopbarStrings, ARCHIVAL_DETA
 import { SPECIMEN_JS } from './specimen';
 
 const PAGE_CSS = `
-.ws-hero {
-    padding: 48px 0 32px 0;
+.hero {
+    padding: 64px 0 48px;
     border-bottom: var(--rule);
     display: grid;
     grid-template-columns: repeat(12, 1fr);
     column-gap: var(--gutter);
-    align-items: end;
 }
-.ws-hero .ws-hero-num {
-    grid-column: 1 / span 1;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    color: var(--accent);
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    padding-bottom: 4px;
+.hero .index {
+    grid-column: 1 / span 2;
+    font-size: 14px;
+    font-weight: 700;
 }
-.ws-hero .ws-hero-title {
-    grid-column: 2 / span 6;
-    font-size: clamp(32px, 5vw, 56px);
+.hero .headline {
+    grid-column: 3 / span 7;
+}
+.hero h1 {
+    font-family: 'Inter', sans-serif;
     font-weight: 800;
-    letter-spacing: -0.03em;
-    line-height: 1;
+    font-size: clamp(48px, 9vw, 128px);
+    line-height: 0.95;
+    letter-spacing: -0.04em;
+    color: var(--black);
+    margin: 0;
 }
-.ws-hero .ws-hero-lede {
-    grid-column: 8 / span 5;
-    font-size: 13px;
-    color: var(--gray-600);
-    letter-spacing: 0.02em;
-    line-height: 1.6;
+.hero h1 .amp { color: var(--accent); }
+.hero .lede {
+    grid-column: 10 / span 3;
     align-self: end;
-    padding-bottom: 6px;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--gray-600);
+    border-top: var(--rule);
+    padding-top: 12px;
 }
 
 /* Filter bar */
@@ -333,10 +334,12 @@ const BODY_HTML = `
 <div class="container">
     ${renderTopbar('workspace', 'english')}
 
-    <header class="ws-hero">
-        <div class="ws-hero-num">02</div>
-        <h1 class="ws-hero-title" id="wsTitle">Workspace.</h1>
-        <p class="ws-hero-lede" id="wsLede">Your saved drafts and finished pieces. Edit inline, autosave while you write.</p>
+    <header class="hero">
+        <div class="index">№ 02</div>
+        <div class="headline">
+            <h1 id="heroTitle">Workspace<span class="amp">.</span></h1>
+        </div>
+        <p class="lede" id="heroLede">Your saved drafts and finished pieces. Edit inline, autosave while you write.</p>
     </header>
 
     <div class="ws-filter-bar" id="wsFilterBar">
@@ -681,10 +684,19 @@ const SCRIPT = `
         t = I18N.workspace[newLang];
         lang = newLang;
         var topbar = document.querySelector('.topbar');
-        if (topbar && TOPBARS[newLang]) topbar.outerHTML = TOPBARS[newLang];
+        if (topbar && TOPBARS[newLang]) {
+            topbar.outerHTML = TOPBARS[newLang];
+            window.setupAccountMenu();
+            window.syncAuthPill();
+            window.syncByokStatus();
+        }
         var el = function(id) { return document.getElementById(id); };
-        if (el('wsTitle')) el('wsTitle').textContent = t.title;
-        if (el('wsLede')) el('wsLede').textContent = t.lede;
+        
+        var heroTitle = el('heroTitle');
+        if (heroTitle) {
+            heroTitle.innerHTML = t.title.replace(/\\\\./, '<span class="amp">.</span>');
+        }
+        if (el('heroLede')) el('heroLede').textContent = t.lede;
         if (el('filterAll')) el('filterAll').textContent = t.filterAll;
         if (el('filterDraft')) el('filterDraft').textContent = t.filterDraft;
         if (el('filterFinal')) el('filterFinal').textContent = t.filterFinal;

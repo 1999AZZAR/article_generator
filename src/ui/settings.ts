@@ -109,12 +109,13 @@ const BODY_HTML = `
     ${renderTopbar('settings', 'english')}
 
     <header class="hero">
-        <div class="index">&#8470; S.01</div>
+        <div class="index">№ 04</div>
         <div class="headline">
             <h1 id="heroTitle">Settings<span class="amp">.</span></h1>
         </div>
         <p class="lede" id="heroLede">Configure the language of the interface and your Gemini API key. All values are stored locally in this browser.</p>
     </header>
+
 
     <div class="nav">
         <div class="num">01</div>

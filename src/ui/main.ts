@@ -282,11 +282,11 @@ const BODY_HTML = `
     </div>
 
     <header class="hero">
-        <div class="index">&#8470; 01</div>
+        <div class="index">№ 01</div>
         <div class="headline">
-            <h1 id="heroTitle">Quill<span class="brand-tm">™</span><span class="amp">.</span></h1>
+            <h1 id="heroTitle">Quill<span class="amp">.</span></h1>
         </div>
-        <p class="lede" id="heroLede">An editorial writing instrument powered by AI. Long-form articles, short stories, news briefs and novel outlines &mdash; drafted with author-style precision.</p>
+        <p class="lede" id="heroLede">An editorial writing instrument powered by AI. Long-form articles, short stories, news briefs and novel outlines — drafted with author-style precision.</p>
     </header>
 
     <div class="section-label">
