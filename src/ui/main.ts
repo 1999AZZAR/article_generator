@@ -3,8 +3,9 @@
 // injected below and re-paints fields when the user changes language.
 
 import { MAIN_STRINGS, Locale } from './i18n';
-import { renderHead, renderFooter, renderTopbar, getTopbarStrings, FOOTER_STRINGS } from './styles';
+import { renderHead, renderFooter, renderTopbar, getTopbarStrings, FOOTER_STRINGS, ARCHIVAL_DETAILS_HTML } from './styles';
 import { SELECT_CSS, SELECT_SCRIPT } from './select';
+import { SPECIMEN_JS } from './specimen';
 
 const PAGE_CSS = `
 ${SELECT_CSS}
@@ -423,9 +424,12 @@ const BODY_HTML = `
 </form>
 
 <div class="status-bar" id="loading">
-    <div class="row">
-        <div class="lab" id="statusLabel">Status</div>
-        <div class="msg" id="loadingMsg">Generating your content with AI&hellip;</div>
+    <div class="loading-specimen">
+        <svg class="specimen-figure specimen-svg" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet" data-specimen-seed="Quill-Generating" aria-hidden="true"></svg>
+        <div class="loading-specimen-meta">
+            <div class="specimen-sid">SPEC.№ —</div>
+            <div id="loadingMsg">Generating your content with AI&hellip;</div>
+        </div>
     </div>
     <div class="progress"></div>
 </div>
@@ -439,12 +443,11 @@ const BODY_HTML = `
 
 <div class="result-container" id="resultContainer"></div>
 
-<footer class="footer">
-    <div class="col-1" id="footerCol1">Quill&trade; <span class="accent-dot">&middot;</span> Ed. 02 / 2026</div>
-    <div class="col-2" id="footerCol2">Set in Inter &amp; JetBrains Mono</div>
-    <div class="col-3" id="footerCol3">By <a href="https://azzar.netlify.app/porto" target="_blank">LilyOpenCMS</a></div>
-</footer>
+    ${renderFooter(FOOTER_STRINGS['english'])}
 </div>
+
+${ARCHIVAL_DETAILS_HTML}
+
 
 <div class="modal-overlay" id="confirmationModal">
     <div class="modal-content">
@@ -565,11 +568,6 @@ const SCRIPT = `
         if (tagsContainer) tagsContainer.setAttribute('data-empty', t.tagsEmpty);
         const keywordsContainer = document.getElementById('keywordsContainer');
         if (keywordsContainer) keywordsContainer.setAttribute('data-empty', t.keywordsEmpty);
-        // Footer
-        const f = FOOTER[lang];
-        document.getElementById('footerCol1').innerHTML = f.copyright;
-        document.getElementById('footerCol2').textContent = f.typeface;
-        document.getElementById('footerCol3').innerHTML = f.by.replace('{link}', '<a href="https://azzar.netlify.app/porto" target="_blank">LilyOpenCMS</a>');
         // Auth links
         const signInLink = document.getElementById('authSignInLink');
         if (signInLink) {
@@ -1070,7 +1068,8 @@ const SCRIPT = `
         });
 
         function resultHead(num, title, meta) {
-            return '<div class="result-block"><div class="result-head"><div class="num">' + num + '</div><div class="title">' + title + '</div><div class="meta">' + (meta || '') + '</div></div>';
+            const seed = 'Quill-Result-' + (num || 'X') + '-' + (title || '').slice(0, 8);
+            return '<div class="result-block"><div class="result-head"><div class="num">' + num + '</div><div class="title">' + title + '</div><div class="meta">' + (meta || '') + '</div><svg class="specimen-mark-svg specimen-svg" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet" data-specimen-seed="' + escapeHtml(seed) + '" aria-hidden="true"></svg></div>';
         }
         function resultFoot() { return '</div>'; }
 
@@ -1120,11 +1119,17 @@ const SCRIPT = `
                 html += '<div class="export-select-group" style="grid-column: 1 / -1; margin-top: 16px;"><label for="selectedSubtitle">' + t.selectSubtitle + '</label><select id="selectedSubtitle" class="export-select"><option value="">' + t.selectSubtitle + '…</option>';
                 if (result.subtitleSelection) result.subtitleSelection.forEach(function(x) { html += '<option value="' + escapeHtml(x) + '">' + escapeHtml(x) + '</option>'; });
                 html += '</select></div>';
-                html += '<div class="export-buttons"><button class="export-btn" id="exportMdBtn">&#8595; ' + t.exportMarkdown + '</button><button class="export-btn" id="exportRtfBtn">&#8595; ' + t.exportRTF + '</button></div>';
+                html += '<div class="export-buttons"><button class="export-btn" id="exportMdBtn">&#8595; ' + t.exportMarkdown + '</button><button class="export-btn" id="exportRtfBtn">&#8595; ' + t.exportRTF + '</button><button class="export-btn" id="saveToWsBtn">&#8964; ' + t.saveToWorkspace + '</button></div>';
                 html += '</div></div>';
                 html += resultFoot();
             }
             resultContainer.innerHTML = html;
+            // Render any specimen SVGs that the result HTML just produced
+            if (window.renderSpecimen) {
+                resultContainer.querySelectorAll('svg[data-specimen-seed]').forEach(function(svg) {
+                    window.renderSpecimen(svg, svg.getAttribute('data-specimen-seed'));
+                });
+            }
             bindOptionSelection();
             bindExportButtons();
         }
@@ -1215,6 +1220,54 @@ const SCRIPT = `
             const md = document.getElementById('exportMdBtn'); if (md) md.addEventListener('click', exportAsMarkdown);
             const rtf = document.getElementById('exportRtfBtn'); if (rtf) rtf.addEventListener('click', exportAsRTF);
             const nmd = document.getElementById('exportNovelMdBtn'); if (nmd) nmd.addEventListener('click', exportNovelAsMarkdown);
+            const ws = document.getElementById('saveToWsBtn'); if (ws) ws.addEventListener('click', saveCurrentToWorkspace);
+        }
+
+        async function saveCurrentToWorkspace() {
+            var wsBtn = document.getElementById('saveToWsBtn');
+            var lang = localStorage.getItem('uiLanguage') || 'english';
+            var t = window.__QUILL_I18N__.main[lang];
+            var authUid = localStorage.getItem('quillAuthUid');
+            if (!authUid) {
+                alert(t.workspaceAuthRequired || 'Please sign in to save to your Workspace.');
+                return;
+            }
+            var titleVal = (document.getElementById('selectedTitle') || {}).value || 'Untitled';
+            var contentEl = document.querySelector('.content-display');
+            var content = contentEl ? (contentEl.textContent || contentEl.innerText || '') : '';
+            var savedForm = {};
+            try { savedForm = JSON.parse(localStorage.getItem('quillFormData') || '{}'); } catch(e) {}
+            if (wsBtn) { wsBtn.disabled = true; wsBtn.textContent = '…'; }
+            try {
+                var resp = await fetch('/api/workspace/drafts', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        title: String(titleVal).slice(0, 500),
+                        content: content,
+                        type: savedForm.type || 'article',
+                        style: savedForm.authorStyle || '',
+                        topic: savedForm.topic || titleVal,
+                        tags: Array.isArray(savedForm.tags) ? savedForm.tags : [],
+                        status: 'draft',
+                    }),
+                });
+                if (resp.status === 401) {
+                    alert(t.workspaceAuthRequired || 'Please sign in to save to your Workspace.');
+                    return;
+                }
+                if (!resp.ok) {
+                    var j = await resp.json().catch(function() { return {}; });
+                    throw new Error(j.error || 'Save failed');
+                }
+                if (wsBtn) { wsBtn.textContent = t.savedToWorkspace || 'Saved ✓'; }
+                setTimeout(function() {
+                    if (wsBtn) { wsBtn.disabled = false; wsBtn.innerHTML = '&#8964; ' + (t.saveToWorkspace || 'Save to Workspace'); }
+                }, 2500);
+            } catch(e) {
+                if (wsBtn) { wsBtn.disabled = false; wsBtn.innerHTML = '&#8964; ' + (t.saveToWorkspace || 'Save to Workspace'); }
+                alert(t.saveError || 'Failed to save. Please try again.');
+            }
         }
 
         function exportAsMarkdown() {
@@ -1416,6 +1469,16 @@ window.__QUILL_TOPBAR_STRINGS__ = ${JSON.stringify({
 </script>
 <script>${SCRIPT}</script>
 <script>${SELECT_SCRIPT}</script>
+<script>${SPECIMEN_JS}</script>
+<script>
+(function() {
+    if (window.renderSpecimen) {
+        document.querySelectorAll('svg[data-specimen-seed]').forEach(function(svg) {
+            window.renderSpecimen(svg, svg.getAttribute('data-specimen-seed'));
+        });
+    }
+})();
+</script>
 </body>
 </html>`;
 }

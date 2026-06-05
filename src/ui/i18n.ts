@@ -130,6 +130,81 @@ export interface MainPageStrings {
   settingsTooltip: string;
   signInTooltip: string;
   signOutTooltip: string;
+
+  // Workspace integration
+  saveToWorkspace: string;
+  savedToWorkspace: string;
+  workspaceAuthRequired: string;
+}
+
+export interface WorkspacePageStrings {
+  documentTitle: string;
+  title: string;
+  lede: string;
+
+  // Filter tabs
+  filterAll: string;
+  filterDraft: string;
+  filterFinal: string;
+
+  // Table headers
+  colStatus: string;
+  colTitle: string;
+  colType: string;
+  colDate: string;
+  colActions: string;
+
+  // Status labels
+  statusDraft: string;
+  statusFinal: string;
+
+  // Actions
+  actionEdit: string;
+  actionDelete: string;
+  actionSave: string;
+  actionMarkFinal: string;
+  actionMarkDraft: string;
+  actionClose: string;
+
+  // Editor
+  editorTitlePlaceholder: string;
+  editorContentPlaceholder: string;
+  autosaveActive: string;
+  autosaveLabel: string;
+  unsavedChanges: string;
+
+  // Empty state
+  emptyTitle: string;
+  emptyMsg: string;
+  emptyCtaLabel: string;
+
+  // Delete modal
+  deleteConfirmTitle: string;
+  deleteConfirmMessage: string;
+  cancelButton: string;
+  deleteConfirmButton: string;
+
+  // Toasts / errors
+  loadError: string;
+  saveSuccess: string;
+  saveError: string;
+  deleteSuccess: string;
+  deleteError: string;
+  authRequired: string;
+
+  // Content type labels
+  typeArticle: string;
+  typeShortStory: string;
+  typeNews: string;
+  typeShortNews: string;
+  typeNovel: string;
+
+  // Shared nav/modal strings
+  confirmLabel: string;
+  escToClose: string;
+  signInLink: string;
+  signInTooltip: string;
+  signOutTooltip: string;
 }
 
 export interface SettingsPageStrings {
@@ -370,6 +445,10 @@ export const MAIN_STRINGS: Record<Locale, MainPageStrings> = {
     settingsTooltip: 'Settings',
     signInTooltip: 'Sign in',
     signOutTooltip: 'Sign out',
+
+    saveToWorkspace: 'Save to Workspace',
+    savedToWorkspace: 'Saved ✓',
+    workspaceAuthRequired: 'Please sign in to save to your Workspace.',
   },
 
   indonesian: {
@@ -497,6 +576,132 @@ export const MAIN_STRINGS: Record<Locale, MainPageStrings> = {
     exportChapter: 'Ekspor Bab',
 
     settingsTooltip: 'Pengaturan',
+    signInTooltip: 'Masuk',
+    signOutTooltip: 'Keluar',
+
+    saveToWorkspace: 'Simpan ke Ruang Kerja',
+    savedToWorkspace: 'Tersimpan ✓',
+    workspaceAuthRequired: 'Silakan masuk untuk menyimpan ke Ruang Kerja Anda.',
+  },
+};
+
+export const WORKSPACE_STRINGS: Record<Locale, WorkspacePageStrings> = {
+  english: {
+    documentTitle: 'Quill — Workspace',
+    title: 'Workspace.',
+    lede: 'Your saved drafts and finished pieces. Edit inline, autosave while you write.',
+
+    filterAll: 'All',
+    filterDraft: 'Draft',
+    filterFinal: 'Final',
+
+    colStatus: 'STATUS',
+    colTitle: 'TITLE',
+    colType: 'TYPE',
+    colDate: 'DATE',
+    colActions: 'ACTIONS',
+
+    statusDraft: 'DRAFT',
+    statusFinal: 'FINAL',
+
+    actionEdit: 'Edit',
+    actionDelete: 'Delete',
+    actionSave: 'Save',
+    actionMarkFinal: 'Mark Final',
+    actionMarkDraft: 'Mark Draft',
+    actionClose: 'Close',
+
+    editorTitlePlaceholder: 'Draft title…',
+    editorContentPlaceholder: 'Your content…',
+    autosaveActive: 'Autosave on',
+    autosaveLabel: 'AUTOSAVE',
+    unsavedChanges: 'Unsaved changes',
+
+    emptyTitle: 'No drafts yet.',
+    emptyMsg: 'Generate an article and save it to your Workspace to see it here.',
+    emptyCtaLabel: 'Go to Generator →',
+
+    deleteConfirmTitle: 'Delete Draft',
+    deleteConfirmMessage: 'This will permanently delete the draft. This action cannot be undone.',
+    cancelButton: 'Cancel',
+    deleteConfirmButton: 'Delete',
+
+    loadError: 'Failed to load drafts. Please try again.',
+    saveSuccess: 'Draft saved.',
+    saveError: 'Failed to save. Please try again.',
+    deleteSuccess: 'Draft deleted.',
+    deleteError: 'Failed to delete. Please try again.',
+    authRequired: 'Please sign in to access your workspace.',
+
+    typeArticle: 'Article',
+    typeShortStory: 'Short Story',
+    typeNews: 'News',
+    typeShortNews: 'Short News',
+    typeNovel: 'Novel',
+
+    confirmLabel: 'CONFIRM',
+    escToClose: 'ESC TO CLOSE',
+    signInLink: 'SIGN IN',
+    signInTooltip: 'Sign in',
+    signOutTooltip: 'Sign out',
+  },
+
+  indonesian: {
+    documentTitle: 'Quill — Ruang Kerja',
+    title: 'Ruang Kerja.',
+    lede: 'Draf dan karya selesai Anda. Edit langsung, simpan otomatis saat menulis.',
+
+    filterAll: 'Semua',
+    filterDraft: 'Draf',
+    filterFinal: 'Final',
+
+    colStatus: 'STATUS',
+    colTitle: 'JUDUL',
+    colType: 'TIPE',
+    colDate: 'TANGGAL',
+    colActions: 'AKSI',
+
+    statusDraft: 'DRAF',
+    statusFinal: 'FINAL',
+
+    actionEdit: 'Edit',
+    actionDelete: 'Hapus',
+    actionSave: 'Simpan',
+    actionMarkFinal: 'Tandai Final',
+    actionMarkDraft: 'Tandai Draf',
+    actionClose: 'Tutup',
+
+    editorTitlePlaceholder: 'Judul draf…',
+    editorContentPlaceholder: 'Konten Anda…',
+    autosaveActive: 'Simpan otomatis aktif',
+    autosaveLabel: 'SIMPAN-OTO',
+    unsavedChanges: 'Ada perubahan belum disimpan',
+
+    emptyTitle: 'Belum ada draf.',
+    emptyMsg: 'Hasilkan artikel dan simpan ke Ruang Kerja Anda untuk melihatnya di sini.',
+    emptyCtaLabel: 'Buka Generator →',
+
+    deleteConfirmTitle: 'Hapus Draf',
+    deleteConfirmMessage: 'Draf ini akan dihapus permanen. Tindakan ini tidak dapat dibatalkan.',
+    cancelButton: 'Batal',
+    deleteConfirmButton: 'Hapus',
+
+    loadError: 'Gagal memuat draf. Coba lagi.',
+    saveSuccess: 'Draf disimpan.',
+    saveError: 'Gagal menyimpan. Coba lagi.',
+    deleteSuccess: 'Draf dihapus.',
+    deleteError: 'Gagal menghapus. Coba lagi.',
+    authRequired: 'Silakan masuk untuk mengakses ruang kerja Anda.',
+
+    typeArticle: 'Artikel',
+    typeShortStory: 'Cerita Pendek',
+    typeNews: 'Berita',
+    typeShortNews: 'Berita Singkat',
+    typeNovel: 'Novel',
+
+    confirmLabel: 'KONFIRMASI',
+    escToClose: 'ESC UNTUK TUTUP',
+    signInLink: 'MASUK',
     signInTooltip: 'Masuk',
     signOutTooltip: 'Keluar',
   },

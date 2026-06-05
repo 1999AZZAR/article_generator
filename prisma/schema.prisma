@@ -1,10 +1,38 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
 }
 
 datasource db {
-  provider = "sqlite"
-  // url moved to config
+  provider = "postgresql"
+}
+
+model User {
+  id          String          @id  // Firebase UID
+  email       String?
+  name        String?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  drafts      Draft[]
+  preferences UserPreference?
+}
+
+model Draft {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  content   String   @db.Text
+  type      String
+  style     String
+  status    String   @default("draft")
+  topic     String
+  tags      String[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([userId, status])
 }
 
 model Article {
@@ -18,8 +46,9 @@ model Article {
 }
 
 model UserPreference {
-  id        String   @id @default(cuid())
-  userId    String   @unique
-  language  String   @default("english")
-  history   Json?
+  id       String  @id @default(cuid())
+  userId   String  @unique
+  user     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  language String  @default("english")
+  history  Json?
 }

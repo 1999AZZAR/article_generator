@@ -884,6 +884,139 @@ button { font-family: inherit; }
     .auth-page .auth-card { grid-column: 1 / -1; }
     .auth-page .auth-intro { margin-bottom: 24px; }
 }
+
+/* ========== SWISS-ARCHIVAL DETAILS ========== */
+/* Paper-grain texture (fixed, behind everything; fixed-position so it doesn't
+   scroll or interfere with hits). Uses feTurbulence with the reference values
+   from the Swiss-Archival ruleset: baseFrequency 0.65, opacity 0.035. */
+.paper-grain {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.035;
+    mix-blend-mode: multiply;
+}
+.container { position: relative; z-index: 1; }
+
+/* Blueprint construction guides — twelve 1px vertical hairlines at the
+   column boundaries, only visible at 1200px+ viewports. The 12-col grid
+   has each column at 1280px / 12 = 106.67px wide. */
+.construction-guides {
+    position: fixed;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 1280px;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 0;
+    display: none;
+}
+@media (min-width: 1200px) {
+    .construction-guides { display: block; }
+}
+.construction-guides svg { width: 100%; height: 100%; display: block; }
+.construction-guides line { stroke: rgba(115, 110, 100, 0.18); stroke-width: 1; }
+.construction-guides line.gutter { stroke: rgba(115, 110, 100, 0.08); }
+.construction-guides line.outer { stroke: rgba(115, 110, 100, 0.22); }
+
+/* Corner crop marks — four L-shaped 1px hairlines at the page corners,
+   only visible at 1200px+ viewports. Crop marks are a museum/archive
+   printing convention that says "this is a finished specimen, not a draft". */
+.crop-marks {
+    position: fixed;
+    inset: 24px 24px 24px 24px;
+    pointer-events: none;
+    z-index: 9999;
+    display: none;
+}
+@media (min-width: 1200px) {
+    .crop-marks { display: block; }
+}
+.crop-marks::before,
+.crop-marks::after,
+.crop-marks > span::before,
+.crop-marks > span::after {
+    content: '';
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    border: 0 solid var(--black);
+}
+.crop-marks::before { top: 0; left: 0; border-top-width: 1px; border-left-width: 1px; }
+.crop-marks::after { top: 0; right: 0; border-top-width: 1px; border-right-width: 1px; }
+.crop-marks > span::before { bottom: 0; left: 0; border-bottom-width: 1px; border-left-width: 1px; }
+.crop-marks > span::after { bottom: 0; right: 0; border-bottom-width: 1px; border-right-width: 1px; }
+
+/* Specimen SVG container — used both in the footer and next to the
+   loading status. Square aspect, tiny, never crosses the form flow. */
+.specimen-svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+    color: var(--gray-600);
+}
+.specimen-block {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.specimen-block .specimen-figure {
+    width: 22px;
+    height: 22px;
+    flex-shrink: 0;
+    color: var(--gray-900);
+    animation: specimen-rotate 18s linear infinite;
+}
+@keyframes specimen-rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+    .specimen-block .specimen-figure { animation: none; }
+}
+
+/* Loading state ornament — a small specimen next to the spinning dots. */
+.loading-specimen {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 0;
+    border-top: var(--rule-soft);
+    border-bottom: var(--rule-soft);
+    margin-bottom: 14px;
+}
+.loading-specimen .specimen-figure {
+    width: 38px;
+    height: 38px;
+    color: var(--accent);
+    animation: specimen-rotate 8s linear infinite;
+}
+.loading-specimen-meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--gray-600);
+    line-height: 1.4;
+}
+.loading-specimen-meta .specimen-sid { color: var(--accent); }
+
+/* Specimen SVG tucked into the result-head — a tiny corner ornament
+   that re-renders for each result block. */
+.result-head .specimen-mark-svg {
+    width: 18px;
+    height: 18px;
+    color: var(--gray-900);
+    margin-left: auto;
+    flex-shrink: 0;
+    align-self: center;
+}
 `;
 
 // Helper that wraps a `<style>…</style>` block in the standard document head.
@@ -917,13 +1050,13 @@ export function renderFooter(i18n: FooterStrings): string {
 
 // Shared topbar used on every page. Hybrid: Swiss grid + Polaris nav patterns
 // (brand mark, primary nav, BYOK chip, account menu with ActionList dropdown).
-// `active` is one of: 'generator' | 'settings' | 'login'. The active page's
-// link in the account dropdown is marked `aria-current="page"` too.
-export type TopbarPage = 'generator' | 'settings' | 'login';
+// `active` is one of: 'generator' | 'workspace' | 'settings' | 'login'.
+export type TopbarPage = 'generator' | 'workspace' | 'settings' | 'login';
 
 export interface TopbarStrings {
   brandAria: string;
   navGenerator: string;
+  navWorkspace: string;
   navSettings: string;
   byokAria: string;
   byokLabel: string;
@@ -932,6 +1065,8 @@ export interface TopbarStrings {
   signIn: string;
   accountAria: string;
   menuAccount: string;
+  menuWorkspace: string;
+  menuWorkspaceMeta: string;
   menuSettings: string;
   menuSettingsMeta: string;
   menuSignOut: string;
@@ -943,6 +1078,7 @@ export interface TopbarStrings {
 const TOPBAR_STRINGS_EN: TopbarStrings = {
   brandAria: 'Quill home',
   navGenerator: 'Generator',
+  navWorkspace: 'Workspace',
   navSettings: 'Settings',
   byokAria: 'BYOK — Bring Your Own Key',
   byokLabel: 'BYOK',
@@ -951,6 +1087,8 @@ const TOPBAR_STRINGS_EN: TopbarStrings = {
   signIn: 'Sign in',
   accountAria: 'Account menu',
   menuAccount: 'Account',
+  menuWorkspace: 'Workspace',
+  menuWorkspaceMeta: 'WS',
   menuSettings: 'Settings',
   menuSettingsMeta: 'CFG',
   menuSignOut: 'Sign out',
@@ -962,6 +1100,7 @@ const TOPBAR_STRINGS_EN: TopbarStrings = {
 const TOPBAR_STRINGS_ID: TopbarStrings = {
   brandAria: 'Beranda Quill',
   navGenerator: 'Generator',
+  navWorkspace: 'Ruang Kerja',
   navSettings: 'Pengaturan',
   byokAria: 'BYOK — Bawa Kunci Anda Sendiri',
   byokLabel: 'BYOK',
@@ -970,6 +1109,8 @@ const TOPBAR_STRINGS_ID: TopbarStrings = {
   signIn: 'Masuk',
   accountAria: 'Menu akun',
   menuAccount: 'Akun',
+  menuWorkspace: 'Ruang Kerja',
+  menuWorkspaceMeta: 'WK',
   menuSettings: 'Pengaturan',
   menuSettingsMeta: 'CFG',
   menuSignOut: 'Keluar',
@@ -993,8 +1134,11 @@ export function renderTopbar(active: TopbarPage, lang: 'english' | 'indonesian' 
                 <a href="/" class="topbar-nav-link${active === 'generator' ? ' active' : ''}" data-page="generator" ${active === 'generator' ? 'aria-current="page"' : ''}>
                     <span class="nav-num">01</span>${t.navGenerator}
                 </a>
+                <a href="/workspace" class="topbar-nav-link${active === 'workspace' ? ' active' : ''}" data-page="workspace" ${active === 'workspace' ? 'aria-current="page"' : ''}>
+                    <span class="nav-num">02</span>${t.navWorkspace}
+                </a>
                 <a href="/settings" class="topbar-nav-link${active === 'settings' ? ' active' : ''}" data-page="settings" ${active === 'settings' ? 'aria-current="page"' : ''}>
-                    <span class="nav-num">02</span>${t.navSettings}
+                    <span class="nav-num">03</span>${t.navSettings}
                 </a>
             </nav>
         </div>
@@ -1021,6 +1165,10 @@ export function renderTopbar(active: TopbarPage, lang: 'english' | 'indonesian' 
                         </div>
                     </div>
                     <div class="account-dropdown-list" role="none">
+                        <a href="/workspace" class="account-dropdown-item" role="menuitem" ${active === 'workspace' ? 'aria-current="page"' : ''}>
+                            <span class="account-dropdown-label">${t.menuWorkspace}</span>
+                            <span class="account-dropdown-meta">${t.menuWorkspaceMeta}</span>
+                        </a>
                         <a href="/settings" class="account-dropdown-item" role="menuitem" ${active === 'settings' ? 'aria-current="page"' : ''}>
                             <span class="account-dropdown-label">${t.menuSettings}</span>
                             <span class="account-dropdown-meta">${t.menuSettingsMeta}</span>
@@ -1058,3 +1206,38 @@ export const FOOTER_STRINGS: Record<'english' | 'indonesian', FooterStrings> = {
     by: 'Oleh {link}',
   },
 };
+
+// Swiss-Archival details: paper grain (fixed SVG noise), construction guides
+// (12-col vertical hairlines at the column boundaries, wide viewports only),
+// and corner crop marks. Emitted in the page body so every page gets the
+// museum-archive feel without per-page wiring.
+export const ARCHIVAL_DETAILS_HTML = `
+<div class="paper-grain" aria-hidden="true">
+    <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
+        <filter id="quill-paper-grain">
+            <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="2" stitchTiles="stitch" seed="7"/>
+            <feColorMatrix values="0 0 0 0 0   0 0 0 0 0   0 0 0 0 0   0 0 0 0.6 0"/>
+        </filter>
+        <rect width="100%" height="100%" filter="url(#quill-paper-grain)"/>
+    </svg>
+</div>
+<div class="construction-guides" aria-hidden="true">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 800" preserveAspectRatio="none">
+        <line class="outer" x1="0" y1="0" x2="0" y2="800"/>
+        <line class="outer" x1="1280" y1="0" x2="1280" y2="800"/>
+        <line class="gutter" x1="106.67" y1="0" x2="106.67" y2="800"/>
+        <line x1="213.33" y1="0" x2="213.33" y2="800"/>
+        <line x1="320" y1="0" x2="320" y2="800"/>
+        <line x1="426.67" y1="0" x2="426.67" y2="800"/>
+        <line x1="533.33" y1="0" x2="533.33" y2="800"/>
+        <line x1="640" y1="0" x2="640" y2="800"/>
+        <line x1="746.67" y1="0" x2="746.67" y2="800"/>
+        <line x1="853.33" y1="0" x2="853.33" y2="800"/>
+        <line x1="960" y1="0" x2="960" y2="800"/>
+        <line x1="1066.67" y1="0" x2="1066.67" y2="800"/>
+        <line x1="1173.33" y1="0" x2="1173.33" y2="800"/>
+    </svg>
+</div>
+<div class="crop-marks" aria-hidden="true"><span></span></div>
+`;
+

@@ -17,9 +17,12 @@
   },
   "dependencies": {
     "@cloudflare/workers-types": "^4.20251128.0",
+    "@prisma/adapter-pg": "^7.4.2",
     "@prisma/client": "^7.4.2",
+    "@types/pg": "^8.11.0",
     "@types/redis": "^4.0.10",
     "neo4j-driver": "^6.0.1",
+    "pg": "^8.13.0",
     "prisma": "^7.4.2",
     "redis": "^5.11.0",
     "wrangler": "^4.51.0"

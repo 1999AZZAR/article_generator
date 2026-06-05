@@ -4,7 +4,10 @@
 .gitattributes
 
 # Dependencies (rebuilt inside the image)
-node_modules
+# node_modules is intentionally included — build sandbox has no DNS access,
+# so npm ci cannot download packages. The host-side node_modules (including
+# prisma-generated client) are copied directly into the image instead.
+# node_modules
 
 # Build artefacts and cache
 dist

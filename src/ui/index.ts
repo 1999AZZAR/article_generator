@@ -4,15 +4,18 @@
 export { generateMainPageHTML } from './main';
 export { generateSettingsPageHTML } from './settings';
 export { generateAuthPageHTML } from './auth';
+export { generateWorkspacePageHTML } from './workspace';
 export {
   MAIN_STRINGS,
   SETTINGS_STRINGS,
   AUTH_STRINGS,
+  WORKSPACE_STRINGS,
   getLocale,
   type Locale,
   type MainPageStrings,
   type SettingsPageStrings,
   type AuthPageStrings,
+  type WorkspacePageStrings,
 } from './i18n';
 export {
   renderHead,

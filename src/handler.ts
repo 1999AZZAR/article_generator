@@ -1,5 +1,9 @@
 import { generateArticle, generateNovelOutline, generateShortStory, generateNews, generateShortNews, testGeminiAPIKey, generateChapterContent } from './gemini';
 import { generateMainPageHTML, generateSettingsPageHTML, generateAuthPageHTML } from './ui';
+import { generateWorkspacePageHTML } from './ui/workspace';
+import { getSessionUid, unauthorizedResponse } from './auth';
+import { getPrisma, getRedis, DbEnv } from './db';
+import { handleWorkspaceApi } from './workspace';
 
 export interface GenerateRequest {
   topic: string;
@@ -84,7 +88,7 @@ export interface NovelResponse {
 }
 
 
-export async function handleRequest(request: Request, env: { GEMINI_API_KEY?: string }): Promise<Response> {
+export async function handleRequest(request: Request, env: { GEMINI_API_KEY?: string; DATABASE_URL: string; REDIS_URL: string }): Promise<Response> {
   // Handle CORS
   if (request.method === 'OPTIONS') {
     return new Response(null, {
@@ -134,9 +138,14 @@ export async function handleRequest(request: Request, env: { GEMINI_API_KEY?: st
     });
   }
 
+  // Workspace API — authenticated routes for draft management
+  if (url.pathname.startsWith('/api/workspace')) {
+    return handleWorkspaceApi(request, env, url);
+  }
+
   // Serve static files
   if (request.method === 'GET' && new URL(request.url).pathname !== '/api/generate') {
-    return serveStatic(request);
+    return serveStatic(request, env);
   }
 
   // Handle API requests
@@ -620,9 +629,22 @@ function escapeRTF(text: string): string {
     .replace(/\u2026/g, '...'); // Ellipsis
 }
 
-async function serveStatic(request: Request): Promise<Response> {
+async function serveStatic(request: Request, env: { DATABASE_URL: string; REDIS_URL: string; GEMINI_API_KEY?: string }): Promise<Response> {
   const url = new URL(request.url);
   const pathname = url.pathname;
+
+  if (pathname === '/workspace') {
+    const uid = getSessionUid(request);
+    if (!uid) {
+      return new Response(null, {
+        status: 302,
+        headers: { Location: '/login?redirect=/workspace' },
+      });
+    }
+    return new Response(generateWorkspacePageHTML(), {
+      headers: { 'Content-Type': 'text/html' },
+    });
+  }
 
   if (pathname === '/' || pathname === '/index.html') {
     const htmlContent = generateMainPageHTML();

@@ -4,7 +4,8 @@
 // pages can namespace the BYOK key per user.
 
 import { AUTH_STRINGS, Locale } from './i18n';
-import { renderHead, renderFooter, renderTopbar, getTopbarStrings, FOOTER_STRINGS } from './styles';
+import { renderHead, renderFooter, renderTopbar, getTopbarStrings, FOOTER_STRINGS, ARCHIVAL_DETAILS_HTML } from './styles';
+import { SPECIMEN_JS } from './specimen';
 
 const FIREBASE_CONFIG = {
   apiKey: 'AIzaSyD1E_enU3EG10HHT-g2Z0fY7OhaHm_aKY8',
@@ -95,12 +96,10 @@ const BODY_HTML = `
         </div>
     </main>
 
-    <footer class="footer">
-        <div class="col-1" id="footerCol1">Quill&trade; <span class="accent-dot">&middot;</span> Ed. 02 / 2026</div>
-        <div class="col-2" id="footerCol2">Set in Inter &amp; JetBrains Mono</div>
-        <div class="col-3" id="footerCol3">By <a href="https://azzar.netlify.app/porto" target="_blank">LilyOpenCMS</a></div>
-    </footer>
+    ${renderFooter(FOOTER_STRINGS['english'])}
 </div>
+
+${ARCHIVAL_DETAILS_HTML}
 `;
 
 const SCRIPT = `
@@ -191,10 +190,6 @@ const SCRIPT = `
         submit.textContent = t[labelKey];
         const switchLink = document.getElementById('switchMode');
         switchLink.textContent = mode === 'signin' ? t.switchToSignUp : t.switchToSignIn;
-        const f = FOOTER[lang];
-        document.getElementById('footerCol1').innerHTML = f.copyright;
-        document.getElementById('footerCol2').textContent = f.typeface;
-        document.getElementById('footerCol3').innerHTML = f.by.replace('{link}', '<a href="https://azzar.netlify.app/porto" target="_blank">LilyOpenCMS</a>');
     }
 
     function setMode(next) {
@@ -405,6 +400,16 @@ window.__QUILL_TOPBAR_STRINGS__ = ${JSON.stringify({
 })};
 </script>
 <script>${SCRIPT}</script>
+<script>${SPECIMEN_JS}</script>
+<script>
+(function() {
+    if (window.renderSpecimen) {
+        document.querySelectorAll('svg[data-specimen-seed]').forEach(function(svg) {
+            window.renderSpecimen(svg, svg.getAttribute('data-specimen-seed'));
+        });
+    }
+})();
+</script>
 </body>
 </html>`;
 }

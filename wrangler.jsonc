@@ -1,5 +1,10 @@
 {
   "name": "quill-ai-writer",
   "main": "src/index.ts",
-  "compatibility_date": "2024-01-01"
+  "compatibility_date": "2025-04-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "vars": {
+    "DATABASE_URL": "postgresql://quill:quilldev@postgres:5432/quill",
+    "REDIS_URL": "redis://redis:6379"
+  }
 }

@@ -30,18 +30,23 @@ ARG NODE_VERSION=20
 # =====================================================================
 # Stage 1: install dependencies (cached unless package*.json changes)
 # =====================================================================
-FROM node:${NODE_VERSION}-slim AS deps
+FROM node:${NODE_VERSION} AS deps
 
 WORKDIR /app
 
 COPY package.json package-lock.json* ./
 
-RUN npm ci --no-audit --no-fund
+# NOTE: Build sandbox has no DNS access (deb.debian.org and registry.npmjs.org
+# both unreachable). node_modules is excluded from .dockerignore so we copy
+# the host-installed modules (including the prisma-generated client) directly.
+# When rebuilding from scratch: run `npm install && npx prisma generate` on the
+# host first, then `docker compose build`.
+COPY node_modules ./node_modules
 
 # =====================================================================
 # Stage 2: runtime (slim, non-root, glibc for workerd, init via compose)
 # =====================================================================
-FROM node:${NODE_VERSION}-slim AS runtime
+FROM node:${NODE_VERSION} AS runtime
 
 WORKDIR /app
 
