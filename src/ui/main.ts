@@ -4,8 +4,10 @@
 
 import { MAIN_STRINGS, Locale } from './i18n';
 import { renderHead, renderFooter, renderTopbar, getTopbarStrings, FOOTER_STRINGS } from './styles';
+import { SELECT_CSS, SELECT_SCRIPT } from './select';
 
 const PAGE_CSS = `
+${SELECT_CSS}
 /* ========== SECTION LABEL ========== */
 .section-label {
     padding: 14px 0;
@@ -453,6 +455,7 @@ const BODY_HTML = `
         <div class="modal-body">
             <h3 class="modal-title" id="modalTitle">Reset All Data</h3>
             <p class="modal-message" id="modalMessage">Are you sure you want to reset all data?</p>
+            <div class="modal-extra" id="modalExtra" style="display: none;"></div>
         </div>
         <div class="modal-actions">
             <button class="modal-btn modal-btn-cancel" id="modalCancel">Cancel</button>
@@ -547,6 +550,10 @@ const SCRIPT = `
         setOpt('typeShortNews', t.typeShortNews + ' (400–600 words)');
         setOpt('authorStyleCustom', t.authorCustom);
         setOpt('newspaperStyleCustom', t.authorCustom);
+        // Optgroup labels (author groups)
+        const authorGroups = document.querySelectorAll('#authorStyle optgroup');
+        const groupLabels = [t.authorOptgroupClassic, t.authorOptgroupFantasy, t.authorOptgroupContemporary, t.authorOptgroupIndonesian, t.authorOptgroupNonFiction, t.authorOptgroupOther];
+        authorGroups.forEach(function(og, i) { if (groupLabels[i]) og.label = groupLabels[i]; });
         setOpt('addTagBtn', t.addButton);
         setOpt('addKeywordBtn', t.addButton);
         setOpt('generateButtonLabel', t.generateButton);
@@ -571,6 +578,8 @@ const SCRIPT = `
         }
         const signOutBtn = document.getElementById('authSignOutBtn');
         if (signOutBtn) signOutBtn.setAttribute('title', t.signOutTooltip);
+        // Re-sync custom selects (option text changed on language swap)
+        if (window.rebuildAllSelects) window.rebuildAllSelects();
         // BYOK badge / banner
         syncByokStatus();
     }
@@ -637,7 +646,7 @@ const SCRIPT = `
         }
     }
 
-    function showModal(title, message, onConfirm, cancelText, confirmText) {
+    function showModal(title, message, onConfirm, cancelText, confirmText, opts) {
         const modal = document.getElementById('confirmationModal');
         const modalTitle = document.getElementById('modalTitle');
         const modalMessage = document.getElementById('modalMessage');
@@ -645,6 +654,7 @@ const SCRIPT = `
         const modalConfirm = document.getElementById('modalConfirm');
         const lab = document.getElementById('modalLab');
         const escClose = document.getElementById('modalEscClose');
+        const modalExtra = document.getElementById('modalExtra');
         const lang = localStorage.getItem('uiLanguage') || 'english';
         if (lab) lab.textContent = I18N[lang].confirmLabel;
         if (escClose) escClose.textContent = I18N[lang].escToClose;
@@ -652,10 +662,26 @@ const SCRIPT = `
         modalMessage.textContent = message;
         modalCancel.textContent = cancelText || 'Cancel';
         modalConfirm.textContent = confirmText || 'Confirm';
+        if (modalExtra) {
+            if (opts && opts.checkboxLabel) {
+                modalExtra.innerHTML = '<label class="modal-checkbox"><input type="checkbox" id="modalCheckbox" ' + (opts.checkboxDefault !== false ? 'checked' : '') + '> <span id="modalCheckboxLabel"></span></label>';
+                const lbl = document.getElementById('modalCheckboxLabel');
+                if (lbl) lbl.textContent = opts.checkboxLabel;
+                modalExtra.style.display = 'block';
+            } else {
+                modalExtra.innerHTML = '';
+                modalExtra.style.display = 'none';
+            }
+        }
         modal.classList.add('show');
         function closeModal() { modal.classList.remove('show'); }
         modalCancel.onclick = closeModal;
-        modalConfirm.onclick = function() { closeModal(); onConfirm(); };
+        modalConfirm.onclick = function() {
+            const cb = document.getElementById('modalCheckbox');
+            const checked = cb ? cb.checked : true;
+            closeModal();
+            onConfirm(checked);
+        };
         modal.onclick = function(e) { if (e.target === modal) closeModal(); };
         document.addEventListener('keydown', function escHandler(e) {
             if (e.key === 'Escape') { closeModal(); document.removeEventListener('keydown', escHandler); }
@@ -934,19 +960,64 @@ const SCRIPT = `
             showModal(t.resetConfirmTitle, t.resetConfirmMessage, clearAllData, t.cancelButton, t.resetModalButton);
         });
 
-        document.getElementById('authSignOutBtn').addEventListener('click', async function() {
+        document.addEventListener('click', function(e) {
+            const target = e.target;
+            if (!(target instanceof Element)) return;
+            const btn = target.closest('#authSignOutBtn');
+            if (!btn) return;
+            e.preventDefault();
+            const lang = localStorage.getItem('uiLanguage') || 'english';
+            const t = I18N[lang];
+            showModal(
+                t.signOutConfirmTitle,
+                t.signOutConfirmMessage,
+                function(keepKey) { performSignOut(keepKey); },
+                t.cancelButton,
+                t.signOutConfirmButton,
+                { checkboxLabel: t.signOutKeepKeyLabel, checkboxDefault: true }
+            );
+        });
+
+        async function performSignOut(keepKey) {
+            const previousUid = localStorage.getItem('quillAuthUid');
+            const previousKey = previousUid ? localStorage.getItem('geminiApiKey.' + previousUid) : null;
             try {
-                await fetch('/api/auth/signout', { method: 'POST' });
+                if (!window.firebase || !window.firebase.auth) {
+                    await new Promise(function(resolve, reject) {
+                        const s1 = document.createElement('script');
+                        s1.src = 'https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js';
+                        s1.onload = resolve; s1.onerror = reject;
+                        document.head.appendChild(s1);
+                    });
+                    await new Promise(function(resolve, reject) {
+                        const s2 = document.createElement('script');
+                        s2.src = 'https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js';
+                        s2.onload = resolve; s2.onerror = reject;
+                        document.head.appendChild(s2);
+                    });
+                }
+                if (window.firebase && window.firebase.auth) {
+                    try { await window.firebase.auth().signOut(); } catch (_) {}
+                }
             } catch (_) {}
+            try { await fetch('/api/auth/session', { method: 'DELETE' }); } catch (_) {}
+            try { await fetch('/api/auth/signout', { method: 'POST' }); } catch (_) {}
             localStorage.removeItem('quillAuthUid');
             localStorage.removeItem('quillAuthName');
-            // Migrate any anonymous key over to its new key (or wipe if none).
-            const newKey = getApiKeyStorageKey();
+            if (!keepKey && previousUid) {
+                localStorage.removeItem('geminiApiKey.' + previousUid);
+            }
             localStorage.removeItem('geminiApiKey');
-            localStorage.setItem(newKey, localStorage.getItem(newKey) || '');
+            const newKey = getApiKeyStorageKey();
+            if (keepKey && previousKey) {
+                localStorage.setItem(newKey, previousKey);
+            } else {
+                localStorage.setItem(newKey, '');
+            }
             syncAuthPill();
             syncByokStatus();
-        });
+            location.reload();
+        }
 
         form.addEventListener('submit', async function(e) {
             e.preventDefault();
@@ -1344,6 +1415,7 @@ window.__QUILL_TOPBAR_STRINGS__ = ${JSON.stringify({
 })};
 </script>
 <script>${SCRIPT}</script>
+<script>${SELECT_SCRIPT}</script>
 </body>
 </html>`;
 }

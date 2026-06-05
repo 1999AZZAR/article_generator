@@ -698,6 +698,53 @@ button { font-family: inherit; }
 .modal-actions .modal-btn:hover { background: var(--gray-100); }
 .modal-actions .modal-btn-confirm { background: var(--black); color: var(--white); }
 .modal-actions .modal-btn-confirm:hover { background: var(--accent); }
+.modal-extra {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: var(--rule-soft);
+}
+.modal-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--black);
+    cursor: pointer;
+    text-transform: none;
+    letter-spacing: 0;
+}
+.modal-checkbox input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    border: 1px solid var(--black);
+    background: var(--white);
+    cursor: pointer;
+    position: relative;
+    margin: 0;
+    flex-shrink: 0;
+    border-radius: 0;
+}
+.modal-checkbox input[type="checkbox"]:checked {
+    background: var(--black);
+}
+.modal-checkbox input[type="checkbox"]:checked::after {
+    content: '';
+    position: absolute;
+    left: 4px;
+    top: 1px;
+    width: 4px;
+    height: 8px;
+    border: solid var(--white);
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+.modal-checkbox input[type="checkbox"]:focus {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
 
 /* ========== AUTH PAGE (login / sign-up) ========== */
 .auth-page {
@@ -787,6 +834,30 @@ button { font-family: inherit; }
 .auth-page .auth-status.show { display: block; }
 .auth-page .auth-status.status-error { color: var(--accent); border-color: var(--accent); }
 .auth-page .auth-status.status-success { color: var(--black); }
+.auth-page .auth-row-between {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: -4px;
+    margin-bottom: 4px;
+}
+.auth-page .auth-link-muted {
+    text-decoration: none;
+    transition: color 120ms linear, border-color 120ms linear;
+}
+.auth-page .auth-link-muted:hover {
+    color: var(--black);
+    border-bottom-color: var(--black);
+}
+.auth-page .btn-primary[disabled],
+.auth-page .btn-google[disabled] {
+    opacity: 0.55;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+.auth-page .auth-tab[disabled] {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
 
 /* ========== RESPONSIVE ========== */
 @media (max-width: 900px) {

@@ -4,8 +4,10 @@
 
 import { SETTINGS_STRINGS, Locale } from './i18n';
 import { renderHead, renderFooter, renderTopbar, getTopbarStrings, FOOTER_STRINGS } from './styles';
+import { SELECT_CSS, SELECT_SCRIPT } from './select';
 
 const PAGE_CSS = `
+${SELECT_CSS}
 .nav {
     border-bottom: var(--rule);
     padding: 14px 0;
@@ -188,6 +190,7 @@ const BODY_HTML = `
         <div class="modal-body">
             <h3 class="modal-title" id="modalTitle">Remove API Key</h3>
             <p class="modal-message" id="modalMessage">Are you sure you want to remove your API key?</p>
+            <div class="modal-extra" id="modalExtra" style="display: none;"></div>
         </div>
         <div class="modal-actions">
             <button class="modal-btn modal-btn-cancel" id="modalCancel">Cancel</button>
@@ -250,6 +253,7 @@ const SCRIPT = `
         }
         const signOutBtn = document.getElementById('authSignOutBtn');
         if (signOutBtn) signOutBtn.setAttribute('title', t.signOutTooltip);
+        if (window.rebuildAllSelects) window.rebuildAllSelects();
         syncByokStatus();
     }
 
@@ -268,22 +272,39 @@ const SCRIPT = `
         if (byokNoticeMsg) byokNoticeMsg.innerHTML = t.byokNoticeMsg;
     }
 
-    function showModal(title, message, onConfirm, cancelText, confirmText) {
+    function showModal(title, message, onConfirm, cancelText, confirmText, opts) {
         const modal = document.getElementById('confirmationModal');
         const lang = localStorage.getItem('uiLanguage') || 'english';
         const t = I18N[lang];
         const lab = document.getElementById('modalLab');
         const escClose = document.getElementById('modalEscClose');
+        const modalExtra = document.getElementById('modalExtra');
         if (lab) lab.textContent = t.confirmLabel;
         if (escClose) escClose.textContent = t.escToClose;
         document.getElementById('modalTitle').textContent = title;
         document.getElementById('modalMessage').textContent = message;
         document.getElementById('modalCancel').textContent = cancelText || 'Cancel';
         document.getElementById('modalConfirm').textContent = confirmText || 'Confirm';
+        if (modalExtra) {
+            if (opts && opts.checkboxLabel) {
+                modalExtra.innerHTML = '<label class="modal-checkbox"><input type="checkbox" id="modalCheckbox" ' + (opts.checkboxDefault !== false ? 'checked' : '') + '> <span id="modalCheckboxLabel"></span></label>';
+                const lbl = document.getElementById('modalCheckboxLabel');
+                if (lbl) lbl.textContent = opts.checkboxLabel;
+                modalExtra.style.display = 'block';
+            } else {
+                modalExtra.innerHTML = '';
+                modalExtra.style.display = 'none';
+            }
+        }
         modal.classList.add('show');
         function closeModal() { modal.classList.remove('show'); }
         document.getElementById('modalCancel').onclick = closeModal;
-        document.getElementById('modalConfirm').onclick = function() { closeModal(); onConfirm(); };
+        document.getElementById('modalConfirm').onclick = function() {
+            const cb = document.getElementById('modalCheckbox');
+            const checked = cb ? cb.checked : true;
+            closeModal();
+            onConfirm(checked);
+        };
         modal.onclick = function(e) { if (e.target === modal) closeModal(); };
         document.addEventListener('keydown', function escHandler(e) {
             if (e.key === 'Escape') { closeModal(); document.removeEventListener('keydown', escHandler); }
@@ -449,13 +470,64 @@ const SCRIPT = `
             }
         });
 
-        document.getElementById('authSignOutBtn').addEventListener('click', async function() {
+        document.addEventListener('click', function(e) {
+            const target = e.target;
+            if (!(target instanceof Element)) return;
+            const btn = target.closest('#authSignOutBtn');
+            if (!btn) return;
+            e.preventDefault();
+            const lang = localStorage.getItem('uiLanguage') || 'english';
+            const t = I18N[lang];
+            showModal(
+                t.signOutConfirmTitle,
+                t.signOutConfirmMessage,
+                function(keepKey) { performSignOut(keepKey); },
+                t.cancelButton,
+                t.signOutConfirmButton,
+                { checkboxLabel: t.signOutKeepKeyLabel, checkboxDefault: true }
+            );
+        });
+
+        async function performSignOut(keepKey) {
+            const previousUid = localStorage.getItem('quillAuthUid');
+            const previousKey = previousUid ? localStorage.getItem('geminiApiKey.' + previousUid) : null;
+            try {
+                if (!window.firebase || !window.firebase.auth) {
+                    await new Promise(function(resolve, reject) {
+                        const s1 = document.createElement('script');
+                        s1.src = 'https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js';
+                        s1.onload = resolve; s1.onerror = reject;
+                        document.head.appendChild(s1);
+                    });
+                    await new Promise(function(resolve, reject) {
+                        const s2 = document.createElement('script');
+                        s2.src = 'https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js';
+                        s2.onload = resolve; s2.onerror = reject;
+                        document.head.appendChild(s2);
+                    });
+                }
+                if (window.firebase && window.firebase.auth) {
+                    try { await window.firebase.auth().signOut(); } catch (_) {}
+                }
+            } catch (_) {}
+            try { await fetch('/api/auth/session', { method: 'DELETE' }); } catch (_) {}
             try { await fetch('/api/auth/signout', { method: 'POST' }); } catch (_) {}
             localStorage.removeItem('quillAuthUid');
             localStorage.removeItem('quillAuthName');
+            if (!keepKey && previousUid) {
+                localStorage.removeItem('geminiApiKey.' + previousUid);
+            }
+            localStorage.removeItem('geminiApiKey');
+            const newKey = getApiKeyStorageKey();
+            if (keepKey && previousKey) {
+                localStorage.setItem(newKey, previousKey);
+            } else {
+                localStorage.setItem(newKey, '');
+            }
             syncAuthPill();
             syncByokStatus();
-        });
+            location.reload();
+        }
     });
 })();
 `;
@@ -480,6 +552,7 @@ window.__QUILL_TOPBAR_STRINGS__ = ${JSON.stringify({
 })};
 </script>
 <script>${SCRIPT}</script>
+<script>${SELECT_SCRIPT}</script>
 </body>
 </html>`;
 }

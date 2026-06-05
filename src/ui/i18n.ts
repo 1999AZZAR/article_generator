@@ -101,6 +101,12 @@ export interface MainPageStrings {
   cancelButton: string;
   resetModalButton: string;
 
+  // Sign-out confirm modal
+  signOutConfirmTitle: string;
+  signOutConfirmMessage: string;
+  signOutConfirmButton: string;
+  signOutKeepKeyLabel: string;
+
   // Loading facts
   loadingFacts: string[];
 
@@ -156,6 +162,12 @@ export interface SettingsPageStrings {
   removeConfirmMessage: string;
   cancelButton: string;
   removeModalButton: string;
+
+  signOutConfirmTitle: string;
+  signOutConfirmMessage: string;
+  signOutConfirmButton: string;
+  signOutKeepKeyLabel: string;
+
   apiKeySaved: string;
   apiKeyVerified: string;
   apiKeyVerificationFailed: string;
@@ -203,6 +215,7 @@ export interface AuthPageStrings {
   orDivider: string;
   switchToSignUp: string;
   switchToSignIn: string;
+  forgotPasswordLink: string;
 
   invalidEmail: string;
   weakPassword: string;
@@ -212,6 +225,14 @@ export interface AuthPageStrings {
   tooManyRequests: string;
   genericError: string;
   missingFields: string;
+  popupClosed: string;
+  resetEmailSent: (email: string) => string;
+  resetEmailMissing: string;
+
+  signingIn: string;
+  signingUp: string;
+  signingOut: string;
+  redirecting: string;
 
   signInSuccess: string;
   signUpSuccess: string;
@@ -307,6 +328,11 @@ export const MAIN_STRINGS: Record<Locale, MainPageStrings> = {
     resetConfirmMessage: 'Are you sure you want to reset all data? This will clear your form and generated content.',
     cancelButton: 'Cancel',
     resetModalButton: 'Reset',
+
+    signOutConfirmTitle: 'Sign out?',
+    signOutConfirmMessage: 'You will be signed out of your account. Your saved articles and form drafts will stay on this device until you sign back in.',
+    signOutConfirmButton: 'Sign out',
+    signOutKeepKeyLabel: 'Keep my saved API key for next sign-in',
 
     loadingFacts: [
       'The quill pen was invented in the 6th century.',
@@ -432,6 +458,11 @@ export const MAIN_STRINGS: Record<Locale, MainPageStrings> = {
     cancelButton: 'Batal',
     resetModalButton: 'Reset',
 
+    signOutConfirmTitle: 'Keluar?',
+    signOutConfirmMessage: 'Anda akan keluar dari akun. Artikel dan draf formulir yang tersimpan tetap ada di perangkat ini sampai Anda masuk lagi.',
+    signOutConfirmButton: 'Keluar',
+    signOutKeepKeyLabel: 'Simpan kunci API saya untuk masuk berikutnya',
+
     loadingFacts: [
       'Pena quill ditemukan pada abad ke-6.',
       'Quill pertama berasal dari bulu angsa.',
@@ -506,6 +537,12 @@ export const SETTINGS_STRINGS: Record<Locale, SettingsPageStrings> = {
     removeConfirmMessage: 'Are you sure you want to remove the API key?',
     cancelButton: 'Cancel',
     removeModalButton: 'Remove',
+
+    signOutConfirmTitle: 'Sign out?',
+    signOutConfirmMessage: 'You will be signed out of your account. Your API key and articles stay on this device until you sign back in.',
+    signOutConfirmButton: 'Sign out',
+    signOutKeepKeyLabel: 'Keep my saved API key for next sign-in',
+
     apiKeySaved: 'API key saved successfully.',
     apiKeyVerified: 'API key verified and saved successfully.',
     apiKeyVerificationFailed: 'API key saved but verification failed: ',
@@ -562,6 +599,12 @@ export const SETTINGS_STRINGS: Record<Locale, SettingsPageStrings> = {
     removeConfirmMessage: 'Apakah Anda yakin ingin menghapus kunci API?',
     cancelButton: 'Batal',
     removeModalButton: 'Hapus',
+
+    signOutConfirmTitle: 'Keluar?',
+    signOutConfirmMessage: 'Anda akan keluar dari akun. Kunci API dan artikel tetap ada di perangkat ini sampai Anda masuk lagi.',
+    signOutConfirmButton: 'Keluar',
+    signOutKeepKeyLabel: 'Simpan kunci API saya untuk masuk berikutnya',
+
     apiKeySaved: 'Kunci API berhasil disimpan.',
     apiKeyVerified: 'Kunci API diverifikasi dan berhasil disimpan.',
     apiKeyVerificationFailed: 'Kunci API disimpan tetapi verifikasi gagal: ',
@@ -611,6 +654,7 @@ export const AUTH_STRINGS: Record<Locale, AuthPageStrings> = {
     orDivider: 'or',
     switchToSignUp: 'No account yet? Create one →',
     switchToSignIn: 'Already have an account? Sign in →',
+    forgotPasswordLink: 'Forgot password?',
 
     invalidEmail: 'Please enter a valid email address.',
     weakPassword: 'Password must be at least 6 characters.',
@@ -620,6 +664,14 @@ export const AUTH_STRINGS: Record<Locale, AuthPageStrings> = {
     tooManyRequests: 'Too many attempts. Please wait a moment and try again.',
     genericError: 'Something went wrong. Please try again.',
     missingFields: 'Email and password are required.',
+    popupClosed: 'Sign-in popup was closed before completing. Please try again.',
+    resetEmailSent: (e: string) => `Password reset link sent to ${e}. Check your inbox.`,
+    resetEmailMissing: 'Please enter your email address to reset your password.',
+
+    signingIn: 'Signing in…',
+    signingUp: 'Creating account…',
+    signingOut: 'Signing out…',
+    redirecting: 'Redirecting…',
 
     signInSuccess: 'Signed in. Redirecting…',
     signUpSuccess: 'Account created. Redirecting…',
@@ -654,6 +706,7 @@ export const AUTH_STRINGS: Record<Locale, AuthPageStrings> = {
     orDivider: 'atau',
     switchToSignUp: 'Belum punya akun? Buat sekarang →',
     switchToSignIn: 'Sudah punya akun? Masuk →',
+    forgotPasswordLink: 'Lupa kata sandi?',
 
     invalidEmail: 'Silakan masukkan alamat surel yang valid.',
     weakPassword: 'Kata sandi minimal 6 karakter.',
@@ -663,6 +716,14 @@ export const AUTH_STRINGS: Record<Locale, AuthPageStrings> = {
     tooManyRequests: 'Terlalu banyak percobaan. Tunggu sebentar dan coba lagi.',
     genericError: 'Terjadi kesalahan. Coba lagi.',
     missingFields: 'Surel dan kata sandi wajib diisi.',
+    popupClosed: 'Jendela masuk ditutup sebelum selesai. Silakan coba lagi.',
+    resetEmailSent: (e: string) => `Tautan reset kata sandi dikirim ke ${e}. Periksa kotak masuk Anda.`,
+    resetEmailMissing: 'Masukkan surel Anda untuk mereset kata sandi.',
+
+    signingIn: 'Sedang masuk…',
+    signingUp: 'Membuat akun…',
+    signingOut: 'Sedang keluar…',
+    redirecting: 'Mengalihkan…',
 
     signInSuccess: 'Berhasil masuk. Mengalihkan…',
     signUpSuccess: 'Akun dibuat. Mengalihkan…',

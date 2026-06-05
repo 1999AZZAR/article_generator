@@ -68,6 +68,10 @@ const BODY_HTML = `
                     <input type="password" id="password" required autocomplete="current-password" placeholder="At least 6 characters">
                 </div>
 
+                <div class="auth-row-between" id="forgotRow">
+                    <a href="#" id="forgotLink" class="auth-link-muted" style="font-size: 12px; color: var(--gray-600); border-bottom: 1px solid var(--gray-300);">Forgot password?</a>
+                </div>
+
                 <div class="auth-status" id="authStatus" role="status" aria-live="polite"></div>
 
                 <div class="auth-actions">
@@ -85,7 +89,7 @@ const BODY_HTML = `
                 </div>
 
                 <p style="margin-top: 16px; font-size: 12px; color: var(--gray-600);">
-                    <a href="/" id="switchMode" style="color: var(--black); border-bottom: 1px solid var(--black);">No account yet? Create one →</a>
+                    <a href="#" id="switchMode" style="color: var(--black); border-bottom: 1px solid var(--black);">No account yet? Create one →</a>
                 </p>
             </form>
         </div>
@@ -106,6 +110,7 @@ const SCRIPT = `
     const FB_CONFIG = window.__QUILL_FIREBASE_CONFIG__;
 
     let mode = 'signin'; // 'signin' | 'signup'
+    let inFlight = false;
 
     function escapeHtml(s) {
         if (s == null) return '';
@@ -143,10 +148,22 @@ const SCRIPT = `
         if (byokStateText) byokStateText.textContent = has ? (byokStrings ? byokStrings.byokSet : 'Key Set') : (byokStrings ? byokStrings.byokMissing : 'No Key');
     }
 
+    function setBusy(busy) {
+        inFlight = busy;
+        const submit = document.getElementById('authSubmitBtn');
+        const google = document.getElementById('googleBtn');
+        const forgot = document.getElementById('forgotLink');
+        const tabs = document.querySelectorAll('.auth-tab');
+        submit.disabled = busy;
+        google.disabled = busy;
+        if (forgot) forgot.style.pointerEvents = busy ? 'none' : '';
+        if (forgot) forgot.style.opacity = busy ? '0.5' : '';
+        tabs.forEach(function(t) { t.disabled = busy; });
+    }
+
     function repaint(lang) {
         const t = I18N[lang];
         document.title = t.documentTitle;
-        // Topbar (replace on language change)
         const topbarEl = document.querySelector('.topbar');
         if (topbarEl) {
             const tmp = document.createElement('div');
@@ -167,11 +184,13 @@ const SCRIPT = `
         document.getElementById('displayName').placeholder = t.displayNamePlaceholder;
         document.getElementById('dividerText').textContent = t.orDivider;
         document.getElementById('googleBtnLabel').textContent = t.googleButton;
+        const forgotLink = document.getElementById('forgotLink');
+        if (forgotLink) forgotLink.textContent = t.forgotPasswordLink;
         const submit = document.getElementById('authSubmitBtn');
-        submit.textContent = mode === 'signin' ? t.signInButton : t.signUpButton;
+        const labelKey = (inFlight ? (mode === 'signin' ? 'signingIn' : 'signingUp') : (mode === 'signin' ? 'signInButton' : 'signUpButton'));
+        submit.textContent = t[labelKey];
         const switchLink = document.getElementById('switchMode');
         switchLink.textContent = mode === 'signin' ? t.switchToSignUp : t.switchToSignIn;
-        // Footer
         const f = FOOTER[lang];
         document.getElementById('footerCol1').innerHTML = f.copyright;
         document.getElementById('footerCol2').textContent = f.typeface;
@@ -184,6 +203,8 @@ const SCRIPT = `
         document.getElementById('tabSignUp').classList.toggle('active', mode === 'signup');
         document.getElementById('displayNameGroup').style.display = mode === 'signup' ? 'block' : 'none';
         document.getElementById('displayName').required = mode === 'signup';
+        const forgotRow = document.getElementById('forgotRow');
+        if (forgotRow) forgotRow.style.display = mode === 'signin' ? 'block' : 'none';
         const lang = localStorage.getItem('uiLanguage') || 'english';
         const t = I18N[lang];
         const submit = document.getElementById('authSubmitBtn');
@@ -194,25 +215,25 @@ const SCRIPT = `
         clearStatus();
     }
 
-    // --- Firebase ---
-    // Loaded dynamically so the SDK is only fetched when the user visits this page.
     async function loadFirebase() {
         if (window.firebase && window.firebase.auth) return window.firebase;
         await new Promise((resolve, reject) => {
             const s = document.createElement('script');
             s.src = 'https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js';
             s.onload = resolve;
-            s.onerror = reject;
+            s.onerror = function() { reject(new Error('Failed to load Firebase app SDK')); };
             document.head.appendChild(s);
         });
         await new Promise((resolve, reject) => {
             const s = document.createElement('script');
             s.src = 'https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js';
             s.onload = resolve;
-            s.onerror = reject;
+            s.onerror = function() { reject(new Error('Failed to load Firebase auth SDK')); };
             document.head.appendChild(s);
         });
-        window.firebase.initializeApp(FB_CONFIG);
+        if (!window.firebase.apps || window.firebase.apps.length === 0) {
+            window.firebase.initializeApp(FB_CONFIG);
+        }
         return window.firebase;
     }
 
@@ -228,6 +249,9 @@ const SCRIPT = `
             case 'auth/invalid-credential': return t.wrongCredentials;
             case 'auth/network-request-failed': return t.networkError;
             case 'auth/too-many-requests': return t.tooManyRequests;
+            case 'auth/popup-closed-by-user': return t.popupClosed;
+            case 'auth/cancelled-popup-request':
+            case 'auth/popup-blocked': return t.popupClosed;
             default: return t.genericError;
         }
     }
@@ -250,17 +274,30 @@ const SCRIPT = `
         }
     }
 
+    async function notifyServerSession(user) {
+        try {
+            const idToken = await user.getIdToken();
+            const r = await fetch('/api/auth/session', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ idToken, uid: user.uid }),
+            });
+            return r.ok;
+        } catch (_) { return false; }
+    }
+
     async function handleSubmit(e) {
         e.preventDefault();
+        if (inFlight) return;
         const lang = localStorage.getItem('uiLanguage') || 'english';
         const t = I18N[lang];
         const email = document.getElementById('email').value.trim();
         const password = document.getElementById('password').value;
         const displayName = document.getElementById('displayName').value.trim();
         if (!email || !password) { showStatus(t.missingFields, 'error'); return; }
-        const submit = document.getElementById('authSubmitBtn');
-        submit.disabled = true;
+        if (mode === 'signup' && password.length < 6) { showStatus(t.weakPassword, 'error'); return; }
         clearStatus();
+        setBusy(true);
         try {
             const fb = await loadFirebase();
             const auth = fb.auth();
@@ -276,27 +313,21 @@ const SCRIPT = `
                 showStatus(t.signUpSuccess, 'success');
             }
             persistSession(cred.user);
-            // Notify the server (no PII) so it can mint a session cookie.
-            try {
-                const idToken = await cred.user.getIdToken();
-                await fetch('/api/auth/session', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ idToken, uid: cred.user.uid }),
-                });
-            } catch (_) { /* non-fatal */ }
-            setTimeout(() => { window.location.href = '/'; }, 600);
+            await notifyServerSession(cred.user);
+            setTimeout(function() { window.location.href = '/'; }, 600);
         } catch (err) {
             const code = (err && err.code) || '';
             showStatus(mapAuthError(code), 'error');
-            submit.disabled = false;
+            setBusy(false);
         }
     }
 
     async function handleGoogle() {
+        if (inFlight) return;
         const lang = localStorage.getItem('uiLanguage') || 'english';
         const t = I18N[lang];
         clearStatus();
+        setBusy(true);
         try {
             const fb = await loadFirebase();
             const auth = fb.auth();
@@ -304,19 +335,34 @@ const SCRIPT = `
             const cred = await auth.signInWithPopup(provider);
             persistSession(cred.user);
             showStatus(t.signInSuccess, 'success');
-            try {
-                const idToken = await cred.user.getIdToken();
-                await fetch('/api/auth/session', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ idToken, uid: cred.user.uid }),
-                });
-            } catch (_) {}
-            setTimeout(() => { window.location.href = '/'; }, 600);
+            await notifyServerSession(cred.user);
+            setTimeout(function() { window.location.href = '/'; }, 600);
+        } catch (err) {
+            const code = (err && err.code) || '';
+            showStatus(mapAuthError(code), 'error');
+            setBusy(false);
+        }
+    }
+
+    async function handleForgot(e) {
+        if (e && e.preventDefault) e.preventDefault();
+        if (inFlight) return;
+        const lang = localStorage.getItem('uiLanguage') || 'english';
+        const t = I18N[lang];
+        const email = document.getElementById('email').value.trim();
+        if (!email) { showStatus(t.resetEmailMissing, 'error'); return; }
+        clearStatus();
+        setBusy(true);
+        try {
+            const fb = await loadFirebase();
+            const auth = fb.auth();
+            await auth.sendPasswordResetEmail(email);
+            showStatus(t.resetEmailSent(email), 'success');
         } catch (err) {
             const code = (err && err.code) || '';
             showStatus(mapAuthError(code), 'error');
         }
+        setBusy(false);
     }
 
     document.addEventListener('DOMContentLoaded', function() {
@@ -324,14 +370,16 @@ const SCRIPT = `
         repaint(savedLanguage);
         setMode('signin');
 
-        document.getElementById('tabSignIn').addEventListener('click', () => setMode('signin'));
-        document.getElementById('tabSignUp').addEventListener('click', () => setMode('signup'));
+        document.getElementById('tabSignIn').addEventListener('click', function() { if (!inFlight) setMode('signin'); });
+        document.getElementById('tabSignUp').addEventListener('click', function() { if (!inFlight) setMode('signup'); });
         document.getElementById('switchMode').addEventListener('click', function(e) {
             e.preventDefault();
-            setMode(mode === 'signin' ? 'signup' : 'signin');
+            if (!inFlight) setMode(mode === 'signin' ? 'signup' : 'signin');
         });
         document.getElementById('authForm').addEventListener('submit', handleSubmit);
         document.getElementById('googleBtn').addEventListener('click', handleGoogle);
+        const forgotLink = document.getElementById('forgotLink');
+        if (forgotLink) forgotLink.addEventListener('click', handleForgot);
     });
 })();
 `;
