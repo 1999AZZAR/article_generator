@@ -1353,7 +1353,25 @@ export const COMMON_JS = `
         const lang = localStorage.getItem('uiLanguage') || 'english';
         const tb = (window.__QUILL_TOPBAR_STRINGS__ && window.__QUILL_TOPBAR_STRINGS__[lang]) || { byokSet: 'Key Set', byokMissing: 'No Key' };
         const uid = localStorage.getItem('quillAuthUid');
-        const key = (localStorage.getItem(uid ? 'geminiApiKey.' + uid : 'geminiApiKey') || '').trim();
+        
+        let key = '';
+        if (uid) {
+            const userKey = (localStorage.getItem('geminiApiKey.' + uid) || '').trim();
+            if (userKey) {
+                key = userKey;
+            } else {
+                // Fallback and migrate if legacy key exists
+                const legacyKey = (localStorage.getItem('geminiApiKey') || '').trim();
+                if (legacyKey) {
+                    key = legacyKey;
+                    localStorage.setItem('geminiApiKey.' + uid, legacyKey);
+                    localStorage.removeItem('geminiApiKey');
+                }
+            }
+        } else {
+            key = (localStorage.getItem('geminiApiKey') || '').trim();
+        }
+
         const has = key.length > 0;
         const chip = document.getElementById('byokStatus');
         if (chip) {

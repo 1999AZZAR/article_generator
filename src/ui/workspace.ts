@@ -316,10 +316,12 @@ const PAGE_CSS = `
 }
 
 @media (max-width: 900px) {
-    .ws-hero { grid-template-columns: 1fr; padding: 32px 0 24px; }
-    .ws-hero .ws-hero-num { display: none; }
-    .ws-hero .ws-hero-title { grid-column: 1 / -1; font-size: 32px; }
-    .ws-hero .ws-hero-lede { grid-column: 1 / -1; padding-top: 12px; }
+    .hero { padding: 32px 0 24px; }
+    .hero .index { display: none; }
+    .hero .headline { grid-column: 1 / -1; }
+    .hero h1 { font-size: 32px; }
+    .hero .lede { grid-column: 1 / -1; padding-top: 12px; }
+    
     .workspace-table-head { display: none; }
     .workspace-table-row { grid-template-columns: 1fr auto; grid-template-rows: auto auto; gap: 4px 8px; }
     .ws-col-status { grid-row: 1; grid-column: 2; }
@@ -332,7 +334,7 @@ const PAGE_CSS = `
 
 const BODY_HTML = `
 <div class="container">
-    ${renderTopbar('workspace', 'english')}
+    \${renderTopbar('workspace', 'english')}
 
     <header class="hero">
         <div class="index">№ 02</div>
@@ -380,10 +382,10 @@ const BODY_HTML = `
         </div>
     </div>
 
-    ${renderFooter(FOOTER_STRINGS['english'])}
+    \${renderFooter(FOOTER_STRINGS['english'])}
 </div>
 
-${ARCHIVAL_DETAILS_HTML}
+\${ARCHIVAL_DETAILS_HTML}
 
 <div class="ws-toast" id="wsToast"></div>
 
@@ -669,15 +671,6 @@ const SCRIPT = `
             })
             .catch(function() { showToast(t.deleteError, true); });
     });
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-            closeDeleteModal();
-            closeAccountMenu();
-        }
-    });
-
-    // ── Render draft list ─────────────────────────────────────────────────────
-    function renderDrafts() {
 
     // ── i18n repaint ──────────────────────────────────────────────────────────
     function repaint(newLang) {
@@ -685,7 +678,9 @@ const SCRIPT = `
         lang = newLang;
         var topbar = document.querySelector('.topbar');
         if (topbar && TOPBARS[newLang]) {
-            topbar.outerHTML = TOPBARS[newLang];
+            var tmp = document.createElement('div');
+            tmp.innerHTML = TOPBARS[newLang];
+            topbar.replaceWith(tmp.firstElementChild);
             window.setupAccountMenu();
             window.syncAuthPill();
             window.syncByokStatus();
@@ -694,7 +689,7 @@ const SCRIPT = `
         
         var heroTitle = el('heroTitle');
         if (heroTitle) {
-            heroTitle.innerHTML = t.title.replace(/\\\\./, '<span class="amp">.</span>');
+            heroTitle.innerHTML = t.title.replace(/\\./, '<span class="amp">.</span>');
         }
         if (el('heroLede')) el('heroLede').textContent = t.lede;
         if (el('filterAll')) el('filterAll').textContent = t.filterAll;
@@ -714,9 +709,6 @@ const SCRIPT = `
         if (el('deleteModalConfirm')) el('deleteModalConfirm').textContent = t.deleteConfirmButton;
         var wsHead = document.getElementById('wsTableHead');
         if (wsHead) wsHead.innerHTML = '<div>' + t.colStatus + '</div><div>' + t.colTitle + '</div><div>' + t.colType + '</div><div>' + t.colDate + '</div><div></div>';
-        window.setupAccountMenu();
-        window.syncAuthPill();
-        window.syncByokStatus();
         renderDrafts();
     }
 
@@ -724,6 +716,7 @@ const SCRIPT = `
     window.addEventListener('storage', function(e) {
         if (e.key === 'uiLanguage') repaint(e.newValue || 'english');
         if (e.key === 'quillAuthUid' || e.key === 'quillAuthName') window.syncAuthPill();
+        if (e.key.indexOf('geminiApiKey') === 0) window.syncByokStatus();
     });
 
     // ── Boot ──────────────────────────────────────────────────────────────────
@@ -733,6 +726,13 @@ const SCRIPT = `
         window.syncByokStatus();
         repaint(localStorage.getItem('uiLanguage') || 'english');
         loadDrafts();
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeDeleteModal();
+                if (window.closeAccountMenu) window.closeAccountMenu();
+            }
+        });
 
         if (window.renderSpecimen) {
             document.querySelectorAll('svg[data-specimen-seed]').forEach(function(svg) {
@@ -745,7 +745,6 @@ const SCRIPT = `
 
 export function generateWorkspacePageHTML(locale: Locale = 'english'): string {
   const strings = WORKSPACE_STRINGS[locale];
-  const footerStrings = FOOTER_STRINGS[locale];
   return `<!DOCTYPE html>
 <html lang="${locale}">
 ${renderHead({ title: strings.documentTitle, pageStyles: PAGE_CSS })}

@@ -221,8 +221,8 @@ const SCRIPT = `
             const tmp = document.createElement('div');
             tmp.innerHTML = (window.__QUILL_TOPBAR__ && window.__QUILL_TOPBAR__[lang]) || topbarEl.outerHTML;
             topbarEl.replaceWith(tmp.firstElementChild);
-            setupAccountMenu();
-            syncAuthPill();
+            window.setupAccountMenu();
+            window.syncAuthPill();
         }
         const heroTitle = document.getElementById('heroTitle');
         if (heroTitle) {
@@ -250,7 +250,7 @@ const SCRIPT = `
         const signOutBtn = document.getElementById('authSignOutBtn');
         if (signOutBtn) signOutBtn.setAttribute('title', t.signOutTooltip);
         if (window.rebuildAllSelects) window.rebuildAllSelects();
-        syncByokStatus();
+        window.syncByokStatus();
     }
 
     function getApiKeyStorageKey() {
@@ -308,7 +308,7 @@ const SCRIPT = `
                 apiKeyInput.value = '';
                 removeBtn.style.display = 'none';
                 showStatus(t.apiKeyRemoved, 'success');
-                syncByokStatus();
+                window.syncByokStatus();
             }, t.cancelButton, t.removeModalButton);
         });
 
@@ -325,7 +325,7 @@ const SCRIPT = `
             showStatus(t.apiKeySaved, 'success');
             removeBtn.style.display = 'inline-block';
             removeBtn.textContent = t.removeButton;
-            syncByokStatus();
+            window.syncByokStatus();
             try {
                 const response = await fetch('/api/test-key', {
                     method: 'POST',
@@ -403,8 +403,8 @@ const SCRIPT = `
             } else {
                 localStorage.setItem(newKey, '');
             }
-            syncAuthPill();
-            syncByokStatus();
+            window.syncAuthPill();
+            window.syncByokStatus();
             location.reload();
         }
     });

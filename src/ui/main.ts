@@ -501,11 +501,11 @@ const SCRIPT = `
             tmp.innerHTML = (window.__QUILL_TOPBAR__ && window.__QUILL_TOPBAR__[lang]) || topbarEl.outerHTML;
             topbarEl.replaceWith(tmp.firstElementChild);
             // Re-bind dropdown interactions (event listeners don't survive outerHTML replace)
-            setupAccountMenu();
+            window.setupAccountMenu();
             // Re-populate auth pill state on the freshly-injected elements
-            syncAuthPill();
+            window.syncAuthPill();
             // Re-populate BYOK chip state on the freshly-injected chip
-            syncByokStatus();
+            window.syncByokStatus();
         }
         // Hero
         const heroTitle = document.getElementById('heroTitle');
@@ -697,7 +697,7 @@ const SCRIPT = `
 
         window.setupAccountMenu();
         window.syncAuthPill();
-        repaint(savedLanguage);
+        window.syncByokStatus();
 
         function saveFormData() {
             const formData = {
@@ -1226,8 +1226,9 @@ const SCRIPT = `
         }
 
         // Initial paint and auth
-        setupAccountMenu();
-        syncAuthPill();
+        window.setupAccountMenu();
+        window.syncAuthPill();
+        window.syncByokStatus();
         repaint(savedLanguage);
         loadFormData();
         loadResults();

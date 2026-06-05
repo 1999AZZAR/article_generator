@@ -185,6 +185,7 @@ const SCRIPT = `
         if (heroTitle) {
             heroTitle.innerHTML = t.title.replace(/\\./, '<span class="amp">.</span>');
         }
+
         document.getElementById('heroLede').textContent = t.lede;
 
         document.getElementById('visionTitle').textContent = t.visionTitle;
