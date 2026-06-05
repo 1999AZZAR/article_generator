@@ -3,7 +3,7 @@
 // translatable fields when the user changes the language.
 
 import { SETTINGS_STRINGS, Locale } from './i18n';
-import { renderHead, renderFooter, renderTopbar, FOOTER_STRINGS } from './styles';
+import { renderHead, renderFooter, renderTopbar, getTopbarStrings, FOOTER_STRINGS } from './styles';
 
 const PAGE_CSS = `
 .nav {
@@ -103,7 +103,7 @@ const PAGE_CSS = `
 
 const BODY_HTML = `
 <div class="container">
-    ${renderTopbar('settings')}
+    ${renderTopbar('settings', 'english')}
 
     <header class="hero">
         <div class="index">&#8470; S.01</div>
@@ -216,7 +216,7 @@ const SCRIPT = `
         const topbarEl = document.querySelector('.topbar');
         if (topbarEl) {
             const tmp = document.createElement('div');
-            tmp.innerHTML = renderTopbar('settings', lang);
+            tmp.innerHTML = (window.__QUILL_TOPBAR__ && window.__QUILL_TOPBAR__[lang]) || topbarEl.outerHTML;
             topbarEl.replaceWith(tmp.firstElementChild);
             setupAccountMenu();
             syncAuthPill();
@@ -259,8 +259,9 @@ const SCRIPT = `
         const has = !!((localStorage.getItem(getApiKeyStorageKey()) || '').trim());
         const byokStatus = document.getElementById('byokStatus');
         if (byokStatus) byokStatus.setAttribute('data-state', has ? 'ok' : 'missing');
+        const byokStrings = (window.__QUILL_TOPBAR_STRINGS__ && window.__QUILL_TOPBAR_STRINGS__[lang]) || null;
         const byokStateText = document.getElementById('byokStateText');
-        if (byokStateText) byokStateText.textContent = has ? t.byokKeySet : t.byokKeyMissing;
+        if (byokStateText) byokStateText.textContent = has ? (byokStrings ? byokStrings.byokSet : 'Key Set') : (byokStrings ? byokStrings.byokMissing : 'No Key');
         const byokNoticeTitle = document.getElementById('byokNoticeTitle');
         if (byokNoticeTitle) byokNoticeTitle.textContent = t.byokNoticeTitle;
         const byokNoticeMsg = document.getElementById('byokNoticeMsg');
@@ -469,6 +470,14 @@ ${BODY_HTML}
 <script>
 window.__QUILL_I18N__ = ${JSON.stringify({ settings: SETTINGS_STRINGS, footer: FOOTER_STRINGS })};
 window.__QUILL_INITIAL_LOCALE__ = ${JSON.stringify(locale)};
+window.__QUILL_TOPBAR__ = ${JSON.stringify({
+  english: renderTopbar('settings', 'english'),
+  indonesian: renderTopbar('settings', 'indonesian'),
+})};
+window.__QUILL_TOPBAR_STRINGS__ = ${JSON.stringify({
+  english: getTopbarStrings('english'),
+  indonesian: getTopbarStrings('indonesian'),
+})};
 </script>
 <script>${SCRIPT}</script>
 </body>

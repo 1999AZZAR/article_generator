@@ -257,7 +257,7 @@ const PAGE_CSS = `
 // the i18n table that's embedded as a JSON blob.
 const BODY_HTML = `
 <div class="container">
-    ${renderTopbar('generator')}
+    ${renderTopbar('generator', 'english')}
 
     <div class="byok-banner" id="byokBanner">
         <div class="byok-banner-row">
@@ -486,7 +486,7 @@ const SCRIPT = `
         const topbarEl = document.querySelector('.topbar');
         if (topbarEl) {
             const tmp = document.createElement('div');
-            tmp.innerHTML = renderTopbar('generator', lang);
+            tmp.innerHTML = (window.__QUILL_TOPBAR__ && window.__QUILL_TOPBAR__[lang]) || topbarEl.outerHTML;
             topbarEl.replaceWith(tmp.firstElementChild);
             // Re-bind dropdown interactions (event listeners don't survive outerHTML replace)
             setupAccountMenu();
@@ -576,8 +576,9 @@ const SCRIPT = `
         const has = key.length > 0;
         const byokStatus = document.getElementById('byokStatus');
         if (byokStatus) byokStatus.setAttribute('data-state', has ? 'ok' : 'missing');
+        const byokStrings = (window.__QUILL_TOPBAR_STRINGS__ && window.__QUILL_TOPBAR_STRINGS__[lang]) || null;
         const byokStateText = document.getElementById('byokStateText');
-        if (byokStateText) byokStateText.textContent = has ? getTopbarStrings(lang).byokSet : getTopbarStrings(lang).byokMissing;
+        if (byokStateText) byokStateText.textContent = has ? (byokStrings ? byokStrings.byokSet : 'Key Set') : (byokStrings ? byokStrings.byokMissing : 'No Key');
         const byokBanner = document.getElementById('byokBanner');
         if (byokBanner) byokBanner.classList.toggle('show', !has);
         const byokBannerTitle = document.getElementById('byokBannerTitle');
@@ -1327,6 +1328,14 @@ ${BODY_HTML}
 <script>
 window.__QUILL_I18N__ = ${JSON.stringify({ main: MAIN_STRINGS, footer: FOOTER_STRINGS })};
 window.__QUILL_INITIAL_LOCALE__ = ${JSON.stringify(locale)};
+window.__QUILL_TOPBAR__ = ${JSON.stringify({
+  english: renderTopbar('generator', 'english'),
+  indonesian: renderTopbar('generator', 'indonesian'),
+})};
+window.__QUILL_TOPBAR_STRINGS__ = ${JSON.stringify({
+  english: getTopbarStrings('english'),
+  indonesian: getTopbarStrings('indonesian'),
+})};
 </script>
 <script>${SCRIPT}</script>
 </body>

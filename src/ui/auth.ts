@@ -4,7 +4,7 @@
 // pages can namespace the BYOK key per user.
 
 import { AUTH_STRINGS, Locale } from './i18n';
-import { renderHead, renderFooter, renderTopbar, FOOTER_STRINGS } from './styles';
+import { renderHead, renderFooter, renderTopbar, getTopbarStrings, FOOTER_STRINGS } from './styles';
 
 const FIREBASE_CONFIG = {
   apiKey: 'AIzaSyD1E_enU3EG10HHT-g2Z0fY7OhaHm_aKY8',
@@ -34,7 +34,7 @@ const PAGE_CSS = `
 
 const BODY_HTML = `
 <div class="container">
-    ${renderTopbar('login')}
+    ${renderTopbar('login', 'english')}
 
     <div class="auth-section-label">
         <div class="num">01</div>
@@ -128,6 +128,21 @@ const SCRIPT = `
         el.textContent = '';
     }
 
+    function getApiKeyStorageKey() {
+        const uid = localStorage.getItem('quillAuthUid');
+        return uid ? ('geminiApiKey.' + uid) : 'geminiApiKey';
+    }
+
+    function syncByokStatus() {
+        const lang = localStorage.getItem('uiLanguage') || 'english';
+        const has = !!((localStorage.getItem(getApiKeyStorageKey()) || '').trim());
+        const byokStatus = document.getElementById('byokStatus');
+        if (byokStatus) byokStatus.setAttribute('data-state', has ? 'ok' : 'missing');
+        const byokStrings = (window.__QUILL_TOPBAR_STRINGS__ && window.__QUILL_TOPBAR_STRINGS__[lang]) || null;
+        const byokStateText = document.getElementById('byokStateText');
+        if (byokStateText) byokStateText.textContent = has ? (byokStrings ? byokStrings.byokSet : 'Key Set') : (byokStrings ? byokStrings.byokMissing : 'No Key');
+    }
+
     function repaint(lang) {
         const t = I18N[lang];
         document.title = t.documentTitle;
@@ -135,8 +150,9 @@ const SCRIPT = `
         const topbarEl = document.querySelector('.topbar');
         if (topbarEl) {
             const tmp = document.createElement('div');
-            tmp.innerHTML = renderTopbar('login', lang);
+            tmp.innerHTML = (window.__QUILL_TOPBAR__ && window.__QUILL_TOPBAR__[lang]) || topbarEl.outerHTML;
             topbarEl.replaceWith(tmp.firstElementChild);
+            syncByokStatus();
         }
         const introTitle = document.getElementById('introTitle');
         introTitle.innerHTML = escapeHtml(t.introTitle).replace(/\\./, '<span class="amp">.</span>');
@@ -331,6 +347,14 @@ ${BODY_HTML}
 window.__QUILL_I18N__ = ${JSON.stringify({ auth: AUTH_STRINGS, footer: FOOTER_STRINGS })};
 window.__QUILL_FIREBASE_CONFIG__ = ${JSON.stringify(FIREBASE_CONFIG)};
 window.__QUILL_INITIAL_LOCALE__ = ${JSON.stringify(locale)};
+window.__QUILL_TOPBAR__ = ${JSON.stringify({
+  english: renderTopbar('login', 'english'),
+  indonesian: renderTopbar('login', 'indonesian'),
+})};
+window.__QUILL_TOPBAR_STRINGS__ = ${JSON.stringify({
+  english: getTopbarStrings('english'),
+  indonesian: getTopbarStrings('indonesian'),
+})};
 </script>
 <script>${SCRIPT}</script>
 </body>
