@@ -182,6 +182,10 @@ button { font-family: inherit; }
 
 /* ========== ACCOUNT MENU (Polaris ActionList pattern, Swiss treatment) ========== */
 .account-menu { position: relative; display: flex; align-items: stretch; }
+.account-trigger[hidden],
+.account-backdrop[hidden],
+.account-dropdown[hidden] { display: none !important; }
+.signin-btn[hidden] { display: none !important; }
 
 .account-trigger {
     display: flex;
@@ -223,13 +227,20 @@ button { font-family: inherit; }
     white-space: nowrap;
 }
 .account-caret {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 9px;
-    opacity: 0.6;
-    margin-left: -2px;
+    width: 10px; height: 10px;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' stroke='%23000' stroke-width='1.4' fill='none'/></svg>");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 10px 6px;
+    transition: transform 120ms linear;
+    flex-shrink: 0;
 }
-.account-trigger[aria-expanded="true"] .account-caret { transform: rotate(180deg); opacity: 1; }
+.account-trigger[aria-expanded="true"] .account-caret {
+    transform: rotate(180deg);
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' stroke='%23fff' stroke-width='1.4' fill='none'/></svg>");
+}
 
+.topbar .signin-btn,
 .signin-btn {
     display: flex;
     align-items: center;
@@ -245,8 +256,10 @@ button { font-family: inherit; }
     text-transform: uppercase;
     text-decoration: none;
     cursor: pointer;
+    line-height: 1;
 }
-.signin-btn:hover { background: var(--accent); text-decoration: none; }
+.signin-btn:hover { background: var(--accent); color: var(--white); text-decoration: none; }
+.signin-btn[hidden] { display: none; }
 
 .account-dropdown {
     position: absolute;
@@ -274,11 +287,12 @@ button { font-family: inherit; }
     width: 40px; height: 40px;
     display: inline-flex;
     align-items: center; justify-content: center;
-    background: var(--black);
+    background: var(--accent);
     color: var(--white);
     font-family: 'JetBrains Mono', monospace;
     font-size: 14px;
     font-weight: 700;
+    flex-shrink: 0;
 }
 .account-info { min-width: 0; }
 .account-name {
@@ -534,11 +548,24 @@ button { font-family: inherit; }
     -webkit-appearance: none;
     appearance: none;
 }
+.form-group input:hover:not(:focus),
+.form-group select:hover:not(:focus),
+.form-group textarea:hover:not(:focus) {
+    border-bottom-color: var(--accent);
+}
 .form-group input:focus,
 .form-group select:focus,
 .form-group textarea:focus {
     border-bottom: 2px solid var(--accent);
     padding-bottom: 7px;
+}
+.form-group input:disabled,
+.form-group select:disabled,
+.form-group textarea:disabled {
+    color: var(--gray-600);
+    border-bottom-color: var(--gray-300);
+    cursor: not-allowed;
+    background: transparent;
 }
 .form-group textarea {
     resize: vertical;
@@ -910,7 +937,7 @@ export function renderTopbar(active: TopbarPage, lang: 'english' | 'indonesian' 
                 <button type="button" class="account-trigger" id="accountTrigger" aria-haspopup="menu" aria-expanded="false" aria-label="${t.accountAria}" hidden>
                     <span class="account-avatar" id="accountAvatar">--</span>
                     <span class="account-trigger-name" id="accountTriggerName"></span>
-                    <span class="account-caret" aria-hidden="true">▾</span>
+                    <span class="account-caret" aria-hidden="true"></span>
                 </button>
                 <a href="/login" class="signin-btn" id="authSignInLink" ${active === 'login' ? 'aria-current="page"' : ''}>${t.signIn}</a>
                 <div class="account-backdrop" id="accountBackdrop" hidden></div>

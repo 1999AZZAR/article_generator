@@ -174,7 +174,9 @@ const PAGE_CSS = `
     display: flex; flex-direction: column; gap: 8px; min-height: 96px;
 }
 .option-card:hover { background: var(--gray-100); }
+.option-card:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 .option-card.selected { background: var(--black); color: var(--white); }
+.option-card.selected:hover { background: var(--black); }
 .option-card.selected .option-tag { color: var(--accent); }
 .option-tag { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; font-weight: 700; color: var(--gray-600); }
 .option-text { font-size: 16px; line-height: 1.3; font-weight: 500; }
@@ -197,7 +199,11 @@ const PAGE_CSS = `
     border-radius: 0; -webkit-appearance: none; appearance: none;
     background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1l5 5 5-5' stroke='%23000' stroke-width='1.4' fill='none'/></svg>");
     background-repeat: no-repeat; background-position: right 0 center; padding-right: 24px;
+    outline: none;
+    cursor: pointer;
 }
+.export-select:hover { border-bottom-color: var(--accent); }
+.export-select:focus { border-bottom: 2px solid var(--accent); padding-bottom: 7px; }
 .export-btn {
     border: 1px solid var(--black); background: var(--white); color: var(--black);
     padding: 12px 16px;
