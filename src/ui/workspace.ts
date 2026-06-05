@@ -244,41 +244,37 @@ const PAGE_CSS = `
 .ws-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
 /* Delete modal */
-.ws-modal-overlay { display: none; }
-.ws-modal-overlay:not([hidden]) {
+.modal-overlay {
     position: fixed; inset: 0;
-    background: rgba(0,0,0,0.55);
-    z-index: 100;
-    display: flex; align-items: center; justify-content: center;
+    background: rgba(255,255,255,0.92);
+    z-index: 1000; display: none; align-items: center; justify-content: center;
+    backdrop-filter: blur(4px);
 }
-.ws-modal {
+.modal-overlay.show { display: flex; }
+.modal-content {
     background: var(--white);
     border: 1px solid var(--black);
-    padding: 0;
-    max-width: 400px;
-    width: 90%;
+    width: 100%; max-width: 480px; padding: 0;
 }
-.ws-modal-head {
-    padding: 16px 20px;
-    border-bottom: var(--rule);
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
+.modal-head {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 14px 20px; border-bottom: var(--rule);
 }
-.ws-modal-body {
-    padding: 20px;
-    font-size: 14px;
-    line-height: 1.6;
-    color: var(--gray-600);
+.modal-head .lab { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; }
+.modal-body { padding: 32px 40px; }
+.modal-title { font-size: 24px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 12px; }
+.modal-message { font-size: 15px; line-height: 1.6; color: var(--gray-700); }
+.modal-actions {
+    display: flex; gap: 12px; padding: 24px 40px 32px;
 }
-.ws-modal-actions {
-    display: flex;
-    gap: 8px;
-    padding: 12px 20px 16px;
-    justify-content: flex-end;
-    border-top: var(--rule-soft);
+.modal-btn {
+    padding: 14px 24px; font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 700;
+    letter-spacing: 0.14em; text-transform: uppercase; cursor: pointer; border: 1px solid var(--black);
 }
+.modal-btn-confirm { background: var(--black); color: var(--white); }
+.modal-btn-confirm:hover { background: #c0392b; border-color: #c0392b; }
+.modal-btn-cancel { background: transparent; color: var(--black); }
+.modal-btn-cancel:hover { background: var(--gray-100); }
 
 @media (max-width: 900px) {
     .ws-hero { grid-template-columns: 1fr; padding: 32px 0 24px; }
@@ -352,13 +348,18 @@ ${ARCHIVAL_DETAILS_HTML}
 
 <div class="ws-toast" id="wsToast"></div>
 
-<div class="ws-modal-overlay" id="deleteModal" hidden>
-    <div class="ws-modal">
-        <div class="ws-modal-head" id="deleteModalTitle">Delete Draft</div>
-        <div class="ws-modal-body" id="deleteModalMsg">This will permanently delete the draft. This action cannot be undone.</div>
-        <div class="ws-modal-actions">
-            <button class="toolbar-btn secondary" id="deleteModalCancel">Cancel</button>
-            <button class="toolbar-btn danger" id="deleteModalConfirm" style="background:#c0392b;border-color:#c0392b;color:#fff">Delete</button>
+<div class="modal-overlay" id="deleteModal">
+    <div class="modal-content">
+        <div class="modal-head">
+            <span class="lab" id="deleteModalLab">CONFIRM</span>
+        </div>
+        <div class="modal-body">
+            <h3 class="modal-title" id="deleteModalTitle">Delete Draft</h3>
+            <p class="modal-message" id="deleteModalMsg">This will permanently delete the draft. This action cannot be undone.</p>
+        </div>
+        <div class="modal-actions">
+            <button class="modal-btn modal-btn-cancel" id="deleteModalCancel">Cancel</button>
+            <button class="modal-btn modal-btn-confirm" id="deleteModalConfirm">Delete</button>
         </div>
     </div>
 </div>
@@ -417,11 +418,18 @@ const SCRIPT = `
     }
 
     // ── Render draft list ─────────────────────────────────────────────────────
-    function renderDrafts() {
+    function renderDrafts(isLoading) {
         var list = document.getElementById('draftList');
         var empty = document.getElementById('wsEmpty');
         var head = document.getElementById('wsTableHead');
         if (!list || !empty || !head) return;
+
+        if (isLoading) {
+            list.innerHTML = '<div class="ws-loading" style="padding: 48px; text-align: center; font-family: \\'JetBrains Mono\\', monospace; font-size: 11px; letter-spacing: 0.12em; color: var(--gray-600);">LOADING ARCHIVES…</div>';
+            empty.hidden = true;
+            head.style.display = 'none';
+            return;
+        }
         
         var filtered = drafts.filter(function(d) {
             if (activeFilter === 'all') return true;
@@ -469,6 +477,7 @@ const SCRIPT = `
 
     // ── Fetch drafts ──────────────────────────────────────────────────────────
     function loadDrafts() {
+        renderDrafts(true);
         fetch('/api/workspace/drafts')
             .then(function(r) {
                 if (r.status === 401) { window.location.href = '/login?redirect=/workspace'; return null; }
@@ -478,9 +487,9 @@ const SCRIPT = `
             .then(function(data) {
                 if (!data) return;
                 drafts = data.drafts || [];
-                renderDrafts();
+                renderDrafts(false);
             })
-            .catch(function() { showToast(t.loadError, true); });
+            .catch(function() { showToast(t.loadError, true); renderDrafts(false); });
     }
 
     // ── Editor ────────────────────────────────────────────────────────────────
@@ -618,10 +627,10 @@ const SCRIPT = `
     // ── Delete modal ──────────────────────────────────────────────────────────
     function openDeleteModal(id) {
         deleteTargetId = id;
-        document.getElementById('deleteModal').hidden = false;
+        document.getElementById('deleteModal').classList.add('show');
     }
     function closeDeleteModal() {
-        document.getElementById('deleteModal').hidden = true;
+        document.getElementById('deleteModal').classList.remove('show');
         deleteTargetId = null;
     }
 
