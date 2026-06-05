@@ -1,5 +1,5 @@
 import { generateArticle, generateNovelOutline, generateShortStory, generateNews, generateShortNews, testGeminiAPIKey, generateChapterContent } from './gemini';
-import { generateMainPageHTML, generateSettingsPageHTML, generateAuthPageHTML, generateAboutPageHTML } from './ui';
+import { generateMainPageHTML, generateSettingsPageHTML, generateAuthPageHTML } from './ui';
 import { generateWorkspacePageHTML } from './ui/workspace';
 import { getSessionUid, unauthorizedResponse } from './auth';
 import { getPrisma, getRedis, DbEnv } from './db';
@@ -125,17 +125,6 @@ export async function handleRequest(request: Request, env: { GEMINI_API_KEY?: st
     } catch (e) {
       return jsonResponse({ error: 'Bad request' }, 400);
     }
-  }
-
-  if (request.method === 'DELETE' && url.pathname === '/api/auth/session') {
-    return new Response(JSON.stringify({ ok: true }), {
-      status: 200,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-        'Set-Cookie': 'quill_uid=; Path=/; Max-Age=0; SameSite=Lax; HttpOnly',
-      },
-    });
   }
 
   if (request.method === 'POST' && url.pathname === '/api/auth/signout') {
@@ -659,16 +648,6 @@ async function serveStatic(request: Request, env: { DATABASE_URL: string; REDIS_
 
   if (pathname === '/' || pathname === '/index.html') {
     const htmlContent = generateMainPageHTML();
-    return new Response(htmlContent, {
-      headers: {
-        'Content-Type': 'text/html',
-        'Access-Control-Allow-Origin': '*',
-      },
-    });
-  }
-
-  if (pathname === '/about') {
-    const htmlContent = generateAboutPageHTML();
     return new Response(htmlContent, {
       headers: {
         'Content-Type': 'text/html',

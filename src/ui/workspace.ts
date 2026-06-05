@@ -1,41 +1,40 @@
-import { WORKSPACE_STRINGS, COMMON_STRINGS, Locale } from './i18n';
-import { renderHead, renderFooter, renderTopbar, getTopbarStrings, ARCHIVAL_DETAILS_HTML, FOOTER_STRINGS, COMMON_JS } from './styles';
+import { WORKSPACE_STRINGS, Locale } from './i18n';
+import { renderHead, renderFooter, renderTopbar, getTopbarStrings, ARCHIVAL_DETAILS_HTML, FOOTER_STRINGS } from './styles';
 import { SPECIMEN_JS } from './specimen';
 
 const PAGE_CSS = `
-.hero {
-    padding: 64px 0 48px;
+.ws-hero {
+    padding: 48px 0 32px 0;
     border-bottom: var(--rule);
     display: grid;
     grid-template-columns: repeat(12, 1fr);
     column-gap: var(--gutter);
+    align-items: end;
 }
-.hero .index {
-    grid-column: 1 / span 2;
-    font-size: 14px;
-    font-weight: 700;
+.ws-hero .ws-hero-num {
+    grid-column: 1 / span 1;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    padding-bottom: 4px;
 }
-.hero .headline {
-    grid-column: 3 / span 7;
-}
-.hero h1 {
-    font-family: 'Inter', sans-serif;
+.ws-hero .ws-hero-title {
+    grid-column: 2 / span 6;
+    font-size: clamp(32px, 5vw, 56px);
     font-weight: 800;
-    font-size: clamp(48px, 9vw, 128px);
-    line-height: 0.95;
-    letter-spacing: -0.04em;
-    color: var(--black);
-    margin: 0;
+    letter-spacing: -0.03em;
+    line-height: 1;
 }
-.hero h1 .amp { color: var(--accent); }
-.hero .lede {
-    grid-column: 10 / span 3;
-    align-self: end;
+.ws-hero .ws-hero-lede {
+    grid-column: 8 / span 5;
     font-size: 13px;
-    line-height: 1.5;
     color: var(--gray-600);
-    border-top: var(--rule);
-    padding-top: 12px;
+    letter-spacing: 0.02em;
+    line-height: 1.6;
+    align-self: end;
+    padding-bottom: 6px;
 }
 
 /* Filter bar */
@@ -316,12 +315,10 @@ const PAGE_CSS = `
 }
 
 @media (max-width: 900px) {
-    .hero { padding: 32px 0 24px; }
-    .hero .index { display: none; }
-    .hero .headline { grid-column: 1 / -1; }
-    .hero h1 { font-size: 32px; }
-    .hero .lede { grid-column: 1 / -1; padding-top: 12px; }
-    
+    .ws-hero { grid-template-columns: 1fr; padding: 32px 0 24px; }
+    .ws-hero .ws-hero-num { display: none; }
+    .ws-hero .ws-hero-title { grid-column: 1 / -1; font-size: 32px; }
+    .ws-hero .ws-hero-lede { grid-column: 1 / -1; padding-top: 12px; }
     .workspace-table-head { display: none; }
     .workspace-table-row { grid-template-columns: 1fr auto; grid-template-rows: auto auto; gap: 4px 8px; }
     .ws-col-status { grid-row: 1; grid-column: 2; }
@@ -330,6 +327,73 @@ const PAGE_CSS = `
     .ws-col-date { display: none; }
     .ws-col-actions { grid-row: 2; grid-column: 2; }
 }
+`;
+
+const BODY_HTML = `
+<div class="container">
+    ${renderTopbar('workspace', 'english')}
+
+    <header class="ws-hero">
+        <div class="ws-hero-num">02</div>
+        <h1 class="ws-hero-title" id="wsTitle">Workspace.</h1>
+        <p class="ws-hero-lede" id="wsLede">Your saved drafts and finished pieces. Edit inline, autosave while you write.</p>
+    </header>
+
+    <div class="ws-filter-bar" id="wsFilterBar">
+        <button class="ws-filter-tab active" data-filter="all" id="filterAll">All</button>
+        <button class="ws-filter-tab" data-filter="draft" id="filterDraft">Draft</button>
+        <button class="ws-filter-tab" data-filter="final" id="filterFinal">Final</button>
+    </div>
+
+    <div class="workspace-table" id="workspaceTable">
+        <div class="workspace-table-head" id="wsTableHead">
+            <div>STATUS</div>
+            <div>TITLE</div>
+            <div>TYPE</div>
+            <div>DATE</div>
+            <div></div>
+        </div>
+        <div id="draftList"></div>
+        <div class="ws-empty" id="wsEmpty" hidden>
+            <div class="ws-empty-ornament">∅</div>
+            <div class="ws-empty-title" id="wsEmptyTitle">No drafts yet.</div>
+            <p class="ws-empty-msg" id="wsEmptyMsg">Generate an article and save it to your Workspace to see it here.</p>
+            <a href="/" class="ws-empty-cta" id="wsEmptyCta">Go to Generator →</a>
+        </div>
+    </div>
+
+    <div class="editor-panel" id="editorPanel">
+        <input type="text" class="editor-title-input" id="editorTitle" placeholder="Draft title…" autocomplete="off">
+        <div class="editor-autosave-bar" id="autosaveBar">
+            <span class="as-dot"></span>
+            <span id="autosaveLabel">AUTOSAVE</span>
+        </div>
+        <textarea class="editor-content" id="editorContent" placeholder="Your content…"></textarea>
+        <div class="editor-toolbar">
+            <button class="toolbar-btn" id="editorSaveBtn">Save</button>
+            <button class="toolbar-btn secondary" id="editorToggleStatusBtn">Mark Final</button>
+            <button class="toolbar-btn secondary" id="editorCloseBtn">Close</button>
+            <button class="toolbar-btn danger" id="editorDeleteBtn">Delete</button>
+        </div>
+    </div>
+
+    ${renderFooter(FOOTER_STRINGS['english'])}
+</div>
+
+${ARCHIVAL_DETAILS_HTML}
+
+<div class="ws-toast" id="wsToast"></div>
+
+<div class="ws-modal-overlay" id="deleteModal" hidden>
+    <div class="ws-modal">
+        <div class="ws-modal-head" id="deleteModalTitle">Delete Draft</div>
+        <div class="ws-modal-body" id="deleteModalMsg">This will permanently delete the draft. This action cannot be undone.</div>
+        <div class="ws-modal-actions">
+            <button class="toolbar-btn secondary" id="deleteModalCancel">Cancel</button>
+            <button class="toolbar-btn danger" id="deleteModalConfirm" style="background:#c0392b;border-color:#c0392b;color:#fff">Delete</button>
+        </div>
+    </div>
+</div>
 `;
 
 const SCRIPT = `
@@ -602,27 +666,92 @@ const SCRIPT = `
             })
             .catch(function() { showToast(t.deleteError, true); });
     });
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeDeleteModal();
+            closeAccountMenu();
+        }
+    });
+
+    // ── Account menu (shared pattern) ─────────────────────────────────────────
+    function syncAuthPill() {
+        var name = localStorage.getItem('quillAuthName');
+        uid = localStorage.getItem('quillAuthUid');
+        var trigger = document.getElementById('accountTrigger');
+        var signIn = document.getElementById('authSignInLink');
+        if (!trigger || !signIn) return;
+        if (uid) {
+            trigger.hidden = false;
+            signIn.hidden = true;
+            var initials = (name || uid).slice(0, 2).toUpperCase();
+            var av = document.getElementById('accountAvatar');
+            var avLg = document.getElementById('accountAvatarLg');
+            var trigName = document.getElementById('accountTriggerName');
+            var ddName = document.getElementById('accountName');
+            var ddEmail = document.getElementById('accountEmail');
+            var footUid = document.getElementById('accountFootUid');
+            if (av) av.textContent = initials;
+            if (avLg) avLg.textContent = initials;
+            if (trigName) trigName.textContent = name || 'Account';
+            if (ddName) ddName.textContent = name || 'Account';
+            if (ddEmail) ddEmail.textContent = uid || '';
+            if (footUid) footUid.textContent = uid ? 'UID ' + uid.slice(0, 8) + (uid.length > 8 ? '\\u2026' : '') : '';
+        } else {
+            trigger.hidden = true;
+            signIn.hidden = false;
+        }
+    }
+
+    function syncByokStatus() {
+        var authUid = localStorage.getItem('quillAuthUid');
+        var keyStorageKey = authUid ? ('geminiApiKey.' + authUid) : 'geminiApiKey';
+        var apiKey = localStorage.getItem(keyStorageKey);
+        var chip = document.getElementById('byokStatus');
+        var stateText = document.getElementById('byokStateText');
+        if (chip) chip.setAttribute('data-state', apiKey ? 'ok' : 'missing');
+        var tb = window.__QUILL_TOPBAR_STRINGS__[localStorage.getItem('uiLanguage') || 'english'];
+        if (stateText) stateText.textContent = apiKey ? tb.byokSet : tb.byokMissing;
+    }
+
+    function openAccountMenu() {
+        var trigger = document.getElementById('accountTrigger');
+        var dd = document.getElementById('accountDropdown');
+        var back = document.getElementById('accountBackdrop');
+        if (!trigger || !dd) return;
+        trigger.setAttribute('aria-expanded', 'true');
+        dd.hidden = false;
+        if (back) back.hidden = false;
+    }
+    function closeAccountMenu() {
+        var trigger = document.getElementById('accountTrigger');
+        var dd = document.getElementById('accountDropdown');
+        var back = document.getElementById('accountBackdrop');
+        if (trigger) trigger.setAttribute('aria-expanded', 'false');
+        if (dd) dd.hidden = true;
+        if (back) back.hidden = true;
+    }
+    function setupAccountMenu() {
+        var trigger = document.getElementById('accountTrigger');
+        var back = document.getElementById('accountBackdrop');
+        if (trigger) {
+            trigger.addEventListener('click', function(e) {
+                e.stopPropagation();
+                if (trigger.getAttribute('aria-expanded') === 'true') closeAccountMenu();
+                else openAccountMenu();
+            });
+        }
+        if (back) back.addEventListener('click', closeAccountMenu);
+    }
 
     // ── i18n repaint ──────────────────────────────────────────────────────────
     function repaint(newLang) {
         t = I18N.workspace[newLang];
         lang = newLang;
         var topbar = document.querySelector('.topbar');
-        if (topbar && TOPBARS[newLang]) {
-            var tmp = document.createElement('div');
-            tmp.innerHTML = TOPBARS[newLang];
-            topbar.replaceWith(tmp.firstElementChild);
-            window.setupAccountMenu();
-            window.syncAuthPill();
-            window.syncByokStatus();
-        }
+        if (topbar && TOPBARS[newLang]) topbar.outerHTML = TOPBARS[newLang];
         var el = function(id) { return document.getElementById(id); };
-        
-        var heroTitle = el('heroTitle');
-        if (heroTitle) {
-            heroTitle.innerHTML = t.title.replace(/\\./, '<span class="amp">.</span>');
-        }
-        if (el('heroLede')) el('heroLede').textContent = t.lede;
+        if (el('wsTitle')) el('wsTitle').textContent = t.title;
+        if (el('wsLede')) el('wsLede').textContent = t.lede;
         if (el('filterAll')) el('filterAll').textContent = t.filterAll;
         if (el('filterDraft')) el('filterDraft').textContent = t.filterDraft;
         if (el('filterFinal')) el('filterFinal').textContent = t.filterFinal;
@@ -640,40 +769,25 @@ const SCRIPT = `
         if (el('deleteModalConfirm')) el('deleteModalConfirm').textContent = t.deleteConfirmButton;
         var wsHead = document.getElementById('wsTableHead');
         if (wsHead) wsHead.innerHTML = '<div>' + t.colStatus + '</div><div>' + t.colTitle + '</div><div>' + t.colType + '</div><div>' + t.colDate + '</div><div></div>';
-        
-        // Repaint Footer
-        const footerEl = document.querySelector('.footer');
-        if (footerEl) {
-            const footerStrings = I18N.footer[newLang];
-            footerEl.querySelector('.col-1').innerHTML = footerStrings.copyright;
-            footerEl.querySelector('.col-2').innerHTML = footerStrings.typeface;
-            footerEl.querySelector('.col-3').innerHTML = footerStrings.by.replace('{link}', '<a href="https://azzar.netlify.app/porto" target="_blank">LilyOpenCMS</a>');
-        }
-
+        setupAccountMenu();
+        syncAuthPill();
+        syncByokStatus();
         renderDrafts();
     }
 
     // ── Storage listener (cross-tab auth changes) ─────────────────────────────
     window.addEventListener('storage', function(e) {
         if (e.key === 'uiLanguage') repaint(e.newValue || 'english');
-        if (e.key === 'quillAuthUid' || e.key === 'quillAuthName') window.syncAuthPill();
-        if (e.key.indexOf('geminiApiKey') === 0) window.syncByokStatus();
+        if (e.key === 'quillAuthUid' || e.key === 'quillAuthName') syncAuthPill();
     });
 
     // ── Boot ──────────────────────────────────────────────────────────────────
     document.addEventListener('DOMContentLoaded', function() {
-        window.setupAccountMenu();
-        window.syncAuthPill();
-        window.syncByokStatus();
+        setupAccountMenu();
+        syncAuthPill();
+        syncByokStatus();
         repaint(localStorage.getItem('uiLanguage') || 'english');
         loadDrafts();
-
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                closeDeleteModal();
-                if (window.closeAccountMenu) window.closeAccountMenu();
-            }
-        });
 
         if (window.renderSpecimen) {
             document.querySelectorAll('svg[data-specimen-seed]').forEach(function(svg) {
@@ -687,82 +801,13 @@ const SCRIPT = `
 export function generateWorkspacePageHTML(locale: Locale = 'english'): string {
   const strings = WORKSPACE_STRINGS[locale];
   const footerStrings = FOOTER_STRINGS[locale];
-  const topbarHtml = renderTopbar('workspace', locale);
-  const footerHtml = renderFooter(footerStrings);
-
   return `<!DOCTYPE html>
 <html lang="${locale}">
 ${renderHead({ title: strings.documentTitle, pageStyles: PAGE_CSS })}
 <body>
-<div class="container">
-    ${topbarHtml}
-
-    <header class="hero">
-        <div class="index">№ 02</div>
-        <div class="headline">
-            <h1 id="heroTitle">${strings.title.replace(/\./, '<span class="amp">.</span>')}</h1>
-        </div>
-        <p class="lede" id="heroLede">${strings.lede}</p>
-    </header>
-
-    <div class="ws-filter-bar" id="wsFilterBar">
-        <button class="ws-filter-tab active" data-filter="all" id="filterAll">${strings.filterAll}</button>
-        <button class="ws-filter-tab" data-filter="draft" id="filterDraft">${strings.filterDraft}</button>
-        <button class="ws-filter-tab" data-filter="final" id="filterFinal">${strings.filterFinal}</button>
-    </div>
-
-    <div class="workspace-table" id="workspaceTable">
-        <div class="workspace-table-head" id="wsTableHead">
-            <div>${strings.colStatus}</div>
-            <div>${strings.colTitle}</div>
-            <div>${strings.colType}</div>
-            <div>${strings.colDate}</div>
-            <div></div>
-        </div>
-        <div id="draftList"></div>
-        <div class="ws-empty" id="wsEmpty" hidden>
-            <div class="ws-empty-ornament">∅</div>
-            <div class="ws-empty-title" id="wsEmptyTitle">${strings.emptyTitle}</div>
-            <p class="ws-empty-msg" id="wsEmptyMsg">${strings.emptyMsg}</p>
-            <a href="/" class="ws-empty-cta" id="wsEmptyCta">${strings.emptyCtaLabel}</a>
-        </div>
-    </div>
-
-    <div class="editor-panel" id="editorPanel">
-        <input type="text" class="editor-title-input" id="editorTitle" placeholder="${strings.editorTitlePlaceholder}" autocomplete="off">
-        <div class="editor-autosave-bar" id="autosaveBar">
-            <span class="as-dot"></span>
-            <span id="autosaveLabel">${strings.autosaveLabel}</span>
-        </div>
-        <textarea class="editor-content" id="editorContent" placeholder="${strings.editorContentPlaceholder}"></textarea>
-        <div class="editor-toolbar">
-            <button class="toolbar-btn" id="editorSaveBtn">${strings.actionSave}</button>
-            <button class="toolbar-btn secondary" id="editorToggleStatusBtn">${strings.actionMarkFinal}</button>
-            <button class="toolbar-btn secondary" id="editorCloseBtn">${strings.actionClose}</button>
-            <button class="toolbar-btn danger" id="editorDeleteBtn">${strings.actionDelete}</button>
-        </div>
-    </div>
-
-    ${footerHtml}
-</div>
-
-${ARCHIVAL_DETAILS_HTML}
-
-<div class="ws-toast" id="wsToast"></div>
-
-<div class="ws-modal-overlay" id="deleteModal" hidden>
-    <div class="ws-modal">
-        <div class="ws-modal-head" id="deleteModalTitle">${strings.deleteConfirmTitle}</div>
-        <div class="ws-modal-body" id="deleteModalMsg">${strings.deleteConfirmMessage}</div>
-        <div class="ws-modal-actions">
-            <button class="toolbar-btn secondary" id="deleteModalCancel">${strings.cancelButton}</button>
-            <button class="toolbar-btn danger" id="deleteModalConfirm" style="background:#c0392b;border-color:#c0392b;color:#fff">${strings.deleteConfirmButton}</button>
-        </div>
-    </div>
-</div>
-
+${BODY_HTML}
 <script>
-window.__QUILL_I18N__ = ${JSON.stringify({ workspace: WORKSPACE_STRINGS, common: COMMON_STRINGS, footer: FOOTER_STRINGS })};
+window.__QUILL_I18N__ = ${JSON.stringify({ workspace: WORKSPACE_STRINGS, footer: FOOTER_STRINGS })};
 window.__QUILL_INITIAL_LOCALE__ = ${JSON.stringify(locale)};
 window.__QUILL_TOPBAR__ = ${JSON.stringify({
     english: renderTopbar('workspace', 'english'),
@@ -773,7 +818,6 @@ window.__QUILL_TOPBAR_STRINGS__ = ${JSON.stringify({
     indonesian: getTopbarStrings('indonesian'),
   })};
 </script>
-<script>${COMMON_JS}</script>
 <script>${SCRIPT}</script>
 <script>${SPECIMEN_JS}</script>
 <script>

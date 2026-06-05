@@ -2,8 +2,8 @@
 // English strings are the default markup; the script below re-paints
 // translatable fields when the user changes the language.
 
-import { SETTINGS_STRINGS, COMMON_STRINGS, Locale } from './i18n';
-import { renderHead, renderFooter, renderTopbar, getTopbarStrings, FOOTER_STRINGS, ARCHIVAL_DETAILS_HTML, COMMON_JS } from './styles';
+import { SETTINGS_STRINGS, Locale } from './i18n';
+import { renderHead, renderFooter, renderTopbar, getTopbarStrings, FOOTER_STRINGS, ARCHIVAL_DETAILS_HTML } from './styles';
 import { SELECT_CSS, SELECT_SCRIPT } from './select';
 import { SPECIMEN_JS } from './specimen';
 
@@ -104,11 +104,207 @@ ${SELECT_CSS}
 }
 `;
 
+const BODY_HTML = `
+<div class="container">
+    ${renderTopbar('settings', 'english')}
+
+    <header class="hero">
+        <div class="index">&#8470; S.01</div>
+        <div class="headline">
+            <h1 id="heroTitle">Settings<span class="amp">.</span></h1>
+        </div>
+        <p class="lede" id="heroLede">Configure the language of the interface and your Gemini API key. All values are stored locally in this browser.</p>
+    </header>
+
+    <div class="nav">
+        <div class="num">01</div>
+        <div class="title" id="configTitle">Configuration</div>
+        <div class="back"><a href="/" id="backLink">&larr; Back to Generator</a></div>
+    </div>
+
+    <div class="settings-container">
+        <section class="settings-section">
+            <div class="section-head">
+                <div class="num">02</div>
+                <div class="title" id="languageSection">Language</div>
+                <div class="meta" id="languageMeta">UI / LOCALE</div>
+            </div>
+            <div class="form-group">
+                <label for="uiLanguage" id="interfaceLanguageLabel">Interface Language</label>
+                <select id="uiLanguage">
+                    <option value="english">English</option>
+                    <option value="indonesian">Bahasa Indonesia</option>
+                </select>
+                <small class="help-text" id="languageHelp">Choose the language for the user interface.</small>
+            </div>
+        </section>
+
+        <section class="settings-section">
+            <div class="section-head">
+                <div class="num">03</div>
+                <div class="title" id="apiSection">Gemini AI Configuration</div>
+                <div class="meta" id="apiMeta">CREDENTIALS</div>
+            </div>
+            <div class="byok-notice" id="byokNotice">
+                <div class="byok-notice-num">BYOK</div>
+                <div class="byok-notice-body">
+                    <div class="byok-notice-title" id="byokNoticeTitle">Bring Your Own Key</div>
+                    <div class="byok-notice-msg" id="byokNoticeMsg">Quill<span class="brand-tm">™</span> is BYOK &mdash; Bring Your Own Key. The server has no default Gemini key, so every visitor must provide their own. Your key is stored only in this browser (<code>localStorage</code>) and is sent per-request as the <code>X-User-API-Key</code> header. The server never persists, logs, or shares it.</div>
+                </div>
+            </div>
+            <div class="info-block">
+                <h4 id="apiInstructions">How to get your API key</h4>
+                <ol id="apiStepsList">
+                    <li><a href="https://aistudio.google.com/app/apikey" target="_blank">Go to Google AI Studio</a></li>
+                    <li>Sign in with your Google account</li>
+                    <li>Create a new API key</li>
+                    <li>Copy the key and paste it below</li>
+                </ol>
+            </div>
+            <form id="apiKeyForm">
+                <div class="form-group">
+                    <label for="apiKey" id="apiKeyLabel">Gemini API Key <span class="req">*</span></label>
+                    <input type="password" id="apiKey" required>
+                </div>
+                <div class="action-row">
+                    <button type="submit" class="save-btn" id="saveBtn">Save API Key</button>
+                    <button type="button" class="remove-btn" id="removeBtn">Remove API Key</button>
+                </div>
+                <div class="status-message" id="statusMessage"></div>
+            </form>
+        </section>
+    </div>
+
+    ${renderFooter(FOOTER_STRINGS['english'])}
+</div>
+
+${ARCHIVAL_DETAILS_HTML}
+
+<div class="modal-overlay" id="confirmationModal">
+    <div class="modal-content">
+        <div class="modal-head">
+            <span class="lab" id="modalLab">CONFIRM</span>
+            <span id="modalEscClose">ESC TO CLOSE</span>
+        </div>
+        <div class="modal-body">
+            <h3 class="modal-title" id="modalTitle">Remove API Key</h3>
+            <p class="modal-message" id="modalMessage">Are you sure you want to remove your API key?</p>
+            <div class="modal-extra" id="modalExtra" style="display: none;"></div>
+        </div>
+        <div class="modal-actions">
+            <button class="modal-btn modal-btn-cancel" id="modalCancel">Cancel</button>
+            <button class="modal-btn modal-btn-confirm" id="modalConfirm">Confirm</button>
+        </div>
+    </div>
+</div>
+`;
+
 const SCRIPT = `
 (function() {
     const I18N = window.__QUILL_I18N__.settings;
-    const lang = localStorage.getItem('uiLanguage') || 'english';
-    const storageKey = getApiKeyStorageKey();
+    const FOOTER = window.__QUILL_I18N__.footer;
+
+    function escapeHtml(s) {
+        if (s == null) return '';
+        return String(s).replace(/[&<>"']/g, function(c) {
+            return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c];
+        });
+    }
+
+    function repaint(lang) {
+        const t = I18N[lang];
+        document.title = t.documentTitle;
+        // Topbar (replace on language change)
+        const topbarEl = document.querySelector('.topbar');
+        if (topbarEl) {
+            const tmp = document.createElement('div');
+            tmp.innerHTML = (window.__QUILL_TOPBAR__ && window.__QUILL_TOPBAR__[lang]) || topbarEl.outerHTML;
+            topbarEl.replaceWith(tmp.firstElementChild);
+            setupAccountMenu();
+            syncAuthPill();
+        }
+        const heroTitle = document.getElementById('heroTitle');
+        if (heroTitle) {
+            heroTitle.innerHTML = t.title.replace(/\\./, '<span class="amp">.</span>');
+        }
+        document.getElementById('heroLede').textContent = t.lede;
+        document.getElementById('backLink').textContent = t.backLink;
+        document.getElementById('configTitle').textContent = t.configTitle;
+        document.getElementById('languageSection').textContent = t.languageSection;
+        document.getElementById('interfaceLanguageLabel').textContent = t.interfaceLanguageLabel;
+        document.getElementById('languageHelp').textContent = t.languageHelp;
+        document.getElementById('apiSection').textContent = t.apiSection;
+        document.getElementById('apiInstructions').textContent = t.apiInstructions;
+        const stepsList = document.getElementById('apiStepsList');
+        if (stepsList) stepsList.innerHTML = t.apiSteps.map(function(s) { return '<li>' + s + '</li>'; }).join('');
+        const apiKeyLabel = document.getElementById('apiKeyLabel');
+        if (apiKeyLabel) apiKeyLabel.innerHTML = escapeHtml(t.apiKeyLabel) + ' <span class="req">*</span>';
+        document.getElementById('saveBtn').textContent = t.saveButton;
+        document.getElementById('removeBtn').textContent = t.removeButton;
+        const signInLink = document.getElementById('authSignInLink');
+        if (signInLink) {
+            signInLink.textContent = t.signInLink;
+            signInLink.setAttribute('title', t.signInTooltip);
+        }
+        const signOutBtn = document.getElementById('authSignOutBtn');
+        if (signOutBtn) signOutBtn.setAttribute('title', t.signOutTooltip);
+        if (window.rebuildAllSelects) window.rebuildAllSelects();
+        syncByokStatus();
+    }
+
+    function syncByokStatus() {
+        const lang = localStorage.getItem('uiLanguage') || 'english';
+        const t = I18N[lang];
+        const has = !!((localStorage.getItem(getApiKeyStorageKey()) || '').trim());
+        const byokStatus = document.getElementById('byokStatus');
+        if (byokStatus) byokStatus.setAttribute('data-state', has ? 'ok' : 'missing');
+        const byokStrings = (window.__QUILL_TOPBAR_STRINGS__ && window.__QUILL_TOPBAR_STRINGS__[lang]) || null;
+        const byokStateText = document.getElementById('byokStateText');
+        if (byokStateText) byokStateText.textContent = has ? (byokStrings ? byokStrings.byokSet : 'Key Set') : (byokStrings ? byokStrings.byokMissing : 'No Key');
+        const byokNoticeTitle = document.getElementById('byokNoticeTitle');
+        if (byokNoticeTitle) byokNoticeTitle.textContent = t.byokNoticeTitle;
+        const byokNoticeMsg = document.getElementById('byokNoticeMsg');
+        if (byokNoticeMsg) byokNoticeMsg.innerHTML = t.byokNoticeMsg;
+    }
+
+    function showModal(title, message, onConfirm, cancelText, confirmText, opts) {
+        const modal = document.getElementById('confirmationModal');
+        const lang = localStorage.getItem('uiLanguage') || 'english';
+        const t = I18N[lang];
+        const lab = document.getElementById('modalLab');
+        const escClose = document.getElementById('modalEscClose');
+        const modalExtra = document.getElementById('modalExtra');
+        if (lab) lab.textContent = t.confirmLabel;
+        if (escClose) escClose.textContent = t.escToClose;
+        document.getElementById('modalTitle').textContent = title;
+        document.getElementById('modalMessage').textContent = message;
+        document.getElementById('modalCancel').textContent = cancelText || 'Cancel';
+        document.getElementById('modalConfirm').textContent = confirmText || 'Confirm';
+        if (modalExtra) {
+            if (opts && opts.checkboxLabel) {
+                modalExtra.innerHTML = '<label class="modal-checkbox"><input type="checkbox" id="modalCheckbox" ' + (opts.checkboxDefault !== false ? 'checked' : '') + '> <span id="modalCheckboxLabel"></span></label>';
+                const lbl = document.getElementById('modalCheckboxLabel');
+                if (lbl) lbl.textContent = opts.checkboxLabel;
+                modalExtra.style.display = 'block';
+            } else {
+                modalExtra.innerHTML = '';
+                modalExtra.style.display = 'none';
+            }
+        }
+        modal.classList.add('show');
+        function closeModal() { modal.classList.remove('show'); }
+        document.getElementById('modalCancel').onclick = closeModal;
+        document.getElementById('modalConfirm').onclick = function() {
+            const cb = document.getElementById('modalCheckbox');
+            const checked = cb ? cb.checked : true;
+            closeModal();
+            onConfirm(checked);
+        };
+        modal.onclick = function(e) { if (e.target === modal) closeModal(); };
+        document.addEventListener('keydown', function escHandler(e) {
+            if (e.key === 'Escape') { closeModal(); document.removeEventListener('keydown', escHandler); }
+        });
+    }
 
     function getApiKeyStorageKey() {
         const uid = localStorage.getItem('quillAuthUid');
@@ -116,95 +312,103 @@ const SCRIPT = `
     }
 
     function showStatus(message, type) {
-        const el = document.getElementById('statusMessage');
-        el.textContent = message;
-        el.className = 'status-message ' + (type === 'success' ? 'status-success' : 'status-error');
-        el.style.display = 'block';
-        setTimeout(() => { el.style.display = 'none'; }, 5000);
+        const sm = document.getElementById('statusMessage');
+        sm.textContent = message;
+        sm.className = 'status-message status-' + type;
+        sm.style.display = 'block';
+        setTimeout(() => { sm.style.display = 'none'; }, 5000);
     }
 
-    function showModal(title, message, onConfirm, cancelText, confirmText, opts) {
-        if (window.showModal) {
-            window.showModal(title, message, onConfirm, cancelText, confirmText, opts);
-        } else {
-            if (confirm(message)) onConfirm(opts && opts.checkboxLabel ? true : undefined);
+    function computeInitials(name) {
+        if (!name) return '';
+        var parts = name.trim().split(/\s+/);
+        if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+        return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+
+    function syncAuthPill() {
+        const trigger = document.getElementById('accountTrigger');
+        const signIn = document.getElementById('authSignInLink');
+        const name = localStorage.getItem('quillAuthName') || '';
+        const uid = localStorage.getItem('quillAuthUid') || '';
+        const initials = computeInitials(name) || (uid ? uid.slice(0, 2).toUpperCase() : '--');
+        if (trigger && signIn) {
+            if (name || uid) {
+                trigger.hidden = false;
+                signIn.hidden = true;
+                trigger.setAttribute('data-uid', uid);
+                const av = document.getElementById('accountAvatar');
+                const avLg = document.getElementById('accountAvatarLg');
+                const trigName = document.getElementById('accountTriggerName');
+                const ddName = document.getElementById('accountName');
+                const ddEmail = document.getElementById('accountEmail');
+                const footUid = document.getElementById('accountFootUid');
+                if (av) av.textContent = initials;
+                if (avLg) avLg.textContent = initials;
+                if (trigName) trigName.textContent = name || 'Account';
+                if (ddName) ddName.textContent = name || 'Account';
+                if (ddEmail) ddEmail.textContent = uid || '';
+                if (footUid) footUid.textContent = uid ? 'UID ' + uid.slice(0, 8) + (uid.length > 8 ? '…' : '') : '';
+            } else {
+                trigger.hidden = true;
+                signIn.hidden = false;
+            }
         }
     }
 
-    function repaint(newLang) {
-        const t = I18N[newLang];
-        document.title = t.documentTitle;
-        const topbarEl = document.querySelector('.topbar');
-        if (topbarEl) {
-            const tmp = document.createElement('div');
-            tmp.innerHTML = (window.__QUILL_TOPBAR__ && window.__QUILL_TOPBAR__[newLang]) || topbarEl.outerHTML;
-            topbarEl.replaceWith(tmp.firstElementChild);
-            window.setupAccountMenu();
-            window.syncAuthPill();
+    function openAccountMenu() {
+        var trigger = document.getElementById('accountTrigger');
+        var dd = document.getElementById('accountDropdown');
+        var back = document.getElementById('accountBackdrop');
+        if (!trigger || !dd) return;
+        trigger.setAttribute('aria-expanded', 'true');
+        dd.hidden = false;
+        if (back) back.hidden = false;
+    }
+    function closeAccountMenu() {
+        var trigger = document.getElementById('accountTrigger');
+        var dd = document.getElementById('accountDropdown');
+        var back = document.getElementById('accountBackdrop');
+        if (trigger) trigger.setAttribute('aria-expanded', 'false');
+        if (dd) dd.hidden = true;
+        if (back) back.hidden = true;
+    }
+    function setupAccountMenu() {
+        var trigger = document.getElementById('accountTrigger');
+        var back = document.getElementById('accountBackdrop');
+        if (trigger) {
+            trigger.addEventListener('click', function(e) {
+                e.stopPropagation();
+                if (trigger.getAttribute('aria-expanded') === 'true') closeAccountMenu();
+                else openAccountMenu();
+            });
         }
-        const heroTitle = document.getElementById('heroTitle');
-        if (heroTitle) {
-            heroTitle.innerHTML = t.title.replace(/\\./, '<span class="amp">.</span>');
-        }
-        document.getElementById('heroLede').textContent = t.lede;
-        document.getElementById('configTitle').textContent = t.navTitle;
-        document.getElementById('backLink').innerHTML = '&larr; ' + t.backToGenerator;
-        document.getElementById('languageSection').textContent = t.languageSection;
-        document.getElementById('languageMeta').textContent = t.languageMeta;
-        document.getElementById('interfaceLanguageLabel').textContent = t.interfaceLanguageLabel;
-        document.getElementById('languageHelp').textContent = t.languageHelp;
-        document.getElementById('apiSection').textContent = t.apiSection;
-        document.getElementById('apiMeta').textContent = t.apiMeta;
-        document.getElementById('byokNoticeTitle').textContent = t.byokNoticeTitle;
-        document.getElementById('byokNoticeBody').textContent = t.byokNoticeBody;
-        document.getElementById('apiKeyLabel').textContent = t.apiKeyLabel;
-        document.getElementById('apiKeyHelp').textContent = t.apiKeyHelp;
-        document.getElementById('apiKeyGuideTitle').textContent = t.apiKeyGuideTitle;
-        document.getElementById('guideStep01').innerHTML = t.guideStep01;
-        document.getElementById('guideStep02').innerHTML = t.guideStep02;
-        document.getElementById('guideStep03').innerHTML = t.guideStep03;
-        document.getElementById('saveBtn').textContent = t.saveButton;
-        const removeBtn = document.getElementById('removeBtn');
-        if (removeBtn) removeBtn.textContent = t.removeButton;
-
-        const signInLink = document.getElementById('authSignInLink');
-        if (signInLink) {
-            signInLink.textContent = t.signInLabel;
-            signInLink.setAttribute('title', t.signInTooltip);
-        }
-        const signOutBtn = document.getElementById('authSignOutBtn');
-        if (signOutBtn) signOutBtn.setAttribute('title', t.signOutTooltip);
-        if (window.rebuildAllSelects) window.rebuildAllSelects();
-
-        // Repaint Footer
-        const footerEl = document.querySelector('.footer');
-        if (footerEl) {
-            const footerStrings = window.__QUILL_I18N__.footer[newLang];
-            footerEl.querySelector('.col-1').innerHTML = footerStrings.copyright;
-            footerEl.querySelector('.col-2').innerHTML = footerStrings.typeface;
-            footerEl.querySelector('.col-3').innerHTML = footerStrings.by.replace('{link}', '<a href="https://azzar.netlify.app/porto" target="_blank">LilyOpenCMS</a>');
-        }
-
-        window.syncByokStatus();
+        if (back) back.addEventListener('click', closeAccountMenu);
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeAccountMenu();
+        });
     }
 
     document.addEventListener('DOMContentLoaded', function() {
-        const savedLanguage = localStorage.getItem('uiLanguage') || 'english';
-        const languageSelect = document.getElementById('uiLanguage');
         const apiKeyForm = document.getElementById('apiKeyForm');
         const apiKeyInput = document.getElementById('apiKey');
+        const saveBtn = document.getElementById('saveBtn');
         const removeBtn = document.getElementById('removeBtn');
+        const languageSelect = document.getElementById('uiLanguage');
 
+        const savedLanguage = localStorage.getItem('uiLanguage') || 'english';
         languageSelect.value = savedLanguage;
-        const savedKey = localStorage.getItem(storageKey);
-        if (savedKey) {
-            apiKeyInput.value = savedKey;
+
+        const storageKey = getApiKeyStorageKey();
+        const savedApiKey = localStorage.getItem(storageKey);
+        if (savedApiKey) {
+            apiKeyInput.value = savedApiKey;
             removeBtn.style.display = 'inline-block';
         } else {
             removeBtn.style.display = 'none';
         }
-        window.setupAccountMenu();
-        window.syncAuthPill();
+        setupAccountMenu();
+        syncAuthPill();
         repaint(savedLanguage);
 
         languageSelect.addEventListener('change', function() {
@@ -220,7 +424,7 @@ const SCRIPT = `
                 apiKeyInput.value = '';
                 removeBtn.style.display = 'none';
                 showStatus(t.apiKeyRemoved, 'success');
-                window.syncByokStatus();
+                syncByokStatus();
             }, t.cancelButton, t.removeModalButton);
         });
 
@@ -237,7 +441,7 @@ const SCRIPT = `
             showStatus(t.apiKeySaved, 'success');
             removeBtn.style.display = 'inline-block';
             removeBtn.textContent = t.removeButton;
-            window.syncByokStatus();
+            syncByokStatus();
             try {
                 const response = await fetch('/api/test-key', {
                     method: 'POST',
@@ -315,8 +519,8 @@ const SCRIPT = `
             } else {
                 localStorage.setItem(newKey, '');
             }
-            window.syncAuthPill();
-            window.syncByokStatus();
+            syncAuthPill();
+            syncByokStatus();
             location.reload();
         }
     });
@@ -325,93 +529,13 @@ const SCRIPT = `
 
 export function generateSettingsPageHTML(locale: Locale = 'english'): string {
   const strings = SETTINGS_STRINGS[locale];
-  const footerStrings = FOOTER_STRINGS[locale];
-  const topbarHtml = renderTopbar('settings', locale);
-  const footerHtml = renderFooter(footerStrings);
-
   return `<!DOCTYPE html>
 <html lang="${locale}">
 ${renderHead({ title: strings.documentTitle, pageStyles: PAGE_CSS })}
 <body>
-<div class="container">
-    ${topbarHtml}
-
-    <header class="hero">
-        <div class="index">№ 04</div>
-        <div class="headline">
-            <h1 id="heroTitle">${strings.title.replace(/\./, '<span class="amp">.</span>')}</h1>
-        </div>
-        <p class="lede" id="heroLede">${strings.lede}</p>
-    </header>
-
-
-    <div class="nav">
-        <div class="num">01</div>
-        <div class="title" id="configTitle">${strings.navTitle}</div>
-        <div class="back"><a href="/" id="backLink">&larr; ${strings.backToGenerator}</a></div>
-    </div>
-
-    <div class="settings-container">
-        <section class="settings-section">
-            <div class="section-head">
-                <div class="num">02</div>
-                <div class="title" id="languageSection">${strings.languageSection}</div>
-                <div class="meta" id="languageMeta">${strings.languageMeta}</div>
-            </div>
-            <div class="form-group">
-                <label for="uiLanguage" id="interfaceLanguageLabel">${strings.interfaceLanguageLabel}</label>
-                <select id="uiLanguage">
-                    <option value="english">English</option>
-                    <option value="indonesian">Bahasa Indonesia</option>
-                </select>
-                <small class="help-text" id="languageHelp">${strings.languageHelp}</small>
-            </div>
-        </section>
-
-        <section class="settings-section">
-            <div class="section-head">
-                <div class="num">03</div>
-                <div class="title" id="apiSection">${strings.apiSection}</div>
-                <div class="meta" id="apiMeta">${strings.apiMeta}</div>
-            </div>
-            <div class="byok-notice" id="byokNotice">
-                <div class="byok-notice-num">BYOK</div>
-                <div class="byok-notice-body">
-                    <h4 id="byokNoticeTitle">${strings.byokNoticeTitle}</h4>
-                    <p id="byokNoticeBody">${strings.byokNoticeBody}</p>
-                </div>
-            </div>
-            <form id="apiKeyForm">
-                <div class="form-group">
-                    <label for="apiKey" id="apiKeyLabel">${strings.apiKeyLabel}</label>
-                    <input type="password" id="apiKey" placeholder="AIzaSy...">
-                    <small class="help-text" id="apiKeyHelp">${strings.apiKeyHelp}</small>
-                </div>
-                <div class="action-row">
-                    <button type="submit" class="save-btn" id="saveBtn">${strings.saveButton}</button>
-                    <button type="button" class="remove-btn" id="removeBtn" style="display: none;">${strings.removeButton}</button>
-                </div>
-                <div id="statusMessage" class="status-message"></div>
-            </form>
-
-            <div class="info-block">
-                <h4 id="apiKeyGuideTitle">${strings.apiKeyGuideTitle}</h4>
-                <ol>
-                    <li id="guideStep01">${strings.guideStep01}</li>
-                    <li id="guideStep02">${strings.guideStep02}</li>
-                    <li id="guideStep03">${strings.guideStep03}</li>
-                </ol>
-            </div>
-        </section>
-    </div>
-
-    ${footerHtml}
-</div>
-
-${ARCHIVAL_DETAILS_HTML}
-
+${BODY_HTML}
 <script>
-window.__QUILL_I18N__ = ${JSON.stringify({ settings: SETTINGS_STRINGS, common: COMMON_STRINGS, footer: FOOTER_STRINGS })};
+window.__QUILL_I18N__ = ${JSON.stringify({ settings: SETTINGS_STRINGS, footer: FOOTER_STRINGS })};
 window.__QUILL_INITIAL_LOCALE__ = ${JSON.stringify(locale)};
 window.__QUILL_TOPBAR__ = ${JSON.stringify({
   english: renderTopbar('settings', 'english'),
@@ -422,7 +546,6 @@ window.__QUILL_TOPBAR_STRINGS__ = ${JSON.stringify({
   indonesian: getTopbarStrings('indonesian'),
 })};
 </script>
-<script>${COMMON_JS}</script>
 <script>${SCRIPT}</script>
 <script>${SELECT_SCRIPT}</script>
 <script>${SPECIMEN_JS}</script>

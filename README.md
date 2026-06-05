@@ -1,7 +1,7 @@
 # Quill™ - AI Writing Assistant
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Version](https://img.shields.io/badge/version-2.2.0-green)
+![Version](https://img.shields.io/badge/version-2.1.0-green)
 ![Status](https://img.shields.io/badge/status-active-success)
 
 **Quill™** is an editorial writing instrument powered by AI. Built on Cloudflare Workers and Google Gemini models, it generates professional articles, short stories, and novel outlines with precise author-style mimicry.
@@ -104,8 +104,6 @@ src/
 ├── ui/                # Swiss-Archival Frontend
 │   ├── main.ts        # Generator Interface
 │   ├── workspace.ts   # Draft Management & Editor
-│   ├── about.ts       # Vision & Technology
-│   ├── auth.ts        # Firebase Authentication
 │   ├── styles.ts      # Unified Design System & Components
 │   └── i18n.ts        # Multilingual Tables (EN/ID)
 ├── handler.ts         # API Routing & Auth logic
