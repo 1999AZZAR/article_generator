@@ -1,53 +1,50 @@
 # Quill™ - AI Writing Assistant
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Version](https://img.shields.io/badge/version-2.0.0-green)
+![Version](https://img.shields.io/badge/version-2.1.0-green)
 ![Status](https://img.shields.io/badge/status-active-success)
 
-**Quill™** is an enterprise-grade AI writing assistant built on Cloudflare Workers and Google Gemini 3 models. It generates professional articles, short stories, and news briefs with precise author style mimicry.
+**Quill™** is an editorial writing instrument powered by AI. Built on Cloudflare Workers and Google Gemini models, it generates professional articles, short stories, and novel outlines with precise author-style mimicry.
 
-**Live Demo:** [https://article-generator.azzar.workers.dev](https://article-generator.azzar.workers.dev)
+**Production Origin:** [https://quill.glassgallery.my.id](https://quill.glassgallery.my.id)
 
 ---
 
 ## Features
 
 ### Content Generation
-- **Articles**: Comprehensive, research-quality content (1800-2000 words)
-- **Short Stories**: Narrative fiction with character arcs (2500-3000 words)
-- **News Articles**: In-depth journalistic reporting (1200-1800 words)
-- **Short News**: Concise news briefs in 5W1H format (400-600 words)
-- **Novel Outlines**: Full chapter breakdown & synopsis
-- **Chapter Continuity**: Intelligent story flow that maintains narrative consistency across chapters (using optimized summaries)
+- **Articles**: Comprehensive, research-quality content.
+- **Short Stories**: Narrative fiction with character arcs.
+- **News Articles**: In-depth journalistic reporting and concise news briefs.
+- **Novel Outlines**: Full chapter breakdown & synopsis with chapter-by-chapter continuity.
+- **Chapter Generation**: Interactive chapter drafting with memory of previous plot events.
 
 ### Author Style System
 Advanced style mimicry with curated prompts for 21+ specific authors:
 - **Classic & Literary**: Hemingway, Austen, Orwell, Toni Morrison, etc.
-- **Fantasy & Sci-Fi**: Tolkien, G.R.R. Martin, Neil Gaiman, J.K. Rowling
-- **Contemporary**: Stephen King, Murakami, Margaret Atwood
-- **Indonesian Authors**: Pramoedya Ananta Toer, Dee Lestari, Andrea Hirata
-- **Non-Fiction**: Yuval Noah Harari
+- **Fantasy & Sci-Fi**: Tolkien, G.R.R. Martin, Neil Gaiman, J.K. Rowling.
+- **Indonesian Authors**: Pramoedya Ananta Toer, Dee Lestari, Andrea Hirata.
+- **Non-Fiction**: Yuval Noah Harari.
 
-### Technical Highlights
-- **Prompt Optimization**: Compressed prompts (60% token reduction) for faster generation
-- **Smart Context**: Novel chapters use optimized summaries (last 3 chapters only) to prevent token bloat
-- **Circuit Breaker**: Removed for stateless edge deployment stability
-- **Gemini 3 Powered**: Uses latest `gemini-3-flash-preview` & `gemini-3-pro-preview` models
+### Technical Architecture
+- **BYOK (Bring Your Own Key)**: Users provide their own Gemini API key in Settings. The key is stored only in the browser (`localStorage`) and sent per-request via the `X-User-API-Key` header.
+- **Persistence**: PostgreSQL (via Prisma) stores drafts and user data. Redis handles transient autosave buffers.
+- **Stateful Edge**: Powered by Cloudflare Workers with `driverAdapters` for database connectivity.
+- **AI Models**: Uses latest `gemini-2.0-flash-exp` & `gemini-1.5-pro` fallback chain.
 
-### UI/UX Design
-- **Swiss Editorial System**: International Typographic Style — 12-column grid, hairline 1px rules, sharp 0px corners
-- **Typography**: Inter Display at display weights (800) with tight letter-spacing; JetBrains Mono for indices and captions
-- **Palette**: Black, White, Signal Red (#FF0000) on a white canvas; no gradients, no shadows, no ornament
-- **Numbered Sections**: Editorial chapter numbering (№ 01, 02, 03…) used as wayfinding
-- **Mobile Responsive**: Grid collapses to single column under 900px
+### Swiss-Archival UI
+- **International Typographic Style**: 12-column grid, hairline 1px rules, sharp 0px corners.
+- **Archival Atmosphere**: Fixed paper-grain texture, blueprint construction guides, and corner crop marks.
+- **Typography**: Inter Display (weights 300–900) and JetBrains Mono for metadata and indices.
+- **Deterministic Ornamentation**: Generative "superformula" specimen shapes unique to each page/result block.
 
 ---
 
 ## Installation
 
 ### Prerequisites
-- Node.js 18+
-- Cloudflare Account
+- Node.js 20+
+- Docker & Docker Compose
 - Google Gemini API Key
 
 ### Local Development
@@ -58,54 +55,44 @@ Advanced style mimicry with curated prompts for 21+ specific authors:
    cd article_generator
    ```
 
-2. **Install dependencies:**
+2. **Setup Environment:**
+   Ensure `docker-compose.yml` environment variables align with your local setup.
+
+3. **Launch Environment:**
    ```bash
-   npm install
+   docker compose up -d
    ```
+   This starts:
+   - `quill-dev`: The Cloudflare Worker in development mode (live-reloading).
+   - `quill-postgres`: Database for persistent storage.
+   - `quill-redis`: Cache for autosave functionality.
 
-3. **Start the development server:**
+4. **Sync Database:**
    ```bash
-   npm run dev
+   docker compose exec quill-dev npx prisma db push
+   docker compose exec quill-dev npx prisma generate
    ```
-
-4. **Build the project:**
-   ```bash
-   npm run build
-   ```
-
-### Local development with the Cloudflare Tunnel
-
-Production is served through the existing Cloudflare Tunnel at [https://quill.glassgallery.my.id](https://quill.glassgallery.my.id). To run the same origin locally so the tunnel can proxy to it:
-
-```bash
-docker build -t quill-dev .
-docker run -d --name quill-dev -p 127.0.0.1:8787:8787 --restart unless-stopped \
-  -v quill-data:/app/.wrangler quill-dev
-# or
-docker compose up -d
-```
-
-The container exposes `wrangler dev` on `0.0.0.0:8787`. If your `cloudflared` is already running on the host with the tunnel origin set to `http://localhost:8787`, requests to `https://quill.glassgallery.my.id` are forwarded straight into the container. If `cloudflared` runs in its own container, attach it to the compose-managed `tunnel` network so the origin becomes `http://quill-dev:8787`.
 
 ---
 
 ## Deployment
 
-We use **Wrangler** for direct deployment (GitHub Actions workflow has been removed).
+Quill is optimized for Cloudflare Workers.
 
 1. **Login to Cloudflare:**
    ```bash
    npx wrangler login
    ```
 
-2. **Set API Key (Secret):**
+2. **Configure Secrets:**
    ```bash
-   npx wrangler secret put GEMINI_API_KEY
+   npx wrangler secret put DATABASE_URL
+   npx wrangler secret put REDIS_URL
    ```
 
 3. **Deploy:**
    ```bash
-   npx wrangler deploy
+   npm run deploy
    ```
 
 ---
@@ -113,24 +100,17 @@ We use **Wrangler** for direct deployment (GitHub Actions workflow has been remo
 ## Project Structure
 
 ```bash
-article_generator/
-├── src/
-│   ├── index.ts           # Worker Entry Point
-│   ├── handler.ts         # API Route Handlers
-│   ├── gemini.ts          # AI Logic & Prompt Engineering
-│   └── ui.ts              # Frontend Components (HTML/CSS)
-├── public/                # Static Assets
-├── PROMPT_OPTIMIZATION.md # Prompt Engineering Documentation
-├── wrangler.toml          # Worker Configuration (Ignored in Git)
-└── package.json           # Project Dependencies
+src/
+├── ui/                # Swiss-Archival Frontend
+│   ├── main.ts        # Generator Interface
+│   ├── workspace.ts   # Draft Management & Editor
+│   ├── styles.ts      # Unified Design System & Components
+│   └── i18n.ts        # Multilingual Tables (EN/ID)
+├── handler.ts         # API Routing & Auth logic
+├── gemini.ts          # AI Orchestration & Prompt Engineering
+├── db.ts              # Database/Cache Client Factories
+└── auth.ts            # HttpOnly Cookie-based Session Tracking
 ```
-
----
-
-## Documentation
-
-- [Prompt Optimization Guide](PROMPT_OPTIMIZATION.md) - Detailed breakdown of how we reduced tokens by 60% while improving quality.
-- [Model Verification](MODEL_VERIFICATION.md) - Details on Gemini 3 model usage and validation.
 
 ---
 
