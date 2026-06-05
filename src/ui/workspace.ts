@@ -420,17 +420,23 @@ const SCRIPT = `
     function renderDrafts() {
         var list = document.getElementById('draftList');
         var empty = document.getElementById('wsEmpty');
-        if (!list || !empty) return;
+        var head = document.getElementById('wsTableHead');
+        if (!list || !empty || !head) return;
+        
         var filtered = drafts.filter(function(d) {
             if (activeFilter === 'all') return true;
             return d.status === activeFilter;
         });
+        
         if (filtered.length === 0) {
             list.innerHTML = '';
             empty.hidden = false;
+            head.style.display = 'none';
             return;
         }
+        
         empty.hidden = true;
+        head.style.display = 'grid';
         list.innerHTML = filtered.map(function(d) {
             var badgeClass = d.status === 'final' ? 'draft-badge-final' : 'draft-badge-draft';
             var isOpen = d.id === openDraftId;
