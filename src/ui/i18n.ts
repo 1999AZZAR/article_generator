@@ -308,9 +308,16 @@ export interface AuthPageStrings {
   signingUp: string;
   signingOut: string;
   redirecting: string;
-  }
 
-  export interface AboutPageStrings {
+  signInSuccess: string;
+  signUpSuccess: string;
+  signOutSuccess: string;
+
+  signedInAs: (name: string) => string;
+  signOutButton: string;
+}
+
+export interface AboutPageStrings {
   documentTitle: string;
   brand: string;
   title: string;
@@ -334,14 +341,6 @@ export interface AuthPageStrings {
   section03Number: string;
   section03Title: string;
   section03Meta: string;
-  }
-
-  signInSuccess: string;
-  signUpSuccess: string;
-  signOutSuccess: string;
-
-  signedInAs: (name: string) => string;
-  signOutButton: string;
 }
 
 export const MAIN_STRINGS: Record<Locale, MainPageStrings> = {
@@ -1082,6 +1081,8 @@ export const COMMON_STRINGS: Record<Locale, CommonStrings> = {
     authUID: 'UID',
   },
 };
+
+export function getLocale(): Locale {
   // Browser-only helper. The server has no localStorage, so the call site
   // guards with `typeof localStorage !== 'undefined'`.
   const ls = (globalThis as { localStorage?: { getItem: (k: string) => string | null } }).localStorage;

@@ -95,7 +95,7 @@ const PAGE_CSS = `
 
 const BODY_HTML = `
 <div class="container">
-    \${renderTopbar('about', 'english')}
+    ${renderTopbar('about', 'english')}
 
     <header class="about-hero">
         <div class="index">&#8470; 00</div>
@@ -152,10 +152,10 @@ const BODY_HTML = `
         </section>
     </main>
 
-    \${renderFooter(FOOTER_STRINGS['english'])}
+    ${renderFooter(FOOTER_STRINGS['english'])}
 </div>
 
-\${ARCHIVAL_DETAILS_HTML}
+${ARCHIVAL_DETAILS_HTML}
 `;
 
 const SCRIPT = `
@@ -178,7 +178,7 @@ const SCRIPT = `
 
         const heroTitle = document.getElementById('heroTitle');
         if (heroTitle) {
-            heroTitle.innerHTML = t.title.replace(/\\\\./, '<span class="amp">.</span>');
+            heroTitle.innerHTML = t.title.replace(/\\./, '<span class="amp">.</span>');
         }
         document.getElementById('heroLede').textContent = t.lede;
 
@@ -220,26 +220,26 @@ const SCRIPT = `
 
 export function generateAboutPageHTML(locale: Locale = 'english'): string {
   const strings = ABOUT_STRINGS[locale];
-  return \`<!DOCTYPE html>
-<html lang="\${locale}">
-\${renderHead({ title: strings.documentTitle, pageStyles: PAGE_CSS })}
+  return `<!DOCTYPE html>
+<html lang="${locale}">
+${renderHead({ title: strings.documentTitle, pageStyles: PAGE_CSS })}
 <body>
-\${BODY_HTML}
+${BODY_HTML}
 <script>
-window.__QUILL_I18N__ = \${JSON.stringify({ about: ABOUT_STRINGS, common: COMMON_STRINGS, footer: FOOTER_STRINGS })};
-window.__QUILL_INITIAL_LOCALE__ = \${JSON.stringify(locale)};
-window.__QUILL_TOPBAR__ = \${JSON.stringify({
+window.__QUILL_I18N__ = ${JSON.stringify({ about: ABOUT_STRINGS, common: COMMON_STRINGS, footer: FOOTER_STRINGS })};
+window.__QUILL_INITIAL_LOCALE__ = ${JSON.stringify(locale)};
+window.__QUILL_TOPBAR__ = ${JSON.stringify({
   english: renderTopbar('about', 'english'),
   indonesian: renderTopbar('about', 'indonesian'),
 })};
-window.__QUILL_TOPBAR_STRINGS__ = \${JSON.stringify({
+window.__QUILL_TOPBAR_STRINGS__ = ${JSON.stringify({
   english: getTopbarStrings('english'),
   indonesian: getTopbarStrings('indonesian'),
 })};
 </script>
-<script>\${COMMON_JS}</script>
-<script>\${SCRIPT}</script>
-<script>\${SPECIMEN_JS}</script>
+<script>${COMMON_JS}</script>
+<script>${SCRIPT}</script>
+<script>${SPECIMEN_JS}</script>
 <script>
 (function() {
     if (window.renderSpecimen) {
@@ -250,5 +250,5 @@ window.__QUILL_TOPBAR_STRINGS__ = \${JSON.stringify({
 })();
 </script>
 </body>
-</html>\`;
+</html>`;
 }
