@@ -149,7 +149,7 @@ const BODY_HTML = `
                 <div class="byok-notice-num">BYOK</div>
                 <div class="byok-notice-body">
                     <div class="byok-notice-title" id="byokNoticeTitle">Bring Your Own Key</div>
-                    <div class="byok-notice-msg" id="byokNoticeMsg">Quill is BYOK &mdash; Bring Your Own Key. The server has no default Gemini key, so every visitor must provide their own. Your key is stored only in this browser (<code>localStorage</code>) and is sent per-request as the <code>X-User-API-Key</code> header. The server never persists, logs, or shares it.</div>
+                    <div class="byok-notice-msg" id="byokNoticeMsg">Quill<span class="brand-tm">™</span> is BYOK &mdash; Bring Your Own Key. The server has no default Gemini key, so every visitor must provide their own. Your key is stored only in this browser (<code>localStorage</code>) and is sent per-request as the <code>X-User-API-Key</code> header. The server never persists, logs, or shares it.</div>
                 </div>
             </div>
             <div class="info-block">
@@ -225,7 +225,7 @@ const SCRIPT = `
         }
         const heroTitle = document.getElementById('heroTitle');
         if (heroTitle) {
-            heroTitle.innerHTML = escapeHtml(t.title).replace(/\\./, '<span class="amp">.</span>');
+            heroTitle.innerHTML = t.title.replace(/\./, '<span class="amp">.</span>');
         }
         document.getElementById('heroLede').textContent = t.lede;
         document.getElementById('backLink').textContent = t.backLink;

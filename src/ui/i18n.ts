@@ -319,9 +319,9 @@ export interface AuthPageStrings {
 
 export const MAIN_STRINGS: Record<Locale, MainPageStrings> = {
   english: {
-    documentTitle: 'Quill \u2014 AI Writing Assistant',
-    brand: 'QUILL <span class="accent-dot">/</span> AI WRITING ASSISTANT <span class="accent-dot">/</span> ED. 02',
-    title: 'Quill.',
+    documentTitle: 'Quill™ \u2014 AI Writing Assistant',
+    brand: 'Quill<span class="brand-tm">™</span> <span class="accent-dot">/</span> AI WRITING ASSISTANT <span class="accent-dot">/</span> ED. 02',
+    title: 'Quill<span class="brand-tm">™</span>.',
     lede: 'An editorial writing instrument powered by AI. Long-form articles, short stories, news briefs and novel outlines — drafted with author-style precision.',
     settingsLink: 'SETTINGS →',
     signInLink: 'SIGN IN',
@@ -391,7 +391,7 @@ export const MAIN_STRINGS: Record<Locale, MainPageStrings> = {
     byokKeySet: 'Key Set',
     byokKeyMissing: 'No API Key',
     byokBannerTitle: 'Bring Your Own Key',
-    byokBannerMsg: 'Quill is BYOK — Bring Your Own Key. Add your Gemini API key in Settings to start generating. The key is stored only in this browser and sent per-request via the <code>X-User-API-Key</code> header. The server never persists it.',
+    byokBannerMsg: 'Quill<span class="brand-tm">™</span> is BYOK — Bring Your Own Key. Add your Gemini API key in Settings to start generating. The key is stored only in this browser and sent per-request via the <code>X-User-API-Key</code> header. The server never persists it.',
     byokBannerCta: 'Open Settings →',
     missingFields: 'Missing required fields',
     tagsRequired: 'Please add at least one tag',
@@ -452,9 +452,9 @@ export const MAIN_STRINGS: Record<Locale, MainPageStrings> = {
   },
 
   indonesian: {
-    documentTitle: 'Quill \u2014 Asisten Menulis AI',
-    brand: 'QUILL <span class="accent-dot">/</span> ASISTEN MENULIS AI <span class="accent-dot">/</span> ED. 02',
-    title: 'Quill.',
+    documentTitle: 'Quill™ \u2014 Asisten Menulis AI',
+    brand: 'Quill<span class="brand-tm">™</span> <span class="accent-dot">/</span> ASISTEN MENULIS AI <span class="accent-dot">/</span> ED. 02',
+    title: 'Quill<span class="brand-tm">™</span>.',
     lede: 'Instrumen penulisan editorial bertenaga AI. Artikel panjang, cerita pendek, berita singkat, dan rangkuman novel — disusun dengan presisi gaya penulis.',
     settingsLink: 'PENGATURAN →',
     signInLink: 'MASUK',
@@ -524,7 +524,7 @@ export const MAIN_STRINGS: Record<Locale, MainPageStrings> = {
     byokKeySet: 'Kunci Disetel',
     byokKeyMissing: 'Tanpa Kunci',
     byokBannerTitle: 'Bawa Kunci Anda Sendiri',
-    byokBannerMsg: 'Quill adalah BYOK — Bawa Kunci Anda Sendiri. Tambahkan kunci API Gemini Anda di Pengaturan untuk mulai menghasilkan. Kunci hanya disimpan di peramban ini dan dikirim per-request lewat header <code>X-User-API-Key</code>. Server tidak pernah menyimpannya.',
+    byokBannerMsg: 'Quill<span class="brand-tm">™</span> adalah BYOK — Bawa Kunci Anda Sendiri. Tambahkan kunci API Gemini Anda di Pengaturan untuk mulai menghasilkan. Kunci hanya disimpan di peramban ini dan dikirim per-request lewat header <code>X-User-API-Key</code>. Server tidak pernah menyimpannya.',
     byokBannerCta: 'Buka Pengaturan →',
     missingFields: 'Kolom wajib belum lengkap',
     tagsRequired: 'Silakan tambahkan setidaknya satu tag',
@@ -587,7 +587,7 @@ export const MAIN_STRINGS: Record<Locale, MainPageStrings> = {
 
 export const WORKSPACE_STRINGS: Record<Locale, WorkspacePageStrings> = {
   english: {
-    documentTitle: 'Quill — Workspace',
+    documentTitle: 'Quill™ — Workspace',
     title: 'Workspace.',
     lede: 'Your saved drafts and finished pieces. Edit inline, autosave while you write.',
 
@@ -647,7 +647,7 @@ export const WORKSPACE_STRINGS: Record<Locale, WorkspacePageStrings> = {
   },
 
   indonesian: {
-    documentTitle: 'Quill — Ruang Kerja',
+    documentTitle: 'Quill™ — Ruang Kerja',
     title: 'Ruang Kerja.',
     lede: 'Draf dan karya selesai Anda. Edit langsung, simpan otomatis saat menulis.',
 
@@ -709,8 +709,8 @@ export const WORKSPACE_STRINGS: Record<Locale, WorkspacePageStrings> = {
 
 export const SETTINGS_STRINGS: Record<Locale, SettingsPageStrings> = {
   english: {
-    documentTitle: 'Quill \u2014 Settings',
-    brand: 'QUILL <span class="accent-dot">/</span> SETTINGS <span class="accent-dot">/</span> ED. 02',
+    documentTitle: 'Quill™ \u2014 Settings',
+    brand: 'Quill<span class="brand-tm">™</span> <span class="accent-dot">/</span> SETTINGS <span class="accent-dot">/</span> ED. 02',
     title: 'Settings.',
     lede: 'Configure the language of the interface and your Gemini API key. All values are stored locally in this browser.',
     backLink: '← Back to Generator',
@@ -761,7 +761,7 @@ export const SETTINGS_STRINGS: Record<Locale, SettingsPageStrings> = {
     byokKeySet: 'Key Set',
     byokKeyMissing: 'No API Key',
     byokNoticeTitle: 'Bring Your Own Key',
-    byokNoticeMsg: 'Quill is BYOK — Bring Your Own Key. The server has no default Gemini key, so every visitor must provide their own. Your key is stored only in this browser (<code>localStorage</code>) and is sent per-request as the <code>X-User-API-Key</code> header. The server never persists, logs, or shares it.',
+    byokNoticeMsg: 'Quill<span class="brand-tm">™</span> is BYOK — Bring Your Own Key. The server has no default Gemini key, so every visitor must provide their own. Your key is stored only in this browser (<code>localStorage</code>) and is sent per-request as the <code>X-User-API-Key</code> header. The server never persists, logs, or shares it.',
 
     signInLink: 'SIGN IN',
     signOutLink: 'SIGN OUT',
@@ -771,8 +771,8 @@ export const SETTINGS_STRINGS: Record<Locale, SettingsPageStrings> = {
   },
 
   indonesian: {
-    documentTitle: 'Quill \u2014 Pengaturan',
-    brand: 'QUILL <span class="accent-dot">/</span> PENGATURAN <span class="accent-dot">/</span> ED. 02',
+    documentTitle: 'Quill™ \u2014 Pengaturan',
+    brand: 'Quill<span class="brand-tm">™</span> <span class="accent-dot">/</span> PENGATURAN <span class="accent-dot">/</span> ED. 02',
     title: 'Pengaturan.',
     lede: 'Konfigurasikan bahasa antarmuka dan kunci API Gemini Anda. Semua nilai disimpan secara lokal di peramban ini.',
     backLink: '← Kembali ke Generator',
@@ -823,7 +823,7 @@ export const SETTINGS_STRINGS: Record<Locale, SettingsPageStrings> = {
     byokKeySet: 'Kunci Disetel',
     byokKeyMissing: 'Tanpa Kunci',
     byokNoticeTitle: 'Bawa Kunci Anda Sendiri',
-    byokNoticeMsg: 'Quill adalah BYOK — Bawa Kunci Anda Sendiri. Server tidak memiliki kunci Gemini bawaan, jadi setiap pengunjung harus menyediakan kuncinya sendiri. Kunci Anda hanya disimpan di peramban ini (<code>localStorage</code>) dan dikirim per-request sebagai header <code>X-User-API-Key</code>. Server tidak pernah menyimpan, mencatat, atau membagikannya.',
+    byokNoticeMsg: 'Quill<span class="brand-tm">™</span> adalah BYOK — Bawa Kunci Anda Sendiri. Server tidak memiliki kunci Gemini bawaan, jadi setiap pengunjung harus menyediakan kuncinya sendiri. Kunci Anda hanya disimpan di peramban ini (<code>localStorage</code>) dan dikirim per-request sebagai header <code>X-User-API-Key</code>. Server tidak pernah menyimpan, mencatat, atau membagikannya.',
 
     signInLink: 'MASUK',
     signOutLink: 'KELUAR',
@@ -835,13 +835,13 @@ export const SETTINGS_STRINGS: Record<Locale, SettingsPageStrings> = {
 
 export const AUTH_STRINGS: Record<Locale, AuthPageStrings> = {
   english: {
-    documentTitle: 'Quill \u2014 Sign In',
-    brand: 'QUILL <span class="accent-dot">/</span> SIGN IN <span class="accent-dot">/</span> ED. 02',
+    documentTitle: 'Quill™ \u2014 Sign In',
+    brand: 'Quill<span class="brand-tm">™</span> <span class="accent-dot">/</span> SIGN IN <span class="accent-dot">/</span> ED. 02',
     title: 'Sign in.',
     backLink: '← Back to Generator',
 
-    introTitle: 'Sign in to Quill.',
-    introBody: 'Quill is BYOK. Sign in to keep your Gemini API key and saved articles tied to your account across devices. The server never sees or stores your key — it lives only in this browser.',
+    introTitle: 'Sign in to Quill<span class="brand-tm">™</span>.',
+    introBody: 'Quill<span class="brand-tm">™</span> is BYOK. Sign in to keep your Gemini API key and saved articles tied to your account across devices. The server never sees or stores your key — it lives only in this browser.',
 
     signInTab: 'Sign In',
     signUpTab: 'Create Account',
@@ -887,13 +887,13 @@ export const AUTH_STRINGS: Record<Locale, AuthPageStrings> = {
   },
 
   indonesian: {
-    documentTitle: 'Quill \u2014 Masuk',
-    brand: 'QUILL <span class="accent-dot">/</span> MASUK <span class="accent-dot">/</span> ED. 02',
+    documentTitle: 'Quill™ \u2014 Masuk',
+    brand: 'Quill<span class="brand-tm">™</span> <span class="accent-dot">/</span> MASUK <span class="accent-dot">/</span> ED. 02',
     title: 'Masuk.',
     backLink: '← Kembali ke Generator',
 
-    introTitle: 'Masuk ke Quill.',
-    introBody: 'Quill adalah BYOK. Masuk untuk menjaga kunci API Gemini dan artikel Anda tetap terhubung ke akun ini di semua perangkat. Server tidak pernah melihat atau menyimpan kunci Anda — kunci hanya ada di peramban ini.',
+    introTitle: 'Masuk ke Quill<span class="brand-tm">™</span>.',
+    introBody: 'Quill<span class="brand-tm">™</span> adalah BYOK. Masuk untuk menjaga kunci API Gemini dan artikel Anda tetap terhubung ke akun ini di semua perangkat. Server tidak pernah melihat atau menyimpan kunci Anda — kunci hanya ada di peramban ini.',
 
     signInTab: 'Masuk',
     signUpTab: 'Buat Akun',

@@ -45,8 +45,8 @@ const BODY_HTML = `
 
     <main class="auth-page">
         <div class="auth-intro">
-            <h2 id="introTitle">Sign in to Quill.</h2>
-            <p id="introBody">Quill is BYOK. Sign in to keep your Gemini API key and saved articles tied to your account across devices. The server never sees or stores your key — it lives only in this browser.</p>
+            <h2 id="introTitle">Sign in to Quill<span class="brand-tm">™</span>.</h2>
+            <p id="introBody">Quill<span class="brand-tm">™</span> is BYOK. Sign in to keep your Gemini API key and saved articles tied to your account across devices. The server never sees or stores your key — it lives only in this browser.</p>
         </div>
 
         <div class="auth-card">
@@ -171,8 +171,8 @@ const SCRIPT = `
             syncByokStatus();
         }
         const introTitle = document.getElementById('introTitle');
-        introTitle.innerHTML = escapeHtml(t.introTitle).replace(/\\./, '<span class="amp">.</span>');
-        document.getElementById('introBody').textContent = t.introBody;
+        introTitle.innerHTML = t.introTitle.replace(/\./, '<span class="amp">.</span>');
+        document.getElementById('introBody').innerHTML = t.introBody;
         document.getElementById('tabSignIn').textContent = t.signInTab;
         document.getElementById('tabSignUp').textContent = t.signUpTab;
         document.getElementById('emailLabel').textContent = t.emailLabel;

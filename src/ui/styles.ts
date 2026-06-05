@@ -11,6 +11,7 @@ export const SWISS_BASE_CSS = `
     --gray-600: #737373;
     --gray-900: #1A1A1A;
     --accent: #FF0000;
+    --burgundy: #8B0000;
     --rule: 1px solid #000000;
     --rule-soft: 1px solid #D4D4D4;
     --grid: 12;
@@ -97,7 +98,7 @@ button { font-family: inherit; }
 }
 .brand:hover { background: var(--gray-100); }
 .brand-mark { line-height: 1; }
-.brand-dot { color: var(--accent); margin-left: 1px; }
+.brand-tm { color: var(--burgundy); margin-left: 2px; font-size: 0.7em; vertical-align: super; }
 
 /* Primary nav (centre-left) — Polaris "Navigation" pattern in Swiss treatment */
 .topbar-nav {
@@ -1128,7 +1129,7 @@ export function renderTopbar(active: TopbarPage, lang: 'english' | 'indonesian' 
   return `<div class="topbar">
         <div class="topbar-left">
             <a href="/" class="brand" aria-label="${t.brandAria}">
-                <span class="brand-mark">QUILL</span><span class="brand-dot">.</span>
+                <span class="brand-mark">Quill</span><span class="brand-tm">™</span>
             </a>
             <nav class="topbar-nav" aria-label="Primary">
                 <a href="/" class="topbar-nav-link${active === 'generator' ? ' active' : ''}" data-page="generator" ${active === 'generator' ? 'aria-current="page"' : ''}>
@@ -1196,12 +1197,12 @@ export interface FooterStrings {
 
 export const FOOTER_STRINGS: Record<'english' | 'indonesian', FooterStrings> = {
   english: {
-    copyright: 'Quill&trade; <span class="accent-dot">&middot;</span> Ed. 02 / 2026',
+    copyright: 'Quill<span class="brand-tm">™</span> <span class="accent-dot">&middot;</span> Ed. 02 / 2026',
     typeface: 'Set in Inter &amp; JetBrains Mono',
     by: 'By {link}',
   },
   indonesian: {
-    copyright: 'Quill&trade; <span class="accent-dot">&middot;</span> Ed. 02 / 2026',
+    copyright: 'Quill<span class="brand-tm">™</span> <span class="accent-dot">&middot;</span> Ed. 02 / 2026',
     typeface: 'Diketik dalam Inter &amp; JetBrains Mono',
     by: 'Oleh {link}',
   },

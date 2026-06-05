@@ -273,7 +273,7 @@ const BODY_HTML = `
             <div class="byok-banner-num">!</div>
             <div class="byok-banner-body">
                 <div class="byok-banner-title" id="byokBannerTitle">Bring Your Own Key</div>
-                <div class="byok-banner-msg" id="byokBannerMsg">Quill is BYOK &mdash; Bring Your Own Key. Add your Gemini API key in Settings to start generating. The key is stored only in this browser and sent per-request via the <code>X-User-API-Key</code> header. The server never persists it.</div>
+                <div class="byok-banner-msg" id="byokBannerMsg">Quill<span class="brand-tm">™</span> is BYOK &mdash; Bring Your Own Key. Add your Gemini API key in Settings to start generating. The key is stored only in this browser and sent per-request via the <code>X-User-API-Key</code> header. The server never persists it.</div>
             </div>
             <div class="byok-banner-cta">
                 <a href="/settings" class="byok-banner-link" id="byokBannerLink">OPEN SETTINGS &rarr;</a>
@@ -284,7 +284,7 @@ const BODY_HTML = `
     <header class="hero">
         <div class="index">&#8470; 01</div>
         <div class="headline">
-            <h1 id="heroTitle">Quill<span class="amp">.</span></h1>
+            <h1 id="heroTitle">Quill<span class="brand-tm">™</span><span class="amp">.</span></h1>
         </div>
         <p class="lede" id="heroLede">An editorial writing instrument powered by AI. Long-form articles, short stories, news briefs and novel outlines &mdash; drafted with author-style precision.</p>
     </header>
@@ -510,7 +510,7 @@ const SCRIPT = `
         // Hero
         const heroTitle = document.getElementById('heroTitle');
         if (heroTitle) {
-            heroTitle.innerHTML = escapeHtml(t.title).replace(/\\./, '<span class="amp">.</span>');
+            heroTitle.innerHTML = t.title.replace(/\./, '<span class="amp">.</span>');
         }
         const heroLede = document.getElementById('heroLede');
         if (heroLede) heroLede.textContent = t.lede;
