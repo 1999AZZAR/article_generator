@@ -1,3 +1,4 @@
+// About page (philosophy + tech) HTML generator for Quill.
 import { ABOUT_STRINGS, COMMON_STRINGS, Locale } from './i18n';
 import { renderHead, renderFooter, renderTopbar, getTopbarStrings, FOOTER_STRINGS, ARCHIVAL_DETAILS_HTML, COMMON_JS } from './styles';
 import { SPECIMEN_JS } from './specimen';
@@ -38,129 +39,51 @@ const PAGE_CSS = `
     padding-top: 12px;
 }
 
-.about-content {
-    padding-bottom: 64px;
-}
-
-.about-section {
-    padding: 48px 0;
-    border-bottom: var(--rule);
-}
+.about-content { padding-top: 32px; }
+.about-section { border-bottom: var(--rule-soft); padding: 48px 0; }
+.about-section:last-child { border-bottom: none; }
 
 .about-grid {
     display: grid;
     grid-template-columns: repeat(12, 1fr);
     column-gap: var(--gutter);
 }
-
 .about-sidebar {
-    grid-column: 1 / 4;
-}
-.about-sidebar .num {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--accent);
-    margin-bottom: 8px;
-}
-.about-sidebar .title {
+    grid-column: 1 / span 3;
     font-size: 11px;
-    font-weight: 700;
     letter-spacing: 0.16em;
     text-transform: uppercase;
+    font-weight: 600;
 }
-.about-sidebar .meta {
-    font-size: 10px;
-    color: var(--gray-400);
-    margin-top: 12px;
-}
+.about-sidebar .num { color: var(--accent); font-family: 'JetBrains Mono', monospace; margin-bottom: 8px; }
+.about-sidebar .meta { color: var(--gray-600); font-weight: 400; margin-top: 8px; }
 
-.about-main {
-    grid-column: 4 / 11;
-}
+.about-main { grid-column: 5 / span 8; }
 .about-main h2 {
-    font-size: 24px;
+    font-size: 32px;
     font-weight: 700;
-    margin: 0 0 24px;
-    letter-spacing: -0.01em;
+    letter-spacing: -0.02em;
+    margin: 0 0 24px 0;
 }
 .about-main p {
-    font-size: 16px;
+    font-size: 18px;
     line-height: 1.6;
-    margin: 0 0 1.5em;
-    color: #333;
+    color: var(--gray-800);
+    margin-bottom: 32px;
 }
 
 @media (max-width: 900px) {
-    .about-hero .index, .about-sidebar { display: none; }
-    .about-hero .headline, .about-hero .lede, .about-main { grid-column: 1 / -1; }
-    .about-hero h1 { font-size: 36px; }
+    .hero { padding: 32px 0 24px; }
+    .hero .index { display: none; }
+    .hero .headline { grid-column: 1 / -1; }
+    .hero h1 { font-size: 32px; }
+    .hero .lede { grid-column: 1 / -1; padding-top: 12px; }
+    
+    .about-sidebar { grid-column: 1 / -1; margin-bottom: 16px; }
+    .about-main { grid-column: 1 / -1; }
+    .about-main h2 { font-size: 24px; }
+    .about-main p { font-size: 16px; }
 }
-`;
-
-const BODY_HTML = `
-<div class="container">
-    ${renderTopbar('about', 'english')}
-
-    <header class="hero">
-        <div class="index">№ 03</div>
-        <div class="headline">
-            <h1 id="heroTitle">About<span class="amp">.</span></h1>
-        </div>
-        <p class="lede" id="heroLede">An editorial writing instrument for the neural era. High-fidelity author style mimicry meeting Swiss typographic precision.</p>
-    </header>
-
-    <main class="about-content">
-        <section class="about-section">
-            <div class="about-grid">
-                <div class="about-sidebar">
-                    <div class="num" id="section01Num">01</div>
-                    <div class="title" id="section01Title">Vision</div>
-                    <div class="meta" id="section01Meta">EDITORIAL / INSTRUMENT</div>
-                </div>
-                <div class="about-main">
-                    <h2 id="visionTitle">Editorial Precision</h2>
-                    <p id="visionBody">Quill is designed as a focused instrument for writers, editors, and journalists. We prioritize the structural integrity of long-form content over transient chat interactions.</p>
-                </div>
-            </div>
-        </section>
-
-        <section class="about-section">
-            <div class="about-grid">
-                <div class="about-sidebar">
-                    <div class="num" id="section02Num">02</div>
-                    <div class="title" id="section02Title">Technology</div>
-                    <div class="meta" id="section02Meta">GEMINI / RECURSIVE</div>
-                </div>
-                <div class="about-main">
-                    <h2 id="techTitle">Neural Synthesis</h2>
-                    <p id="techBody">Powered by the Google Gemini family of models, Quill utilizes recursive synthesis to generate coherent articles that maintain narrative tension and logical flow.</p>
-                </div>
-            </div>
-        </section>
-
-        <section class="about-section">
-            <div class="about-grid">
-                <div class="about-sidebar">
-                    <div class="num" id="section03Num">03</div>
-                    <div class="title" id="section03Title">Style Engine</div>
-                    <div class="meta" id="section03Meta">LITERARY / ANALYTIC</div>
-                </div>
-                <div class="about-main">
-                    <h2 id="authorsTitle">The Style System</h2>
-                    <p id="authorsBody">Our curated style engine enables the creation of content that echoes the cadence, vocabulary, and ideological leanings of history's most significant authors.</p>
-                    
-                    <h2 id="byokTitle">Privacy & Sovereignty</h2>
-                    <p id="byokBody">Quill is BYOK (Bring Your Own Key). We do not persist your Gemini API key on our servers; your intelligence remains your own, stored only in your local browser environment.</p>
-                </div>
-            </div>
-        </section>
-    </main>
-
-    ${renderFooter(FOOTER_STRINGS['english'])}
-</div>
-
-${ARCHIVAL_DETAILS_HTML}
 `;
 
 const SCRIPT = `
@@ -207,30 +130,104 @@ const SCRIPT = `
         document.getElementById('section03Title').textContent = t.section03Title;
         document.getElementById('section03Meta').textContent = t.section03Meta;
 
-        if (window.rebuildAllSelects) window.rebuildAllSelects();
+        // Repaint Footer
+        const footerEl = document.querySelector('.footer');
+        if (footerEl) {
+            const footerStrings = window.__QUILL_I18N__.footer[lang];
+            footerEl.querySelector('.col-1').innerHTML = footerStrings.copyright;
+            footerEl.querySelector('.col-2').innerHTML = footerStrings.typeface;
+            footerEl.querySelector('.col-3').innerHTML = footerStrings.by.replace('{link}', '<a href="https://azzar.netlify.app/porto" target="_blank">LilyOpenCMS</a>');
+        }
     }
 
+    window.addEventListener('storage', function(e) {
+        if (e.key === 'uiLanguage') repaint(e.newValue || 'english');
+        if (e.key === 'quillAuthUid' || e.key === 'quillAuthName') window.syncAuthPill();
+        if (e.key.indexOf('geminiApiKey') === 0) window.syncByokStatus();
+    });
+
     document.addEventListener('DOMContentLoaded', function() {
-        const lang = localStorage.getItem('uiLanguage') || 'english';
         window.setupAccountMenu();
         window.syncAuthPill();
-        repaint(lang);
-
-        window.addEventListener('storage', function(e) {
-            if (e.key === 'uiLanguage') repaint(e.newValue || 'english');
-            if (e.key === 'quillAuthUid' || e.key === 'quillAuthName') window.syncAuthPill();
-        });
+        window.syncByokStatus();
+        repaint(localStorage.getItem('uiLanguage') || 'english');
     });
 })();
 `;
 
 export function generateAboutPageHTML(locale: Locale = 'english'): string {
   const strings = ABOUT_STRINGS[locale];
+  const footerStrings = FOOTER_STRINGS[locale];
+  const topbarHtml = renderTopbar('about', locale);
+  const footerHtml = renderFooter(footerStrings);
+
   return `<!DOCTYPE html>
 <html lang="${locale}">
 ${renderHead({ title: strings.documentTitle, pageStyles: PAGE_CSS })}
 <body>
-${BODY_HTML}
+<div class="container">
+    ${topbarHtml}
+
+    <header class="hero">
+        <div class="index">№ 03</div>
+        <div class="headline">
+            <h1 id="heroTitle">${strings.title.replace(/\./, '<span class="amp">.</span>')}</h1>
+        </div>
+        <p class="lede" id="heroLede">${strings.lede}</p>
+    </header>
+
+    <main class="about-content">
+        <section class="about-section">
+            <div class="about-grid">
+                <div class="about-sidebar">
+                    <div class="num" id="section01Num">${strings.section01Number}</div>
+                    <div class="title" id="section01Title">${strings.section01Title}</div>
+                    <div class="meta" id="section01Meta">${strings.section01Meta}</div>
+                </div>
+                <div class="about-main">
+                    <h2 id="visionTitle">${strings.visionTitle}</h2>
+                    <p id="visionBody">${strings.visionBody}</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="about-section">
+            <div class="about-grid">
+                <div class="about-sidebar">
+                    <div class="num" id="section02Num">${strings.section02Number}</div>
+                    <div class="title" id="section02Title">${strings.section02Title}</div>
+                    <div class="meta" id="section02Meta">${strings.section02Meta}</div>
+                </div>
+                <div class="about-main">
+                    <h2 id="techTitle">${strings.techTitle}</h2>
+                    <p id="techBody">${strings.techBody}</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="about-section">
+            <div class="about-grid">
+                <div class="about-sidebar">
+                    <div class="num" id="section03Num">${strings.section03Number}</div>
+                    <div class="title" id="section03Title">${strings.section03Title}</div>
+                    <div class="meta" id="section03Meta">${strings.section03Meta}</div>
+                </div>
+                <div class="about-main">
+                    <h2 id="authorsTitle">${strings.authorsTitle}</h2>
+                    <p id="authorsBody">${strings.authorsBody}</p>
+                    
+                    <h2 id="byokTitle">${strings.byokTitle}</h2>
+                    <p id="byokBody">${strings.byokBody}</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    ${footerHtml}
+</div>
+
+${ARCHIVAL_DETAILS_HTML}
+
 <script>
 window.__QUILL_I18N__ = ${JSON.stringify({ about: ABOUT_STRINGS, common: COMMON_STRINGS, footer: FOOTER_STRINGS })};
 window.__QUILL_INITIAL_LOCALE__ = ${JSON.stringify(locale)};

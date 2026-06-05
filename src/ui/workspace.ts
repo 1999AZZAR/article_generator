@@ -332,75 +332,6 @@ const PAGE_CSS = `
 }
 `;
 
-const BODY_HTML = `
-<div class="container">
-    \${renderTopbar('workspace', 'english')}
-
-    <header class="hero">
-        <div class="index">№ 02</div>
-        <div class="headline">
-            <h1 id="heroTitle">Workspace<span class="amp">.</span></h1>
-        </div>
-        <p class="lede" id="heroLede">Your saved drafts and finished pieces. Edit inline, autosave while you write.</p>
-    </header>
-
-    <div class="ws-filter-bar" id="wsFilterBar">
-        <button class="ws-filter-tab active" data-filter="all" id="filterAll">All</button>
-        <button class="ws-filter-tab" data-filter="draft" id="filterDraft">Draft</button>
-        <button class="ws-filter-tab" data-filter="final" id="filterFinal">Final</button>
-    </div>
-
-    <div class="workspace-table" id="workspaceTable">
-        <div class="workspace-table-head" id="wsTableHead">
-            <div>STATUS</div>
-            <div>TITLE</div>
-            <div>TYPE</div>
-            <div>DATE</div>
-            <div></div>
-        </div>
-        <div id="draftList"></div>
-        <div class="ws-empty" id="wsEmpty" hidden>
-            <div class="ws-empty-ornament">∅</div>
-            <div class="ws-empty-title" id="wsEmptyTitle">No drafts yet.</div>
-            <p class="ws-empty-msg" id="wsEmptyMsg">Generate an article and save it to your Workspace to see it here.</p>
-            <a href="/" class="ws-empty-cta" id="wsEmptyCta">Go to Generator →</a>
-        </div>
-    </div>
-
-    <div class="editor-panel" id="editorPanel">
-        <input type="text" class="editor-title-input" id="editorTitle" placeholder="Draft title…" autocomplete="off">
-        <div class="editor-autosave-bar" id="autosaveBar">
-            <span class="as-dot"></span>
-            <span id="autosaveLabel">AUTOSAVE</span>
-        </div>
-        <textarea class="editor-content" id="editorContent" placeholder="Your content…"></textarea>
-        <div class="editor-toolbar">
-            <button class="toolbar-btn" id="editorSaveBtn">Save</button>
-            <button class="toolbar-btn secondary" id="editorToggleStatusBtn">Mark Final</button>
-            <button class="toolbar-btn secondary" id="editorCloseBtn">Close</button>
-            <button class="toolbar-btn danger" id="editorDeleteBtn">Delete</button>
-        </div>
-    </div>
-
-    \${renderFooter(FOOTER_STRINGS['english'])}
-</div>
-
-\${ARCHIVAL_DETAILS_HTML}
-
-<div class="ws-toast" id="wsToast"></div>
-
-<div class="ws-modal-overlay" id="deleteModal" hidden>
-    <div class="ws-modal">
-        <div class="ws-modal-head" id="deleteModalTitle">Delete Draft</div>
-        <div class="ws-modal-body" id="deleteModalMsg">This will permanently delete the draft. This action cannot be undone.</div>
-        <div class="ws-modal-actions">
-            <button class="toolbar-btn secondary" id="deleteModalCancel">Cancel</button>
-            <button class="toolbar-btn danger" id="deleteModalConfirm" style="background:#c0392b;border-color:#c0392b;color:#fff">Delete</button>
-        </div>
-    </div>
-</div>
-`;
-
 const SCRIPT = `
 (function() {
     var I18N = window.__QUILL_I18N__;
@@ -709,6 +640,16 @@ const SCRIPT = `
         if (el('deleteModalConfirm')) el('deleteModalConfirm').textContent = t.deleteConfirmButton;
         var wsHead = document.getElementById('wsTableHead');
         if (wsHead) wsHead.innerHTML = '<div>' + t.colStatus + '</div><div>' + t.colTitle + '</div><div>' + t.colType + '</div><div>' + t.colDate + '</div><div></div>';
+        
+        // Repaint Footer
+        const footerEl = document.querySelector('.footer');
+        if (footerEl) {
+            const footerStrings = I18N.footer[newLang];
+            footerEl.querySelector('.col-1').innerHTML = footerStrings.copyright;
+            footerEl.querySelector('.col-2').innerHTML = footerStrings.typeface;
+            footerEl.querySelector('.col-3').innerHTML = footerStrings.by.replace('{link}', '<a href="https://azzar.netlify.app/porto" target="_blank">LilyOpenCMS</a>');
+        }
+
         renderDrafts();
     }
 
@@ -745,11 +686,81 @@ const SCRIPT = `
 
 export function generateWorkspacePageHTML(locale: Locale = 'english'): string {
   const strings = WORKSPACE_STRINGS[locale];
+  const footerStrings = FOOTER_STRINGS[locale];
+  const topbarHtml = renderTopbar('workspace', locale);
+  const footerHtml = renderFooter(footerStrings);
+
   return `<!DOCTYPE html>
 <html lang="${locale}">
 ${renderHead({ title: strings.documentTitle, pageStyles: PAGE_CSS })}
 <body>
-${BODY_HTML}
+<div class="container">
+    ${topbarHtml}
+
+    <header class="hero">
+        <div class="index">№ 02</div>
+        <div class="headline">
+            <h1 id="heroTitle">${strings.title.replace(/\./, '<span class="amp">.</span>')}</h1>
+        </div>
+        <p class="lede" id="heroLede">${strings.lede}</p>
+    </header>
+
+    <div class="ws-filter-bar" id="wsFilterBar">
+        <button class="ws-filter-tab active" data-filter="all" id="filterAll">${strings.filterAll}</button>
+        <button class="ws-filter-tab" data-filter="draft" id="filterDraft">${strings.filterDraft}</button>
+        <button class="ws-filter-tab" data-filter="final" id="filterFinal">${strings.filterFinal}</button>
+    </div>
+
+    <div class="workspace-table" id="workspaceTable">
+        <div class="workspace-table-head" id="wsTableHead">
+            <div>${strings.colStatus}</div>
+            <div>${strings.colTitle}</div>
+            <div>${strings.colType}</div>
+            <div>${strings.colDate}</div>
+            <div></div>
+        </div>
+        <div id="draftList"></div>
+        <div class="ws-empty" id="wsEmpty" hidden>
+            <div class="ws-empty-ornament">∅</div>
+            <div class="ws-empty-title" id="wsEmptyTitle">${strings.emptyTitle}</div>
+            <p class="ws-empty-msg" id="wsEmptyMsg">${strings.emptyMsg}</p>
+            <a href="/" class="ws-empty-cta" id="wsEmptyCta">${strings.emptyCtaLabel}</a>
+        </div>
+    </div>
+
+    <div class="editor-panel" id="editorPanel">
+        <input type="text" class="editor-title-input" id="editorTitle" placeholder="${strings.editorTitlePlaceholder}" autocomplete="off">
+        <div class="editor-autosave-bar" id="autosaveBar">
+            <span class="as-dot"></span>
+            <span id="autosaveLabel">${strings.autosaveLabel}</span>
+        </div>
+        <textarea class="editor-content" id="editorContent" placeholder="${strings.editorContentPlaceholder}"></textarea>
+        <div class="editor-toolbar">
+            <button class="toolbar-btn" id="editorSaveBtn">${strings.actionSave}</button>
+            <button class="toolbar-btn secondary" id="editorToggleStatusBtn">${strings.actionMarkFinal}</button>
+            <button class="toolbar-btn secondary" id="editorCloseBtn">${strings.actionClose}</button>
+            <button class="toolbar-btn danger" id="editorDeleteBtn">${strings.actionDelete}</button>
+        </div>
+    </div>
+
+    ${footerHtml}
+</div>
+
+${ARCHIVAL_DETAILS_HTML}
+
+<div class="ws-toast" id="wsToast"></div>
+
+<div class="ws-modal-overlay" id="deleteModal" hidden>
+    <div class="ws-modal">
+        <div class="ws-modal-head" id="deleteModalTitle">${strings.deleteConfirmTitle}</div>
+        <div class="ws-modal-body" id="deleteModalMsg">${strings.deleteConfirmMessage}</div>
+        <div class="ws-modal-actions">
+            <button class="toolbar-btn secondary" id="deleteModalCancel">${strings.cancelButton}</button>
+            <button class="toolbar-btn danger" id="deleteModalConfirm" style="background:#c0392b;border-color:#c0392b;color:#fff">${strings.deleteConfirmButton}</button>
+        </div>
+    </div>
+</div>
+
 <script>
 window.__QUILL_I18N__ = ${JSON.stringify({ workspace: WORKSPACE_STRINGS, common: COMMON_STRINGS, footer: FOOTER_STRINGS })};
 window.__QUILL_INITIAL_LOCALE__ = ${JSON.stringify(locale)};

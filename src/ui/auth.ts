@@ -54,73 +54,6 @@ const PAGE_CSS = `
 }
 `;
 
-const BODY_HTML = `
-<div class="container">
-    ${renderTopbar('login', 'english')}
-
-    <header class="hero">
-        <div class="index">№ 04</div>
-        <div class="headline">
-            <h1 id="introTitle">Sign in<span class="amp">.</span></h1>
-        </div>
-        <p class="lede" id="introBody">Quill™ is BYOK. Sign in to keep your Gemini API key and saved articles tied to your account across devices. The server never sees or stores your key — it lives only in this browser.</p>
-    </header>
-
-    <main class="auth-page">
-
-        <div class="auth-card">
-            <div class="auth-tabs" role="tablist">
-                <button class="auth-tab active" data-tab="signin" id="tabSignIn" type="button">Sign In</button>
-                <button class="auth-tab" data-tab="signup" id="tabSignUp" type="button">Create Account</button>
-            </div>
-
-            <form id="authForm" class="auth-form" autocomplete="on" novalidate>
-                <div class="form-group" id="displayNameGroup" style="display: none;">
-                    <label for="displayName" id="displayNameLabel">Display name (optional)</label>
-                    <input type="text" id="displayName" placeholder="How should we greet you?">
-                </div>
-                <div class="form-group">
-                    <label for="email" id="emailLabel">Email</label>
-                    <input type="email" id="email" required autocomplete="email" placeholder="you@example.com">
-                </div>
-                <div class="form-group">
-                    <label for="password" id="passwordLabel">Password</label>
-                    <input type="password" id="password" required autocomplete="current-password" placeholder="At least 6 characters">
-                </div>
-
-                <div class="auth-row-between" id="forgotRow">
-                    <a href="#" id="forgotLink" class="auth-link-muted" style="font-size: 12px; color: var(--gray-600); border-bottom: 1px solid var(--gray-300);">Forgot password?</a>
-                </div>
-
-                <div class="auth-status" id="authStatus" role="status" aria-live="polite"></div>
-
-                <div class="auth-actions">
-                    <button type="submit" class="btn-primary" id="authSubmitBtn">Sign In</button>
-                    <div class="auth-divider"><span id="dividerText">or</span></div>
-                    <button type="button" class="btn-google" id="googleBtn">
-                        <svg viewBox="0 0 24 24" aria-hidden="true">
-                            <path fill="#4285F4" d="M22.5 12.27c0-.78-.07-1.53-.2-2.27H12v4.51h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.22-4.74 3.22-8.32z"/>
-                            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.99.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0 0 12 23z"/>
-                            <path fill="#FBBC05" d="M5.84 14.1A6.6 6.6 0 0 1 5.5 12c0-.73.13-1.44.34-2.1V7.07H2.18A11 11 0 0 0 1 12c0 1.77.42 3.45 1.18 4.93l3.66-2.84z"/>
-                            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.46 2.09 14.97 1 12 1A11 11 0 0 0 2.18 7.07l3.66 2.84C6.71 7.31 9.14 5.38 12 5.38z"/>
-                        </svg>
-                        <span id="googleBtnLabel">Continue with Google</span>
-                    </button>
-                </div>
-
-                <p style="margin-top: 16px; font-size: 12px; color: var(--gray-600);">
-                    <a href="#" id="switchMode" style="color: var(--black); border-bottom: 1px solid var(--black);">No account yet? Create one →</a>
-                </p>
-            </form>
-        </div>
-    </main>
-
-    ${renderFooter(FOOTER_STRINGS['english'])}
-</div>
-
-${ARCHIVAL_DETAILS_HTML}
-`;
-
 const SCRIPT = `
 (function() {
     const I18N = window.__QUILL_I18N__.auth;
@@ -201,6 +134,15 @@ const SCRIPT = `
         submit.textContent = t[labelKey];
         const switchLink = document.getElementById('switchMode');
         switchLink.textContent = mode === 'signin' ? t.switchToSignUp : t.switchToSignIn;
+
+        // Repaint Footer
+        const footerEl = document.querySelector('.footer');
+        if (footerEl) {
+            const footerStrings = FOOTER[lang];
+            footerEl.querySelector('.col-1').innerHTML = footerStrings.copyright;
+            footerEl.querySelector('.col-2').innerHTML = footerStrings.typeface;
+            footerEl.querySelector('.col-3').innerHTML = footerStrings.by.replace('{link}', '<a href="https://azzar.netlify.app/porto" target="_blank">LilyOpenCMS</a>');
+        }
     }
 
     function setMode(next) {
@@ -402,11 +344,79 @@ const SCRIPT = `
 
 export function generateAuthPageHTML(locale: Locale = 'english'): string {
   const strings = AUTH_STRINGS[locale];
+  const footerStrings = FOOTER_STRINGS[locale];
+  const topbarHtml = renderTopbar('login', locale);
+  const footerHtml = renderFooter(footerStrings);
+
   return `<!DOCTYPE html>
 <html lang="${locale}">
 ${renderHead({ title: strings.documentTitle, pageStyles: PAGE_CSS })}
 <body>
-${BODY_HTML}
+<div class="container">
+    ${topbarHtml}
+
+    <header class="hero">
+        <div class="index">№ 04</div>
+        <div class="headline">
+            <h1 id="introTitle">${strings.introTitle.replace(/\./, '<span class="amp">.</span>')}</h1>
+        </div>
+        <p class="lede" id="introBody">${strings.introBody}</p>
+    </header>
+
+    <main class="auth-page">
+
+        <div class="auth-card">
+            <div class="auth-tabs" role="tablist">
+                <button class="auth-tab active" data-tab="signin" id="tabSignIn" type="button">${strings.signInTab}</button>
+                <button class="auth-tab" data-tab="signup" id="tabSignUp" type="button">${strings.signUpTab}</button>
+            </div>
+
+            <form id="authForm" class="auth-form" autocomplete="on" novalidate>
+                <div class="form-group" id="displayNameGroup" style="display: none;">
+                    <label for="displayName" id="displayNameLabel">${strings.displayNameLabel}</label>
+                    <input type="text" id="displayName" placeholder="${strings.displayNamePlaceholder}">
+                </div>
+                <div class="form-group">
+                    <label for="email" id="emailLabel">${strings.emailLabel}</label>
+                    <input type="email" id="email" required autocomplete="email" placeholder="${strings.emailPlaceholder}">
+                </div>
+                <div class="form-group">
+                    <label for="password" id="passwordLabel">${strings.passwordLabel}</label>
+                    <input type="password" id="password" required autocomplete="current-password" placeholder="${strings.passwordPlaceholder}">
+                </div>
+
+                <div class="auth-row-between" id="forgotRow">
+                    <a href="#" id="forgotLink" class="auth-link-muted" style="font-size: 12px; color: var(--gray-600); border-bottom: 1px solid var(--gray-300);">${strings.forgotPasswordLink}</a>
+                </div>
+
+                <div class="auth-status" id="authStatus" role="status" aria-live="polite"></div>
+
+                <div class="auth-actions">
+                    <button type="submit" class="btn-primary" id="authSubmitBtn">${strings.signInButton}</button>
+                    <div class="auth-divider"><span id="dividerText">${strings.orDivider}</span></div>
+                    <button type="button" class="btn-google" id="googleBtn">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path fill="#4285F4" d="M22.5 12.27c0-.78-.07-1.53-.2-2.27H12v4.51h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.22-4.74 3.22-8.32z"/>
+                            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.99.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0 0 12 23z"/>
+                            <path fill="#FBBC05" d="M5.84 14.1A6.6 6.6 0 0 1 5.5 12c0-.73.13-1.44.34-2.1V7.07H2.18A11 11 0 0 0 1 12c0 1.77.42 3.45 1.18 4.93l3.66-2.84z"/>
+                            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.46 2.09 14.97 1 12 1A11 11 0 0 0 2.18 7.07l3.66 2.84C6.71 7.31 9.14 5.38 12 5.38z"/>
+                        </svg>
+                        <span id="googleBtnLabel">${strings.googleButton}</span>
+                    </button>
+                </div>
+
+                <p style="margin-top: 16px; font-size: 12px; color: var(--gray-600);">
+                    <a href="#" id="switchMode" style="color: var(--black); border-bottom: 1px solid var(--black);">${strings.switchToSignUp}</a>
+                </p>
+            </form>
+        </div>
+    </main>
+
+    ${footerHtml}
+</div>
+
+${ARCHIVAL_DETAILS_HTML}
+
 <script>
 window.__QUILL_I18N__ = ${JSON.stringify({ auth: AUTH_STRINGS, common: COMMON_STRINGS, footer: FOOTER_STRINGS })};
 window.__QUILL_FIREBASE_CONFIG__ = ${JSON.stringify(FIREBASE_CONFIG)};
