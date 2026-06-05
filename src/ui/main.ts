@@ -492,6 +492,8 @@ const SCRIPT = `
             setupAccountMenu();
             // Re-populate auth pill state on the freshly-injected elements
             syncAuthPill();
+            // Re-populate BYOK chip state on the freshly-injected chip
+            syncByokStatus();
         }
         // Hero
         const heroTitle = document.getElementById('heroTitle');
