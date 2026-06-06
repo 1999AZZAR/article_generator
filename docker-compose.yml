@@ -15,7 +15,7 @@ services:
   postgres:
     image: postgres:16-alpine
     container_name: quill-postgres
-    restart: unless-stopped
+    restart: always
     environment:
       POSTGRES_DB: quill
       POSTGRES_USER: quill
@@ -34,7 +34,7 @@ services:
   redis:
     image: redis:7-alpine
     container_name: quill-redis
-    restart: unless-stopped
+    restart: always
     command: redis-server --maxmemory 128mb --maxmemory-policy allkeys-lru
     volumes:
       - quill-redis:/data
@@ -53,7 +53,7 @@ services:
       dockerfile: Dockerfile
     image: quill-dev:latest
     container_name: quill-dev
-    restart: unless-stopped
+    restart: always
     init: true
     depends_on:
       postgres:

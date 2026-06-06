@@ -243,63 +243,6 @@ const PAGE_CSS = `
 .ws-toast.ws-toast-error { background: #c0392b; }
 .ws-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-/* Delete modal */
-.modal-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.55);
-    display: none;
-    align-items: stretch;
-    justify-content: stretch;
-    z-index: 100;
-}
-.modal-overlay.show { display: flex; }
-.modal-content {
-    background: var(--white);
-    margin: auto;
-    width: min(560px, calc(100% - 64px));
-    border: 1px solid var(--black);
-    padding: 0;
-}
-.modal-head {
-    border-bottom: var(--rule);
-    padding: 16px 24px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 11px;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    font-weight: 700;
-}
-.modal-head .lab { color: var(--accent); font-family: 'JetBrains Mono', monospace; font-size: 11px; }
-.modal-body { padding: 24px; }
-.modal-title { font-size: 28px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.1; margin-bottom: 12px; }
-.modal-message { font-size: 14px; line-height: 1.5; color: var(--gray-900); }
-.modal-actions {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    border-top: var(--rule);
-}
-.modal-actions .modal-btn {
-    background: var(--white);
-    color: var(--black);
-    border: none;
-    border-right: var(--rule);
-    padding: 18px 20px;
-    font-family: 'Inter', sans-serif;
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    cursor: pointer;
-    border-radius: 0;
-    transition: background 120ms linear, color 120ms linear;
-}
-.modal-actions .modal-btn:last-child { border-right: none; }
-.modal-actions .modal-btn:hover { background: var(--black); color: var(--white); }
-.modal-actions .modal-btn.danger:hover { background: var(--accent); color: var(--white); }
-
 @media (max-width: 900px) {
     .ws-hero { grid-template-columns: 1fr; padding: 32px 0 24px; }
     .ws-hero .ws-hero-num { display: none; }
@@ -384,8 +327,8 @@ ${ARCHIVAL_DETAILS_HTML}
             <div class="modal-extra" id="modalExtra" style="display: none;"></div>
         </div>
         <div class="modal-actions">
-            <button class="modal-btn" id="modalCancel">Cancel</button>
-            <button class="modal-btn" id="modalConfirm">Confirm</button>
+            <button class="modal-btn modal-btn-cancel" id="modalCancel">Cancel</button>
+            <button class="modal-btn modal-btn-confirm" id="modalConfirm">Confirm</button>
         </div>
     </div>
 </div>
@@ -394,14 +337,15 @@ ${ARCHIVAL_DETAILS_HTML}
     <div class="modal-content">
         <div class="modal-head">
             <span class="lab" id="deleteModalLab">CONFIRM</span>
+            <span id="deleteModalEscClose">ESC TO CLOSE</span>
         </div>
         <div class="modal-body">
             <h3 class="modal-title" id="deleteModalTitle">Delete Draft</h3>
             <p class="modal-message" id="deleteModalMsg">This will permanently delete the draft. This action cannot be undone.</p>
         </div>
         <div class="modal-actions">
-            <button class="modal-btn" id="deleteModalCancel">Cancel</button>
-            <button class="modal-btn danger" id="deleteModalConfirm">Delete</button>
+            <button class="modal-btn modal-btn-cancel" id="deleteModalCancel">Cancel</button>
+            <button class="modal-btn modal-btn-confirm" id="deleteModalConfirm">Delete</button>
         </div>
     </div>
 </div>
@@ -668,44 +612,51 @@ const SCRIPT = `
 
     function showModal(title, message, onConfirm, cancelText, confirmText, opts) {
         const modal = document.getElementById('confirmationModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalMessage = document.getElementById('modalMessage');
+        const modalCancel = document.getElementById('modalCancel');
+        const modalConfirm = document.getElementById('modalConfirm');
         const lab = document.getElementById('modalLab');
         const escClose = document.getElementById('modalEscClose');
         const modalExtra = document.getElementById('modalExtra');
+        
         if (lab) lab.textContent = t.confirmLabel;
         if (escClose) escClose.textContent = t.escToClose;
-        document.getElementById('modalTitle').textContent = title;
-        document.getElementById('modalMessage').textContent = message;
-        const cancelBtn = document.getElementById('modalCancel');
-        const confirmBtn = document.getElementById('modalConfirm');
-        cancelBtn.textContent = cancelText || 'Cancel';
-        confirmBtn.textContent = confirmText || 'Confirm';
+        if (modalTitle) modalTitle.textContent = title;
+        if (modalMessage) modalMessage.textContent = message;
+        if (modalCancel) modalCancel.textContent = cancelText || 'Cancel';
+        if (modalConfirm) modalConfirm.textContent = confirmText || 'Confirm';
 
-        modalExtra.style.display = 'none';
-        modalExtra.innerHTML = '';
-        if (opts && opts.checkboxLabel) {
-            modalExtra.style.display = 'block';
-            const id = 'modalCheck' + Math.random().toString(36).slice(2);
-            modalExtra.innerHTML = '<div style="margin-top:20px;display:flex;align-items:center;gap:10px;cursor:pointer">' +
-                '<input type="checkbox" id="' + id + '" ' + (opts.checkboxDefault ? 'checked' : '') + ' style="cursor:pointer">' +
-                '<label for="' + id + '" style="font-size:13px;color:var(--gray-800);cursor:pointer">' + opts.checkboxLabel + '</label></div>';
+        if (modalExtra) {
+            if (opts && opts.checkboxLabel) {
+                modalExtra.innerHTML = '<label class="modal-checkbox"><input type="checkbox" id="modalCheckbox" ' + (opts.checkboxDefault !== false ? 'checked' : '') + '> <span id="modalCheckboxLabel"></span></label>';
+                const lbl = document.getElementById('modalCheckboxLabel');
+                if (lbl) lbl.textContent = opts.checkboxLabel;
+                modalExtra.style.display = 'block';
+            } else {
+                modalExtra.innerHTML = '';
+                modalExtra.style.display = 'none';
+            }
         }
 
-        const handleEsc = (e) => { if (e.key === 'Escape') closeModal(); };
-        const closeModal = () => {
-            modal.classList.remove('show');
-            document.removeEventListener('keydown', handleEsc);
-        };
-
-        cancelBtn.onclick = closeModal;
-        confirmBtn.onclick = () => {
-            let val;
-            if (opts && opts.checkboxLabel) val = modalExtra.querySelector('input').checked;
-            onConfirm(val);
-            closeModal();
-        };
-
         modal.classList.add('show');
-        document.addEventListener('keydown', handleEsc);
+        function closeModal() { modal.classList.remove('show'); }
+        modalCancel.onclick = closeModal;
+        modalConfirm.onclick = function() {
+            const cb = document.getElementById('modalCheckbox');
+            const checked = cb ? cb.checked : true;
+            closeModal();
+            onConfirm(checked);
+        };
+        modal.onclick = function(e) { if (e.target === modal) closeModal(); };
+        document.addEventListener('keydown', function escHandler(e) {
+            if (e.key === 'Escape') { closeModal(); document.removeEventListener('keydown', escHandler); }
+        });
+    }
+
+    function getApiKeyStorageKey() {
+        var uid = localStorage.getItem('quillAuthUid');
+        return uid ? ('geminiApiKey.' + uid) : 'geminiApiKey';
     }
 
     async function performSignOut(keepKey) {
@@ -738,7 +689,7 @@ const SCRIPT = `
             localStorage.removeItem('geminiApiKey.' + previousUid);
         }
         localStorage.removeItem('geminiApiKey');
-        const newKey = (localStorage.getItem('quillAuthUid') ? ('geminiApiKey.' + localStorage.getItem('quillAuthUid')) : 'geminiApiKey');
+        const newKey = getApiKeyStorageKey();
         if (keepKey && previousKey) {
             localStorage.setItem(newKey, previousKey);
         } else {
@@ -768,34 +719,29 @@ const SCRIPT = `
     // ── Delete modal ──────────────────────────────────────────────────────────
     function openDeleteModal(id) {
         deleteTargetId = id;
-        document.getElementById('deleteModal').classList.add('show');
+        const modal = document.getElementById('deleteModal');
+        modal.classList.add('show');
+        function closeModal() { modal.classList.remove('show'); deleteTargetId = null; }
+        document.getElementById('deleteModalCancel').onclick = closeModal;
+        document.getElementById('deleteModalConfirm').onclick = function() {
+            if (!deleteTargetId) return;
+            var tid = deleteTargetId;
+            closeModal();
+            if (openDraftId === tid) closeEditor();
+            fetch('/api/workspace/drafts/' + tid, { method: 'DELETE' })
+                .then(function(r) {
+                    if (!r.ok) throw new Error('delete failed');
+                    drafts = drafts.filter(function(d) { return d.id !== tid; });
+                    renderDrafts();
+                    showToast(t.deleteSuccess, false);
+                })
+                .catch(function() { showToast(t.deleteError, true); });
+        };
+        modal.onclick = function(e) { if (e.target === modal) closeModal(); };
+        document.addEventListener('keydown', function escHandler(e) {
+            if (e.key === 'Escape') { closeModal(); document.removeEventListener('keydown', escHandler); }
+        });
     }
-    function closeDeleteModal() {
-        document.getElementById('deleteModal').classList.remove('show');
-        deleteTargetId = null;
-    }
-
-    document.getElementById('deleteModalCancel').addEventListener('click', closeDeleteModal);
-    document.getElementById('deleteModalConfirm').addEventListener('click', function() {
-        if (!deleteTargetId) return;
-        var id = deleteTargetId;
-        closeDeleteModal();
-        if (openDraftId === id) closeEditor();
-        fetch('/api/workspace/drafts/' + id, { method: 'DELETE' })
-            .then(function(r) {
-                if (!r.ok) throw new Error('delete failed');
-                drafts = drafts.filter(function(d) { return d.id !== id; });
-                renderDrafts();
-                showToast(t.deleteSuccess, false);
-            })
-            .catch(function() { showToast(t.deleteError, true); });
-    });
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-            closeDeleteModal();
-            closeAccountMenu();
-        }
-    });
 
     // ── Account menu (shared pattern) ─────────────────────────────────────────
     function syncAuthPill() {
@@ -827,8 +773,7 @@ const SCRIPT = `
     }
 
     function syncByokStatus() {
-        var authUid = localStorage.getItem('quillAuthUid');
-        var keyStorageKey = authUid ? ('geminiApiKey.' + authUid) : 'geminiApiKey';
+        var keyStorageKey = getApiKeyStorageKey();
         var apiKey = localStorage.getItem(keyStorageKey);
         var chip = document.getElementById('byokStatus');
         var stateText = document.getElementById('byokStateText');
@@ -888,6 +833,8 @@ const SCRIPT = `
         if (el('autosaveLabel')) el('autosaveLabel').textContent = t.autosaveLabel;
         if (el('editorSaveBtn')) el('editorSaveBtn').textContent = t.actionSave;
         if (el('editorCloseBtn')) el('editorCloseBtn').textContent = t.actionClose;
+        if (el('deleteModalLab')) el('deleteModalLab').textContent = t.confirmLabel;
+        if (el('deleteModalEscClose')) el('deleteModalEscClose').textContent = t.escToClose;
         if (el('deleteModalTitle')) el('deleteModalTitle').textContent = t.deleteConfirmTitle;
         if (el('deleteModalMsg')) el('deleteModalMsg').textContent = t.deleteConfirmMessage;
         if (el('deleteModalCancel')) el('deleteModalCancel').textContent = t.cancelButton;

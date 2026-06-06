@@ -10,7 +10,7 @@ export const SWISS_BASE_CSS = `
     --gray-300: #D4D4D4;
     --gray-600: #737373;
     --gray-900: #1A1A1A;
-    --accent: #FF0000;
+    --accent: #8B0000;
     --burgundy: #8B0000;
     --rule: 1px solid #000000;
     --rule-soft: 1px solid #D4D4D4;
@@ -377,7 +377,7 @@ button { font-family: inherit; }
         repeating-linear-gradient(
             45deg,
             transparent 0 8px,
-            rgba(255,0,0,0.06) 8px 9px
+            rgba(139,0,0,0.06) 8px 9px
         );
 }
 .byok-banner.show { display: block; }
@@ -442,7 +442,7 @@ button { font-family: inherit; }
         repeating-linear-gradient(
             45deg,
             transparent 0 8px,
-            rgba(255,0,0,0.04) 8px 9px
+            rgba(139,0,0,0.04) 8px 9px
         );
 }
 .byok-notice-num {
@@ -896,7 +896,7 @@ button { font-family: inherit; }
     height: 100vh;
     pointer-events: none;
     z-index: 0;
-    opacity: 0.035;
+    opacity: 0.06;
     mix-blend-mode: multiply;
 }
 .container { position: relative; z-index: 1; }
