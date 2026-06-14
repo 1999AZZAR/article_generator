@@ -31,22 +31,6 @@ services:
       retries: 5
       start_period: 10s
 
-  redis:
-    image: redis:7-alpine
-    container_name: quill-redis
-    restart: always
-    command: redis-server --maxmemory 128mb --maxmemory-policy allkeys-lru
-    volumes:
-      - quill-redis:/data
-    networks:
-      - tunnel
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 3s
-      retries: 3
-      start_period: 5s
-
   quill-dev:
     build:
       context: .
@@ -58,14 +42,12 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      redis:
-        condition: service_healthy
     environment:
       NODE_ENV: development
       HOST: 0.0.0.0
       PORT: 8787
       DATABASE_URL: postgresql://quill:quilldev@postgres:5432/quill
-      REDIS_URL: redis://redis:6379
+      REDIS_URL: redis://shared-redis:6379/1
     ports:
       # Host-side tunnel origin (when cloudflared runs on the host).
       - "127.0.0.1:8787:8787"
@@ -81,18 +63,15 @@ services:
       start_period: 20s
     networks:
       - tunnel
+      - shared-redis-net
 
 networks:
   tunnel:
     name: tunnel
-    # If your existing cloudflared runs in its own container/compose and is
-    # already attached to a `tunnel` network, change this to `external: true`
-    # and ensure that network exists. Otherwise leave it as `external: false`
-    # and attach cloudflared with:
-    #   docker network connect tunnel <cloudflared-container>
     external: false
+  shared-redis-net:
+    external: true
 
 volumes:
   quill-data:
   quill-postgres:
-  quill-redis:

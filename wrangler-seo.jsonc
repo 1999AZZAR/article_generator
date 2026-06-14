@@ -1,0 +1,14 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "glassgallery-seo",
+  "main": "seo-worker.js",
+  "compatibility_date": "2026-06-08",
+  "workers_dev": false,
+  "routes": [
+    { "pattern": "glassgallery.my.id/robots.txt", "zone_id": "804b4d402c3ef177efb562eef8e3ee0a" },
+    { "pattern": "glassgallery.my.id/sitemap.xml", "zone_id": "804b4d402c3ef177efb562eef8e3ee0a" },
+    { "pattern": "glassgallery.my.id/sitemap-pages.xml", "zone_id": "804b4d402c3ef177efb562eef8e3ee0a" },
+    { "pattern": "*.glassgallery.my.id/robots.txt", "zone_id": "804b4d402c3ef177efb562eef8e3ee0a" },
+    { "pattern": "*.glassgallery.my.id/sitemap.xml", "zone_id": "804b4d402c3ef177efb562eef8e3ee0a" }
+  ]
+}
