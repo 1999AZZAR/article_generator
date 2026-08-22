@@ -1,13 +1,27 @@
-import type { GenerateRequest, ArticleResponse, NovelResponse } from './handler';
+import type {
+  GenerateRequest,
+  ArticleResponse,
+  NovelResponse,
+} from "./handler";
+import { buildSourceContext } from "./research";
+
+// Thrown when a model rejects the url_context tool (400). Callers use this to
+// fall back to server-side retrieval + prompt injection.
+class UrlContextUnsupportedError extends Error {}
 
 // Gemini API endpoints (Latest available models - Verified Feb 2026)
-const GEMINI_FLASH_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent';
-const GEMINI_PRO_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-preview:generateContent';
+const GEMINI_FLASH_URL =
+  "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent";
+const GEMINI_PRO_URL =
+  "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-preview:generateContent";
 
 // Fallback model URLs for better quota resilience
-const GEMINI_FALLBACK_PRO_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent';
-const GEMINI_FALLBACK_FLASH_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
-const GEMINI_LEGACY_PRO_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
+const GEMINI_FALLBACK_PRO_URL =
+  "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent";
+const GEMINI_FALLBACK_FLASH_URL =
+  "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
+const GEMINI_LEGACY_PRO_URL =
+  "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
 
 // Enhanced retry configuration
 // We use Gemini's `:streamGenerateContent?alt=sse` endpoint so bytes flow
@@ -19,7 +33,7 @@ const BASE_RETRY_DELAY = 800; // 0.8 seconds
 const MAX_RETRY_DELAY = 2500; // 2.5 seconds
 const ADAPTIVE_TIMEOUT_BASE = 20000; // 20 seconds per fetch
 const ADAPTIVE_TIMEOUT_MAX = 45000; // 45 seconds per fetch — single attempt,
-                                     // then move to next fallback model
+// then move to next fallback model
 
 // Request deduplication cache with cleanup
 const requestCache = new Map<string, { response: string; timestamp: number }>();
@@ -39,29 +53,30 @@ function scheduleCacheCleanup(): void {
 function cleanupExpiredCache(): void {
   const now = Date.now();
   const toDelete: string[] = [];
-  
+
   for (const [key, value] of requestCache.entries()) {
     if (now - value.timestamp > CACHE_TTL) {
       toDelete.push(key);
     }
   }
-  
-  toDelete.forEach(key => requestCache.delete(key));
-  
+
+  toDelete.forEach((key) => requestCache.delete(key));
+
   // If cache is still too large, remove oldest entries
   if (requestCache.size > CACHE_MAX_SIZE) {
-    const entries = Array.from(requestCache.entries())
-      .sort((a, b) => a[1].timestamp - b[1].timestamp);
+    const entries = Array.from(requestCache.entries()).sort(
+      (a, b) => a[1].timestamp - b[1].timestamp,
+    );
     const toRemove = entries.slice(0, requestCache.size - CACHE_MAX_SIZE);
     toRemove.forEach(([key]) => requestCache.delete(key));
   }
-  
+
   cacheCleanupScheduled = false;
 }
 
 // Delay utility function
 function delay(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 interface GeminiResponse {
@@ -81,9 +96,9 @@ interface GeminiResponse {
 
 // Error classification types
 enum ErrorType {
-  RETRYABLE = 'retryable',
-  NON_RETRYABLE = 'non_retryable',
-  QUOTA_EXCEEDED = 'quota_exceeded'
+  RETRYABLE = "retryable",
+  NON_RETRYABLE = "non_retryable",
+  QUOTA_EXCEEDED = "quota_exceeded",
 }
 
 interface ClassifiedError {
@@ -96,75 +111,96 @@ interface ClassifiedError {
 // Error classification function
 function classifyError(error: any): ClassifiedError {
   const errorMessage = error.message || String(error);
-  const errorName = error.name || '';
+  const errorName = error.name || "";
 
   // Quota exceeded errors
-  if (errorMessage.includes('quota exceeded') || errorMessage.includes('429')) {
+  if (errorMessage.includes("quota exceeded") || errorMessage.includes("429")) {
     return {
       type: ErrorType.QUOTA_EXCEEDED,
-      message: 'API quota exceeded. Please upgrade your plan or wait for quota reset.',
-      retryAfter: 60000 // 1 minute
+      message:
+        "API quota exceeded. Please upgrade your plan or wait for quota reset.",
+      retryAfter: 60000, // 1 minute
     };
   }
 
   // Rate limiting
-  if (errorMessage.includes('429') || errorMessage.includes('rate limit')) {
+  if (errorMessage.includes("429") || errorMessage.includes("rate limit")) {
     return {
       type: ErrorType.RETRYABLE,
-      message: 'Rate limit exceeded. Retrying with backoff.',
-      retryAfter: 5000 // 5 seconds
+      message: "Rate limit exceeded. Retrying with backoff.",
+      retryAfter: 5000, // 5 seconds
     };
   }
 
   // Service unavailable or overloaded
-  if (errorMessage.includes('503') || errorMessage.includes('overloaded') || errorMessage.includes('UNAVAILABLE')) {
+  if (
+    errorMessage.includes("503") ||
+    errorMessage.includes("overloaded") ||
+    errorMessage.includes("UNAVAILABLE")
+  ) {
     return {
       type: ErrorType.RETRYABLE,
-      message: 'Service temporarily unavailable. Retrying.',
-      retryAfter: 10000 // 10 seconds
+      message: "Service temporarily unavailable. Retrying.",
+      retryAfter: 10000, // 10 seconds
     };
   }
 
   // Timeout errors
-  if (errorName === 'AbortError' || errorMessage.includes('aborted') || errorMessage.includes('timeout')) {
+  if (
+    errorName === "AbortError" ||
+    errorMessage.includes("aborted") ||
+    errorMessage.includes("timeout")
+  ) {
     return {
       type: ErrorType.RETRYABLE,
-      message: 'Request timed out. Retrying.',
-      retryAfter: 2000 // 2 seconds
+      message: "Request timed out. Retrying.",
+      retryAfter: 2000, // 2 seconds
     };
   }
 
   // Network errors
-  if (errorMessage.includes('fetch') || errorMessage.includes('network') || errorMessage.includes('ECONNRESET')) {
+  if (
+    errorMessage.includes("fetch") ||
+    errorMessage.includes("network") ||
+    errorMessage.includes("ECONNRESET")
+  ) {
     return {
       type: ErrorType.RETRYABLE,
-      message: 'Network error. Retrying.',
-      retryAfter: 3000 // 3 seconds
+      message: "Network error. Retrying.",
+      retryAfter: 3000, // 3 seconds
     };
   }
 
   // Model not found errors (404)
-  if (errorMessage.includes('404') || errorMessage.includes('not found') || errorMessage.includes('is not found')) {
+  if (
+    errorMessage.includes("404") ||
+    errorMessage.includes("not found") ||
+    errorMessage.includes("is not found")
+  ) {
     return {
       type: ErrorType.NON_RETRYABLE,
-      message: 'Model not available. Trying fallback model.',
-      modelNotFound: true // Special flag for model availability issues
+      message: "Model not available. Trying fallback model.",
+      modelNotFound: true, // Special flag for model availability issues
     };
   }
 
   // Authentication errors
-  if (errorMessage.includes('403') || errorMessage.includes('access denied') || errorMessage.includes('unauthorized')) {
+  if (
+    errorMessage.includes("403") ||
+    errorMessage.includes("access denied") ||
+    errorMessage.includes("unauthorized")
+  ) {
     return {
       type: ErrorType.NON_RETRYABLE,
-      message: 'Authentication failed. Please check your API key.'
+      message: "Authentication failed. Please check your API key.",
     };
   }
 
   // Safety filter errors
-  if (errorMessage.includes('safety') || errorMessage.includes('blocked')) {
+  if (errorMessage.includes("safety") || errorMessage.includes("blocked")) {
     return {
       type: ErrorType.NON_RETRYABLE,
-      message: 'Content blocked by safety filters. Please modify your request.'
+      message: "Content blocked by safety filters. Please modify your request.",
     };
   }
 
@@ -172,12 +208,15 @@ function classifyError(error: any): ClassifiedError {
   return {
     type: ErrorType.RETRYABLE,
     message: `Unknown error: ${errorMessage}`,
-    retryAfter: 1000 // 1 second
+    retryAfter: 1000, // 1 second
   };
 }
 
 // Calculate exponential backoff with jitter
-function calculateRetryDelay(attempt: number, baseDelay: number = BASE_RETRY_DELAY): number {
+function calculateRetryDelay(
+  attempt: number,
+  baseDelay: number = BASE_RETRY_DELAY,
+): number {
   const exponentialDelay = baseDelay * Math.pow(2, attempt);
   const jitter = Math.random() * 0.1 * exponentialDelay; // 10% jitter
   return Math.min(exponentialDelay + jitter, MAX_RETRY_DELAY);
@@ -187,7 +226,10 @@ function calculateRetryDelay(attempt: number, baseDelay: number = BASE_RETRY_DEL
 function calculateAdaptiveTimeout(prompt: string): number {
   const wordCount = prompt.split(/\s+/).length;
   const complexityFactor = Math.min(wordCount / 1000, 3); // Max 3x base timeout
-  return Math.min(ADAPTIVE_TIMEOUT_BASE * (1 + complexityFactor), ADAPTIVE_TIMEOUT_MAX);
+  return Math.min(
+    ADAPTIVE_TIMEOUT_BASE * (1 + complexityFactor),
+    ADAPTIVE_TIMEOUT_MAX,
+  );
 }
 
 // Request deduplication
@@ -197,7 +239,7 @@ function getCacheKey(prompt: string, model: string): string {
 
 function getCachedResponse(cacheKey: string): string | null {
   scheduleCacheCleanup(); // Trigger cleanup check
-  
+
   const cached = requestCache.get(cacheKey);
   if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
     return cached.response;
@@ -211,8 +253,9 @@ function getCachedResponse(cacheKey: string): string | null {
 function setCachedResponse(cacheKey: string, response: string): void {
   // Enforce max cache size before adding
   if (requestCache.size >= CACHE_MAX_SIZE) {
-    const oldestKey = Array.from(requestCache.entries())
-      .sort((a, b) => a[1].timestamp - b[1].timestamp)[0][0];
+    const oldestKey = Array.from(requestCache.entries()).sort(
+      (a, b) => a[1].timestamp - b[1].timestamp,
+    )[0][0];
     requestCache.delete(oldestKey);
   }
   requestCache.set(cacheKey, { response, timestamp: Date.now() });
@@ -222,52 +265,87 @@ function setCachedResponse(cacheKey: string, response: string): void {
 function getAuthorStyleGuide(authorStyle: string): string {
   const styles: { [key: string]: string } = {
     // Classic & Literary
-    'Ernest Hemingway': 'Use short, declarative sentences. Minimal adjectives. Direct language. Iceberg theory (subtext).',
-    'Jane Austen': 'Wit and irony. Social commentary. Elegant, formal prose. Character-driven.',
-    'Virginia Woolf': 'Stream of consciousness. Interior monologue. Lyrical, impressionistic.',
-    'George Orwell': 'Clear, precise language. Political undertones. Direct critique.',
-    'Toni Morrison': 'Poetic, deeply emotional prose. Explores identity, race, trauma. Layered narratives.',
-    'Agatha Christie': 'Clever plotting. Red herrings. Crisp dialogue. Methodical mystery unraveling.',
-    'Gabriel García Márquez': 'Magical realism. Rich sensory details. Mythic storytelling. Cyclical time.',
-    'Cormac McCarthy': 'Sparse punctuation. Biblical cadence. Brutal imagery. Philosophical undercurrents.',
-    
+    "Ernest Hemingway":
+      "Use short, declarative sentences. Minimal adjectives. Direct language. Iceberg theory (subtext).",
+    "Jane Austen":
+      "Wit and irony. Social commentary. Elegant, formal prose. Character-driven.",
+    "Virginia Woolf":
+      "Stream of consciousness. Interior monologue. Lyrical, impressionistic.",
+    "George Orwell":
+      "Clear, precise language. Political undertones. Direct critique.",
+    "Toni Morrison":
+      "Poetic, deeply emotional prose. Explores identity, race, trauma. Layered narratives.",
+    "Agatha Christie":
+      "Clever plotting. Red herrings. Crisp dialogue. Methodical mystery unraveling.",
+    "Gabriel García Márquez":
+      "Magical realism. Rich sensory details. Mythic storytelling. Cyclical time.",
+    "Cormac McCarthy":
+      "Sparse punctuation. Biblical cadence. Brutal imagery. Philosophical undercurrents.",
+
     // Fantasy & Sci-Fi
-    'J.R.R. Tolkien': 'Rich, descriptive language. Epic tone. Deep world-building. Poetic prose.',
-    'George R.R. Martin': 'Complex characters. Political intrigue. Multiple POVs. Gritty realism in fantasy.',
-    'J.K. Rowling': 'Accessible, whimsical tone. Strong world-building. Coming-of-age themes.',
-    'Neil Gaiman': 'Mythic storytelling. Dark whimsy. Folklore elements. Genre-blending.',
-    
+    "J.R.R. Tolkien":
+      "Rich, descriptive language. Epic tone. Deep world-building. Poetic prose.",
+    "George R.R. Martin":
+      "Complex characters. Political intrigue. Multiple POVs. Gritty realism in fantasy.",
+    "J.K. Rowling":
+      "Accessible, whimsical tone. Strong world-building. Coming-of-age themes.",
+    "Neil Gaiman":
+      "Mythic storytelling. Dark whimsy. Folklore elements. Genre-blending.",
+
     // Contemporary & Thriller
-    'Stephen King': 'Conversational tone. Vivid imagery. Psychological depth. Building tension.',
-    'Haruki Murakami': 'Surreal elements mixed with mundane details. Contemplative. Jazz-like rhythm.',
-    'Margaret Atwood': 'Feminist lens. Dystopian speculation. Sharp social commentary. Literary precision.',
-    'Zadie Smith': 'Multicultural narratives. Sharp wit. Contemporary social issues. Vibrant dialogue.',
-    'Chimamanda Ngozi Adichie': 'Nuanced cultural identity. Feminist themes. Clear, powerful prose.',
-    
+    "Stephen King":
+      "Conversational tone. Vivid imagery. Psychological depth. Building tension.",
+    "Haruki Murakami":
+      "Surreal elements mixed with mundane details. Contemplative. Jazz-like rhythm.",
+    "Margaret Atwood":
+      "Feminist lens. Dystopian speculation. Sharp social commentary. Literary precision.",
+    "Zadie Smith":
+      "Multicultural narratives. Sharp wit. Contemporary social issues. Vibrant dialogue.",
+    "Chimamanda Ngozi Adichie":
+      "Nuanced cultural identity. Feminist themes. Clear, powerful prose.",
+
     // Indonesian Authors
-    'Pramoedya Ananta Toer': 'Historical depth. Social justice themes. Narrative sweep. Indonesian context.',
-    'Dee Lestari': 'Philosophical depth. Contemporary Indonesian. Layered narratives. Emotional intelligence.',
-    'Andrea Hirata': 'Poetic Indonesian prose. Emotional storytelling. Cultural richness.',
-    'Goenawan Mohamad': 'Essayistic. Philosophical reflections. Cultural criticism. Poetic language.',
-    'Leila S. Chudori': 'Historical fiction. Diaspora themes. Political consciousness. Intimate family narratives.',
-    'Najwa Shihab': 'Journalistic clarity. Direct questioning. Social awareness. Conversational insight.',
-    
+    "Pramoedya Ananta Toer":
+      "Historical depth. Social justice themes. Narrative sweep. Indonesian context.",
+    "Dee Lestari":
+      "Philosophical depth. Contemporary Indonesian. Layered narratives. Emotional intelligence.",
+    "Andrea Hirata":
+      "Poetic Indonesian prose. Emotional storytelling. Cultural richness.",
+    "Goenawan Mohamad":
+      "Essayistic. Philosophical reflections. Cultural criticism. Poetic language.",
+    "Leila S. Chudori":
+      "Historical fiction. Diaspora themes. Political consciousness. Intimate family narratives.",
+    "Najwa Shihab":
+      "Journalistic clarity. Direct questioning. Social awareness. Conversational insight.",
+
     // Non-Fiction
-    'Yuval Noah Harari': 'Big-picture synthesis. Clear explanations of complex ideas. Historical sweep. Provocative questions.'
+    "Yuval Noah Harari":
+      "Big-picture synthesis. Clear explanations of complex ideas. Historical sweep. Provocative questions.",
   };
-  
-  return styles[authorStyle] || '';
+
+  return styles[authorStyle] || "";
 }
 
-export async function generateArticle(request: GenerateRequest, apiKey: string, onChunk?: (t: string) => void): Promise<ArticleResponse> {
-  const language = request.language === 'indonesian' ? 'Indonesian (Bahasa Indonesia)' : 'English';
+export async function generateArticle(
+  request: GenerateRequest,
+  apiKey: string,
+  onChunk?: (t: string) => void,
+): Promise<ArticleResponse> {
+  const language =
+    request.language === "indonesian"
+      ? "Indonesian (Bahasa Indonesia)"
+      : "English";
   const styleGuide = getAuthorStyleGuide(request.authorStyle);
 
-  const prompt = `You are a professional writer. Write a comprehensive article (EXACTLY 1800-2000 words) in ${language} about "${request.topic}" in the style of ${request.authorStyle}${styleGuide ? ` (${styleGuide})` : ''}.
+  const prompt = `You are a professional writer. Write a comprehensive article (EXACTLY 1800-2000 words) in ${language} about "${
+    request.topic
+  }" in the style of ${request.authorStyle}${
+    styleGuide ? ` (${styleGuide})` : ""
+  }.
 
-${request.tags ? `Themes: ${request.tags.join(', ')}` : ''}
-${request.keywords ? `Keywords: ${request.keywords.join(', ')}` : ''}
-${request.mainIdea ? `Core idea: ${request.mainIdea}` : ''}
+${request.tags ? `Themes: ${request.tags.join(", ")}` : ""}
+${request.keywords ? `Keywords: ${request.keywords.join(", ")}` : ""}
+${request.mainIdea ? `Core idea: ${request.mainIdea}` : ""}
 
 Structure:
 - Deep introduction with context
@@ -286,31 +364,50 @@ Output as valid JSON only (no markdown, no explanations):
 
   try {
     // Use Flash for shorter articles, Pro for comprehensive long-form content
-    const useProModel = request.type === 'article' || (request.mainIdea && request.mainIdea.length > 200);
+    const useProModel =
+      request.type === "article" ||
+      (request.mainIdea ? request.mainIdea.length > 200 : false);
 
-    const response = useProModel
-      ? await callGeminiProAPI(prompt, apiKey, onChunk || (() => {}))
-      : await callGeminiFlashAPI(prompt, apiKey, onChunk || (() => {}));
+    const response =
+      request.sources && request.sources.length > 0
+        ? await callGenerationWithSources(
+            prompt,
+            apiKey,
+            useProModel,
+            onChunk || (() => {}),
+            request.sources,
+          )
+        : useProModel
+          ? await callGeminiProAPI(prompt, apiKey, onChunk || (() => {}))
+          : await callGeminiFlashAPI(prompt, apiKey, onChunk || (() => {}));
 
-    console.log(`Gemini API response for article using ${useProModel ? 'Pro' : 'Flash'} (first 500 chars):`, response.substring(0, 500));
+    console.log(
+      `Gemini API response for article using ${
+        useProModel ? "Pro" : "Flash"
+      } (first 500 chars):`,
+      response.substring(0, 500),
+    );
 
     let parsed: ArticleResponse;
     try {
       parsed = parseGeminiResponse(response) as ArticleResponse;
     } catch (parseError) {
-      console.warn('JSON parsing failed for article, using fallback:', (parseError as Error).message);
+      console.warn(
+        "JSON parsing failed for article, using fallback:",
+        (parseError as Error).message,
+      );
       // Return a fallback response if parsing fails
       return {
-        refinedTags: request.tags || ['writing', 'content', 'article'],
+        refinedTags: request.tags || ["writing", "content", "article"],
         titleSelection: [
           `${request.topic} - A Comprehensive Guide`,
           `Exploring ${request.topic} in Depth`,
-          `The Complete ${request.topic} Handbook`
+          `The Complete ${request.topic} Handbook`,
         ],
         subtitleSelection: [
-          'Understanding the Fundamentals',
-          'Practical Applications and Insights',
-          'Expert Analysis and Perspectives'
+          "Understanding the Fundamentals",
+          "Practical Applications and Insights",
+          "Expert Analysis and Perspectives",
         ],
         content: `## ${request.topic} - A Comprehensive Guide
 
@@ -330,25 +427,32 @@ ${request.topic} is an important topic that deserves careful consideration. In t
 
 In conclusion, ${request.topic} represents an exciting area of exploration. The insights gained here can help guide future developments and understanding.
 
-*Word count: 148*`
+*Word count: 148*`,
       };
     }
 
     // Validate the response structure
-    if (!parsed.refinedTags || !parsed.titleSelection || !parsed.subtitleSelection || !parsed.content) {
-      console.warn('Invalid response structure from Gemini Pro, using fallback');
+    if (
+      !parsed.refinedTags ||
+      !parsed.titleSelection ||
+      !parsed.subtitleSelection ||
+      !parsed.content
+    ) {
+      console.warn(
+        "Invalid response structure from Gemini Pro, using fallback",
+      );
       // Return a fallback response if parsing fails
       return {
-        refinedTags: request.tags || ['writing', 'content', 'article'],
+        refinedTags: request.tags || ["writing", "content", "article"],
         titleSelection: [
           `${request.topic} - A Comprehensive Guide`,
           `Exploring ${request.topic} in Depth`,
-          `The Complete ${request.topic} Handbook`
+          `The Complete ${request.topic} Handbook`,
         ],
         subtitleSelection: [
-          'Understanding the Fundamentals',
-          'Practical Applications and Insights',
-          'Expert Analysis and Perspectives'
+          "Understanding the Fundamentals",
+          "Practical Applications and Insights",
+          "Expert Analysis and Perspectives",
         ],
         content: `## ${request.topic} - A Comprehensive Guide
 
@@ -368,60 +472,67 @@ ${request.topic} is an important topic that deserves careful consideration. In t
 
 In conclusion, ${request.topic} represents an exciting area of exploration. The insights gained here can help guide future developments and understanding.
 
-*Word count: 148*`
+*Word count: 148*`,
       };
     }
 
     return parsed;
   } catch (error) {
-    console.error('Article generation error:', error);
+    console.error("Article generation error:", error);
     // Return a fallback response instead of throwing an error
     return {
-      refinedTags: request.tags || ['writing', 'content', 'article'],
+      refinedTags: request.tags || ["writing", "content", "article"],
       titleSelection: [
         `${request.topic} - A Comprehensive Guide`,
         `Exploring ${request.topic} in Depth`,
-        `The Complete ${request.topic} Handbook`
+        `The Complete ${request.topic} Handbook`,
       ],
       subtitleSelection: [
-        'Understanding the Fundamentals',
-        'Practical Applications and Insights',
-        'Expert Analysis and Perspectives'
+        "Understanding the Fundamentals",
+        "Practical Applications and Insights",
+        "Expert Analysis and Perspectives",
       ],
       content: `## ${request.topic} - A Comprehensive Guide
 
-I'm sorry, but I encountered an issue generating the article about "${request.topic}". This might be due to API limits or content filtering.
+I'm sorry, but I encountered an issue generating the article about "${
+        request.topic
+      }". This might be due to API limits or content filtering.
 
 Please try again with a different topic or simplified request.
 
-*Error: ${(error as Error).message}*`
+*Error: ${(error as Error).message}*`,
     };
   }
 }
 
-export async function generateChapterContent(chapter: {
-  chapterNumber: number;
-  chapterTitle: string;
-  chapterSubtitle: string;
-  novelTitle: string;
-  novelSynopsis: string;
-  previousChapters?: Array<{
+export async function generateChapterContent(
+  chapter: {
     chapterNumber: number;
-    title: string;
-    content: string;
-    keyEvents?: string[];
-  }>;
-}, apiKey: string, onChunk?: (t: string) => void): Promise<string> {
+    chapterTitle: string;
+    chapterSubtitle: string;
+    novelTitle: string;
+    novelSynopsis: string;
+    previousChapters?: Array<{
+      chapterNumber: number;
+      title: string;
+      content: string;
+      keyEvents?: string[];
+    }>;
+  },
+  apiKey: string,
+  onChunk?: (t: string) => void,
+): Promise<string> {
   // Optimize context: Only summarize last 2-3 chapters to avoid prompt bloat
-  let previousContext = '';
+  let previousContext = "";
   if (chapter.previousChapters && chapter.previousChapters.length > 0) {
     const recentChapters = chapter.previousChapters.slice(-3); // Last 3 only
     previousContext = `\n\nPREVIOUS CONTEXT:\n`;
-    recentChapters.forEach(prev => {
+    recentChapters.forEach((prev) => {
       // Use key events or short summary instead of full content
-      const summary = prev.keyEvents && prev.keyEvents.length > 0 
-        ? prev.keyEvents.join(', ')
-        : prev.content.substring(0, 300) + '...';
+      const summary =
+        prev.keyEvents && prev.keyEvents.length > 0
+          ? prev.keyEvents.join(", ")
+          : prev.content.substring(0, 300) + "...";
       previousContext += `Ch${prev.chapterNumber} "${prev.title}": ${summary}\n`;
     });
     previousContext += `\nContinue the story naturally. Reference previous events, maintain character arcs.\n`;
@@ -443,21 +554,25 @@ Requirements:
 Return raw chapter content (no JSON, no metadata).`;
 
   try {
-    const response = await callGeminiFlashAPI(prompt, apiKey, onChunk || (() => {}));
+    const response = await callGeminiFlashAPI(
+      prompt,
+      apiKey,
+      onChunk || (() => {}),
+    );
     // Clean up any unwanted prefixes
     const cleanedResponse = response
-      .replace(/^Of course\./i, '')
-      .replace(/^Here is a detailed chapter[:.]?\s*/i, '')
-      .replace(/^\*\*\*\s*$/gm, '')
+      .replace(/^Of course\./i, "")
+      .replace(/^Here is a detailed chapter[:.]?\s*/i, "")
+      .replace(/^\*\*\*\s*$/gm, "")
       .trim();
 
     if (cleanedResponse.length < 100) {
-      throw new Error('Generated chapter is too short');
+      throw new Error("Generated chapter is too short");
     }
 
     return cleanedResponse;
   } catch (error) {
-    console.error('Chapter content generation error:', error);
+    console.error("Chapter content generation error:", error);
     // Return a fallback chapter
     return `## Chapter ${chapter.chapterNumber}: ${chapter.chapterTitle}
 
@@ -479,15 +594,26 @@ Error: ${(error as Error).message}`;
   }
 }
 
-export async function generateShortStory(request: GenerateRequest, apiKey: string, onChunk?: (t: string) => void): Promise<ArticleResponse> {
-  const language = request.language === 'indonesian' ? 'Indonesian (Bahasa Indonesia)' : 'English';
+export async function generateShortStory(
+  request: GenerateRequest,
+  apiKey: string,
+  onChunk?: (t: string) => void,
+): Promise<ArticleResponse> {
+  const language =
+    request.language === "indonesian"
+      ? "Indonesian (Bahasa Indonesia)"
+      : "English";
   const styleGuide = getAuthorStyleGuide(request.authorStyle);
 
-  const prompt = `You are a masterful storyteller. Write a complete short story (EXACTLY 2500-3000 words) in ${language} about "${request.topic}" in the style of ${request.authorStyle}${styleGuide ? ` (${styleGuide})` : ''}.
+  const prompt = `You are a masterful storyteller. Write a complete short story (EXACTLY 2500-3000 words) in ${language} about "${
+    request.topic
+  }" in the style of ${request.authorStyle}${
+    styleGuide ? ` (${styleGuide})` : ""
+  }.
 
-${request.tags ? `Themes: ${request.tags.join(', ')}` : ''}
-${request.keywords ? `Elements: ${request.keywords.join(', ')}` : ''}
-${request.mainIdea ? `Core concept: ${request.mainIdea}` : ''}
+${request.tags ? `Themes: ${request.tags.join(", ")}` : ""}
+${request.keywords ? `Elements: ${request.keywords.join(", ")}` : ""}
+${request.mainIdea ? `Core concept: ${request.mainIdea}` : ""}
 
 Include:
 - Compelling hook & well-developed characters
@@ -505,26 +631,36 @@ Output as valid JSON only:
 }`;
 
   try {
-    const response = await callGeminiFlashAPI(prompt, apiKey, onChunk || (() => {}));
-    console.log('Gemini API response for short story (first 500 chars):', response.substring(0, 500));
+    const response = await callGeminiFlashAPI(
+      prompt,
+      apiKey,
+      onChunk || (() => {}),
+    );
+    console.log(
+      "Gemini API response for short story (first 500 chars):",
+      response.substring(0, 500),
+    );
 
     let parsed: ArticleResponse;
     try {
       parsed = parseGeminiResponse(response) as ArticleResponse;
     } catch (parseError) {
-      console.warn('JSON parsing failed for short story, using fallback:', (parseError as Error).message);
+      console.warn(
+        "JSON parsing failed for short story, using fallback:",
+        (parseError as Error).message,
+      );
       // Return a fallback response if parsing fails
       return {
-        refinedTags: request.tags || ['short story', 'fiction', 'narrative'],
+        refinedTags: request.tags || ["short story", "fiction", "narrative"],
         titleSelection: [
           `${request.topic} - A Short Story`,
           `The ${request.topic} Tale`,
-          `When ${request.topic} Happens`
+          `When ${request.topic} Happens`,
         ],
         subtitleSelection: [
-          'A journey of discovery',
-          'Moments that change everything',
-          'Finding meaning in the ordinary'
+          "A journey of discovery",
+          "Moments that change everything",
+          "Finding meaning in the ordinary",
         ],
         content: `## ${request.topic} - A Short Story
 
@@ -542,33 +678,44 @@ As the story unfolded, characters faced challenges, made difficult decisions, an
 
 In the end, they emerged transformed, carrying with them the wisdom gained from their experiences. The world looked a little different now, seen through the lens of new understanding.
 
-*Word count: 156*`
+*Word count: 156*`,
       };
     }
 
     // Validate the response structure
-    if (!parsed.refinedTags || !parsed.titleSelection || !parsed.subtitleSelection || !parsed.content) {
-      console.warn('Invalid response structure from Gemini Pro, using fallback');
+    if (
+      !parsed.refinedTags ||
+      !parsed.titleSelection ||
+      !parsed.subtitleSelection ||
+      !parsed.content
+    ) {
+      console.warn(
+        "Invalid response structure from Gemini Pro, using fallback",
+      );
       // Return a fallback response if parsing fails
       return {
-        refinedTags: request.tags || ['short story', 'fiction', 'narrative'],
+        refinedTags: request.tags || ["short story", "fiction", "narrative"],
         titleSelection: [
           `${request.topic} - A Short Story`,
           `The ${request.topic} Tale`,
-          `When ${request.topic} Happens`
+          `When ${request.topic} Happens`,
         ],
         subtitleSelection: [
-          'A journey of discovery',
-          'Moments that change everything',
-          'Finding meaning in the ordinary'
+          "A journey of discovery",
+          "Moments that change everything",
+          "Finding meaning in the ordinary",
         ],
         content: `## ${request.topic} - A Short Story
 
-This is a short story about "${request.topic}" written in the style of ${request.authorStyle}.
+This is a short story about "${request.topic}" written in the style of ${
+          request.authorStyle
+        }.
 
 ### The Story Begins
 
-It was a day like any other when everything changed. The protagonist found themselves facing the familiar yet unsettling reality of ${request.topic}.
+It was a day like any other when everything changed. The protagonist found themselves facing the familiar yet unsettling reality of ${
+          request.topic
+        }.
 
 The world around them seemed both ordinary and extraordinary, filled with the subtle magic of everyday life. Every detail mattered - the way the light filtered through the windows, the sound of distant traffic, the scent of rain on concrete.
 
@@ -576,7 +723,11 @@ The world around them seemed both ordinary and extraordinary, filled with the su
 
 Our protagonist was someone who had always been observant, someone who noticed the small things that others missed. They had dreams, fears, and a past that shaped their present.
 
-${request.mainIdea ? `As the story unfolded, it became clear that ${request.mainIdea.toLowerCase()}` : 'As the story unfolded, deep truths began to emerge'}
+${
+  request.mainIdea
+    ? `As the story unfolded, it became clear that ${request.mainIdea.toLowerCase()}`
+    : "As the story unfolded, deep truths began to emerge"
+}
 
 ### The Conflict
 
@@ -586,45 +737,56 @@ But not everything was peaceful. There were challenges to face, obstacles to ove
 
 In the end, the story reached its natural conclusion, leaving the reader with a sense of completion and perhaps a touch of wonder about the mysteries of life.
 
-*Word count: 487*`
+*Word count: 487*`,
       };
     }
 
     return parsed;
   } catch (error) {
-    console.error('Short story generation error:', error);
+    console.error("Short story generation error:", error);
     // Return a fallback response instead of throwing an error
     return {
-      refinedTags: request.tags || ['short story', 'fiction', 'narrative'],
+      refinedTags: request.tags || ["short story", "fiction", "narrative"],
       titleSelection: [
         `${request.topic} - A Short Story`,
         `The ${request.topic} Tale`,
-        `When ${request.topic} Happens`
+        `When ${request.topic} Happens`,
       ],
       subtitleSelection: [
-        'A journey of discovery',
-        'Moments that change everything',
-        'Finding meaning in the ordinary'
+        "A journey of discovery",
+        "Moments that change everything",
+        "Finding meaning in the ordinary",
       ],
       content: `## ${request.topic} - A Short Story
 
-I'm sorry, but I encountered an issue generating the short story about "${request.topic}". This might be due to API limits or content filtering.
+I'm sorry, but I encountered an issue generating the short story about "${
+        request.topic
+      }". This might be due to API limits or content filtering.
 
 Please try again with a different topic or simplified request.
 
-*Error: ${(error as Error).message}*`
+*Error: ${(error as Error).message}*`,
     };
   }
 }
 
-export async function generateShortNews(request: GenerateRequest, apiKey: string, onChunk?: (t: string) => void): Promise<ArticleResponse> {
-  const language = request.language === 'indonesian' ? 'Indonesian (Bahasa Indonesia)' : 'English';
+export async function generateShortNews(
+  request: GenerateRequest,
+  apiKey: string,
+  onChunk?: (t: string) => void,
+): Promise<ArticleResponse> {
+  const language =
+    request.language === "indonesian"
+      ? "Indonesian (Bahasa Indonesia)"
+      : "English";
 
-  const prompt = `You are a professional news journalist. Write a concise news brief (EXACTLY 400-600 words) in ${language} about "${request.topic}" in the style of ${request.newspaperStyle || request.authorStyle}.
+  const prompt = `You are a professional news journalist. Write a concise news brief (EXACTLY 400-600 words) in ${language} about "${
+    request.topic
+  }" in the style of ${request.newspaperStyle || request.authorStyle}.
 
-${request.tags ? `Themes: ${request.tags.join(', ')}` : ''}
-${request.keywords ? `Keywords: ${request.keywords.join(', ')}` : ''}
-${request.mainIdea ? `Core idea: ${request.mainIdea}` : ''}
+${request.tags ? `Themes: ${request.tags.join(", ")}` : ""}
+${request.keywords ? `Keywords: ${request.keywords.join(", ")}` : ""}
+${request.mainIdea ? `Core idea: ${request.mainIdea}` : ""}
 
 Format (5W1H style):
 - Punchy headline & lead paragraph
@@ -644,76 +806,123 @@ Output as valid JSON only:
 }`;
 
   try {
-    const response = await callGeminiFlashAPI(prompt, apiKey, onChunk || (() => {}));
-    console.log('Gemini API response for short news (first 500 chars):', response.substring(0, 500));
+    const response =
+      request.sources && request.sources.length > 0
+        ? await callGenerationWithSources(
+            prompt,
+            apiKey,
+            false,
+            onChunk || (() => {}),
+            request.sources,
+          )
+        : await callGeminiFlashAPI(prompt, apiKey, onChunk || (() => {}));
+    console.log(
+      "Gemini API response for short news (first 500 chars):",
+      response.substring(0, 500),
+    );
 
     let parsed: ArticleResponse;
     try {
       parsed = parseGeminiResponse(response) as ArticleResponse;
     } catch (parseError) {
-      console.warn('JSON parsing failed for short news, using fallback:', (parseError as Error).message);
+      console.warn(
+        "JSON parsing failed for short news, using fallback:",
+        (parseError as Error).message,
+      );
       return {
-        refinedTags: request.tags || ['news', 'breaking', 'brief'],
+        refinedTags: request.tags || ["news", "breaking", "brief"],
         titleSelection: [
           `Breaking: ${request.topic}`,
           `${request.topic} - Quick Update`,
-          `Latest on ${request.topic}`
+          `Latest on ${request.topic}`,
         ],
         subtitleSelection: [
-          'Developing story with key facts',
-          'Quick brief on latest developments',
-          'Essential details you need to know'
+          "Developing story with key facts",
+          "Quick brief on latest developments",
+          "Essential details you need to know",
         ],
-        content: `## ${request.topic}\n\n**Brief:** A developing story about ${request.topic} has emerged today.\n\n### Key Facts\n- Initial reports indicate significant developments\n- Multiple sources confirm the information\n- Situation continues to evolve\n\n### Context\nThis follows earlier reports from the region. Experts are monitoring the situation closely.\n\n### Impact\nThe developments could have implications for stakeholders in the coming days.\n\n*Word count: 98*`
+        content: `## ${request.topic}\n\n**Brief:** A developing story about ${request.topic} has emerged today.\n\n### Key Facts\n- Initial reports indicate significant developments\n- Multiple sources confirm the information\n- Situation continues to evolve\n\n### Context\nThis follows earlier reports from the region. Experts are monitoring the situation closely.\n\n### Impact\nThe developments could have implications for stakeholders in the coming days.\n\n*Word count: 98*`,
       };
     }
 
-    if (!parsed.refinedTags || !parsed.titleSelection || !parsed.subtitleSelection || !parsed.content) {
-      console.warn('Invalid response structure from Gemini, using fallback');
+    if (
+      !parsed.refinedTags ||
+      !parsed.titleSelection ||
+      !parsed.subtitleSelection ||
+      !parsed.content
+    ) {
+      console.warn("Invalid response structure from Gemini, using fallback");
       return {
-        refinedTags: request.tags || ['news', 'breaking', 'brief'],
+        refinedTags: request.tags || ["news", "breaking", "brief"],
         titleSelection: [
           `Breaking: ${request.topic}`,
           `${request.topic} - Quick Update`,
-          `Latest on ${request.topic}`
+          `Latest on ${request.topic}`,
         ],
         subtitleSelection: [
-          'Developing story with key facts',
-          'Quick brief on latest developments',
-          'Essential details you need to know'
+          "Developing story with key facts",
+          "Quick brief on latest developments",
+          "Essential details you need to know",
         ],
-        content: `## ${request.topic}\n\nA news brief about "${request.topic}".\n\n*Error: Invalid JSON structure*`
+        content: `## ${request.topic}\n\nA news brief about "${request.topic}".\n\n*Error: Invalid JSON structure*`,
       };
     }
 
     return parsed;
   } catch (error) {
-    console.error('Short news generation error:', error);
+    console.error("Short news generation error:", error);
     return {
-      refinedTags: request.tags || ['news', 'breaking', 'brief'],
+      refinedTags: request.tags || ["news", "breaking", "brief"],
       titleSelection: [
         `Breaking: ${request.topic}`,
         `${request.topic} - Quick Update`,
-        `Latest on ${request.topic}`
+        `Latest on ${request.topic}`,
       ],
       subtitleSelection: [
-        'Developing story with key facts',
-        'Quick brief on latest developments',
-        'Essential details you need to know'
+        "Developing story with key facts",
+        "Quick brief on latest developments",
+        "Essential details you need to know",
       ],
-      content: `## ${request.topic}\n\nI encountered an issue generating the news brief about "${request.topic}".\n\nPlease try again.\n\n*Error: ${(error as Error).message}*`
+      content: `## ${
+        request.topic
+      }\n\nI encountered an issue generating the news brief about "${
+        request.topic
+      }".\n\nPlease try again.\n\n*Error: ${(error as Error).message}*`,
     };
   }
 }
 
-export async function generateNews(request: GenerateRequest, apiKey: string, onChunk?: (t: string) => void): Promise<ArticleResponse> {
-  const language = request.language === 'indonesian' ? 'Indonesian (Bahasa Indonesia)' : 'English';
+export async function generateNews(
+  request: GenerateRequest,
+  apiKey: string,
+  onChunk?: (t: string) => void,
+): Promise<ArticleResponse> {
+  const language =
+    request.language === "indonesian"
+      ? "Indonesian (Bahasa Indonesia)"
+      : "English";
 
-  const prompt = `You are a professional news journalist. Create a comprehensive news article of at least 1200-1800 words in ${language} about "${request.topic}" in the writing style of ${request.newspaperStyle || request.authorStyle}.
+  const prompt = `You are a professional news journalist. Create a comprehensive news article of at least 1200-1800 words in ${language} about "${
+    request.topic
+  }" in the writing style of ${request.newspaperStyle || request.authorStyle}.
 
-${request.tags ? `Include these themes and tags: ${request.tags.join(', ')}` : ''}
-${request.keywords ? `Incorporate these keywords naturally throughout: ${request.keywords.join(', ')}` : ''}
-${request.mainIdea ? `Build upon this main idea/concept: ${request.mainIdea}` : ''}
+${
+  request.tags
+    ? `Include these themes and tags: ${request.tags.join(", ")}`
+    : ""
+}
+${
+  request.keywords
+    ? `Incorporate these keywords naturally throughout: ${request.keywords.join(
+        ", ",
+      )}`
+    : ""
+}
+${
+  request.mainIdea
+    ? `Build upon this main idea/concept: ${request.mainIdea}`
+    : ""
+}
 
 Write a news article that includes:
 - A compelling headline and lead paragraph
@@ -740,26 +949,41 @@ Required JSON format:
 IMPORTANT: Your entire response must be parseable JSON. Nothing else.`;
 
   try {
-    const response = await callGeminiFlashAPI(prompt, apiKey, onChunk || (() => {}));
-    console.log('Gemini API response for news article (first 500 chars):', response.substring(0, 500));
+    const response =
+      request.sources && request.sources.length > 0
+        ? await callGenerationWithSources(
+            prompt,
+            apiKey,
+            false,
+            onChunk || (() => {}),
+            request.sources,
+          )
+        : await callGeminiFlashAPI(prompt, apiKey, onChunk || (() => {}));
+    console.log(
+      "Gemini API response for news article (first 500 chars):",
+      response.substring(0, 500),
+    );
 
     let parsed: ArticleResponse;
     try {
       parsed = parseGeminiResponse(response) as ArticleResponse;
     } catch (parseError) {
-      console.warn('JSON parsing failed for news article, using fallback:', (parseError as Error).message);
+      console.warn(
+        "JSON parsing failed for news article, using fallback:",
+        (parseError as Error).message,
+      );
       // Return a fallback response if parsing fails
       return {
-        refinedTags: request.tags || ['news', 'current events', 'journalism'],
+        refinedTags: request.tags || ["news", "current events", "journalism"],
         titleSelection: [
           `Breaking: ${request.topic} - Latest Developments`,
           `${request.topic} - Major Update in Ongoing Story`,
-          `New Developments in ${request.topic} Saga`
+          `New Developments in ${request.topic} Saga`,
         ],
         subtitleSelection: [
-          'Comprehensive coverage of the latest developments',
-          'Breaking news and analysis from multiple sources',
-          'In-depth reporting on current events'
+          "Comprehensive coverage of the latest developments",
+          "Breaking news and analysis from multiple sources",
+          "In-depth reporting on current events",
         ],
         content: `## Breaking News: ${request.topic}
 
@@ -795,25 +1019,32 @@ As this story continues to unfold, many are asking what comes next. Analysts sug
 
 This development is part of a larger pattern of similar events that have been occurring with increasing frequency. Related stories include...
 
-*Word count: 487*`
+*Word count: 487*`,
       };
     }
 
     // Validate the response structure
-    if (!parsed.refinedTags || !parsed.titleSelection || !parsed.subtitleSelection || !parsed.content) {
-      console.warn('Invalid response structure from Gemini Pro, using fallback');
+    if (
+      !parsed.refinedTags ||
+      !parsed.titleSelection ||
+      !parsed.subtitleSelection ||
+      !parsed.content
+    ) {
+      console.warn(
+        "Invalid response structure from Gemini Pro, using fallback",
+      );
       // Return a fallback response if parsing fails
       return {
-        refinedTags: request.tags || ['news', 'current events', 'journalism'],
+        refinedTags: request.tags || ["news", "current events", "journalism"],
         titleSelection: [
           `Breaking: ${request.topic} - Latest Developments`,
           `${request.topic} - Major Update in Ongoing Story`,
-          `New Developments in ${request.topic} Saga`
+          `New Developments in ${request.topic} Saga`,
         ],
         subtitleSelection: [
-          'Comprehensive coverage of the latest developments',
-          'Breaking news and analysis from multiple sources',
-          'In-depth reporting on current events'
+          "Comprehensive coverage of the latest developments",
+          "Breaking news and analysis from multiple sources",
+          "In-depth reporting on current events",
         ],
         content: `## Breaking News: ${request.topic}
 
@@ -849,46 +1080,65 @@ As this story continues to unfold, many are asking what comes next. Analysts sug
 
 This development is part of a larger pattern of similar events that have been occurring with increasing frequency. Related stories include...
 
-*Word count: 487*`
+*Word count: 487*`,
       };
     }
 
     return parsed;
   } catch (error) {
-    console.error('News article generation error:', error);
+    console.error("News article generation error:", error);
     // Return a fallback response instead of throwing an error
     return {
-      refinedTags: request.tags || ['news', 'current events', 'journalism'],
+      refinedTags: request.tags || ["news", "current events", "journalism"],
       titleSelection: [
         `Breaking: ${request.topic} - Latest Developments`,
         `${request.topic} - Major Update in Ongoing Story`,
-        `New Developments in ${request.topic} Saga`
+        `New Developments in ${request.topic} Saga`,
       ],
       subtitleSelection: [
-        'Comprehensive coverage of the latest developments',
-        'Breaking news and analysis from multiple sources',
-        'In-depth reporting on current events'
+        "Comprehensive coverage of the latest developments",
+        "Breaking news and analysis from multiple sources",
+        "In-depth reporting on current events",
       ],
       content: `## Breaking News: ${request.topic}
 
-I'm sorry, but I encountered an issue generating the news article about "${request.topic}". This might be due to API limits or content filtering.
+I'm sorry, but I encountered an issue generating the news article about "${
+        request.topic
+      }". This might be due to API limits or content filtering.
 
 Please try again with a different topic or simplified request.
 
-*Error: ${(error as Error).message}*`
+*Error: ${(error as Error).message}*`,
     };
   }
 }
 
-export async function generateNovelOutline(request: GenerateRequest, apiKey: string, onChunk?: (t: string) => void): Promise<NovelResponse> {
-  const language = request.language === 'indonesian' ? 'Indonesian (Bahasa Indonesia)' : 'English';
+export async function generateNovelOutline(
+  request: GenerateRequest,
+  apiKey: string,
+  onChunk?: (t: string) => void,
+): Promise<NovelResponse> {
+  const language =
+    request.language === "indonesian"
+      ? "Indonesian (Bahasa Indonesia)"
+      : "English";
   const chapterCount = request.chapterCount || 10;
 
-  const prompt = `You are a creative novelist. Create a novel outline in ${language} about "${request.topic}" in the style of ${request.authorStyle}.
+  const prompt = `You are a creative novelist. Create a novel outline in ${language} about "${
+    request.topic
+  }" in the style of ${request.authorStyle}.
 
-${request.tags ? `Include these themes: ${request.tags.join(', ')}` : ''}
-${request.keywords ? `Incorporate these elements: ${request.keywords.join(', ')}` : ''}
-${request.mainIdea ? `Build upon this main idea/concept: ${request.mainIdea}` : ''}
+${request.tags ? `Include these themes: ${request.tags.join(", ")}` : ""}
+${
+  request.keywords
+    ? `Incorporate these elements: ${request.keywords.join(", ")}`
+    : ""
+}
+${
+  request.mainIdea
+    ? `Build upon this main idea/concept: ${request.mainIdea}`
+    : ""
+}
 
 Create an outline for exactly ${chapterCount} chapters.
 
@@ -915,69 +1165,124 @@ Required JSON format:
 IMPORTANT: Your entire response must be parseable JSON. The outline array must have exactly ${chapterCount} chapters. Nothing else.`;
 
   try {
-    const response = await callGeminiProAPI(prompt, apiKey, onChunk || (() => {}));
-    console.log('Gemini API response (first 500 chars):', response.substring(0, 500));
+    const response = await callGeminiProAPI(
+      prompt,
+      apiKey,
+      onChunk || (() => {}),
+    );
+    console.log(
+      "Gemini API response (first 500 chars):",
+      response.substring(0, 500),
+    );
 
     let parsed: NovelResponse;
     try {
       parsed = parseGeminiResponse(response) as NovelResponse;
     } catch (parseError) {
-      console.warn('JSON parsing failed for novel outline, using fallback:', (parseError as Error).message);
+      console.warn(
+        "JSON parsing failed for novel outline, using fallback:",
+        (parseError as Error).message,
+      );
       // Return a fallback response if parsing fails
       return {
         titleSelection: [
           `${request.topic} - A Novel`,
           `The ${request.topic} Chronicles`,
-          `${request.topic}: A Story`
+          `${request.topic}: A Story`,
         ],
-        synopsis: `A compelling story about ${request.topic} that explores themes of ${request.tags?.join(', ') || 'human experience'} through the masterful storytelling style of ${request.authorStyle}. This novel follows the journey of characters as they navigate challenges and discover profound truths about life and relationships.`,
+        synopsis: `A compelling story about ${
+          request.topic
+        } that explores themes of ${
+          request.tags?.join(", ") || "human experience"
+        } through the masterful storytelling style of ${
+          request.authorStyle
+        }. This novel follows the journey of characters as they navigate challenges and discover profound truths about life and relationships.`,
         outline: Array.from({ length: chapterCount }, (_, i) => ({
           chapterNumber: i + 1,
-          title: `Chapter ${i + 1}: ${i === 0 ? 'Introduction' : i === chapterCount - 1 ? 'Resolution' : `Development ${i}`}`,
-          subtitle: `${i === 0 ? 'Setting the stage and introducing main characters' :
-                     i === chapterCount - 1 ? 'Climax and satisfying conclusion' :
-                     `Building tension and character development in part ${i} of the story`}`
-        }))
+          title: `Chapter ${i + 1}: ${
+            i === 0
+              ? "Introduction"
+              : i === chapterCount - 1
+                ? "Resolution"
+                : `Development ${i}`
+          }`,
+          subtitle: `${
+            i === 0
+              ? "Setting the stage and introducing main characters"
+              : i === chapterCount - 1
+                ? "Climax and satisfying conclusion"
+                : `Building tension and character development in part ${i} of the story`
+          }`,
+        })),
       };
     }
 
     // Validate the response structure
-    if (!parsed.titleSelection || !parsed.synopsis || !parsed.outline || !Array.isArray(parsed.outline)) {
-      console.warn('Invalid response structure from Gemini Pro, using fallback');
+    if (
+      !parsed.titleSelection ||
+      !parsed.synopsis ||
+      !parsed.outline ||
+      !Array.isArray(parsed.outline)
+    ) {
+      console.warn(
+        "Invalid response structure from Gemini Pro, using fallback",
+      );
       // Return a fallback response if structure is invalid
       return {
         titleSelection: [
           `${request.topic} - A Novel`,
           `The ${request.topic} Chronicles`,
-          `${request.topic}: A Story`
+          `${request.topic}: A Story`,
         ],
-        synopsis: `A compelling story about ${request.topic} that explores themes of ${request.tags?.join(', ') || 'human experience'} through the masterful storytelling style of ${request.authorStyle}. This novel follows the journey of characters as they navigate challenges and discover profound truths about life and relationships.`,
+        synopsis: `A compelling story about ${
+          request.topic
+        } that explores themes of ${
+          request.tags?.join(", ") || "human experience"
+        } through the masterful storytelling style of ${
+          request.authorStyle
+        }. This novel follows the journey of characters as they navigate challenges and discover profound truths about life and relationships.`,
         outline: Array.from({ length: chapterCount }, (_, i) => ({
           chapterNumber: i + 1,
-          title: `Chapter ${i + 1}: ${i === 0 ? 'Introduction' : i === chapterCount - 1 ? 'Resolution' : `Development ${i}`}`,
-          subtitle: `${i === 0 ? 'Setting the stage and introducing main characters' :
-                     i === chapterCount - 1 ? 'Climax and satisfying conclusion' :
-                     `Building tension and character development in part ${i} of the story`}`
-        }))
+          title: `Chapter ${i + 1}: ${
+            i === 0
+              ? "Introduction"
+              : i === chapterCount - 1
+                ? "Resolution"
+                : `Development ${i}`
+          }`,
+          subtitle: `${
+            i === 0
+              ? "Setting the stage and introducing main characters"
+              : i === chapterCount - 1
+                ? "Climax and satisfying conclusion"
+                : `Building tension and character development in part ${i} of the story`
+          }`,
+        })),
       };
     }
 
     return parsed;
   } catch (error) {
-    console.error('Novel outline generation error:', error);
+    console.error("Novel outline generation error:", error);
     // Return a fallback response instead of throwing an error
     return {
       titleSelection: [
         `${request.topic} - A Novel`,
         `The ${request.topic} Chronicles`,
-        `${request.topic}: A Story`
+        `${request.topic}: A Story`,
       ],
-      synopsis: `I'm sorry, but I encountered an issue generating the novel outline for "${request.topic}". This might be due to API limits or content filtering.\n\nError: ${(error as Error).message}`,
+      synopsis: `I'm sorry, but I encountered an issue generating the novel outline for "${
+        request.topic
+      }". This might be due to API limits or content filtering.\n\nError: ${
+        (error as Error).message
+      }`,
       outline: Array.from({ length: chapterCount }, (_, i) => ({
         chapterNumber: i + 1,
         title: `Chapter ${i + 1}`,
-        subtitle: `Chapter ${i + 1} outline - please try regenerating for a more detailed description`
-      }))
+        subtitle: `Chapter ${
+          i + 1
+        } outline - please try regenerating for a more detailed description`,
+      })),
     };
   }
 }
@@ -989,58 +1294,72 @@ export async function testGeminiAPIKey(apiKey: string): Promise<boolean> {
 
     // Use header authentication - simplified request like the working direct call
     const response = await fetch(GEMINI_FLASH_URL, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
-        'x-goog-api-key': apiKey,
+        "Content-Type": "application/json",
+        "x-goog-api-key": apiKey,
       },
       body: JSON.stringify({
-        contents: [{
-          parts: [{
-            text: testPrompt
-          }]
-        }]
+        contents: [
+          {
+            parts: [
+              {
+                text: testPrompt,
+              },
+            ],
+          },
+        ],
       }),
     });
 
     if (!response.ok) {
-      console.error(`Gemini API test failed: ${response.status} ${response.statusText}`);
+      console.error(
+        `Gemini API test failed: ${response.status} ${response.statusText}`,
+      );
       if (response.status === 429) {
-        throw new Error('API quota exceeded. You have reached your free tier limit. Please upgrade your plan or wait for quota reset.');
+        throw new Error(
+          "API quota exceeded. You have reached your free tier limit. Please upgrade your plan or wait for quota reset.",
+        );
       }
       if (response.status === 403) {
-        throw new Error('API access denied. Please check that your API key has Gemini API enabled.');
+        throw new Error(
+          "API access denied. Please check that your API key has Gemini API enabled.",
+        );
       }
-      throw new Error(`API test failed: ${response.status} ${response.statusText}`);
+      throw new Error(
+        `API test failed: ${response.status} ${response.statusText}`,
+      );
     }
 
     const data: GeminiResponse = await response.json();
 
     // Check for API errors
     if (data.error) {
-      console.error('Gemini API error:', data.error);
+      console.error("Gemini API error:", data.error);
       return false;
     }
 
     // Validate response structure
-    return !!(data.candidates &&
-              data.candidates[0] &&
-              data.candidates[0].content &&
-              data.candidates[0].content.parts &&
-              data.candidates[0].content.parts[0] &&
-              data.candidates[0].content.parts[0].text);
-
+    return !!(
+      data.candidates &&
+      data.candidates[0] &&
+      data.candidates[0].content &&
+      data.candidates[0].content.parts &&
+      data.candidates[0].content.parts[0] &&
+      data.candidates[0].content.parts[0].text
+    );
   } catch (error) {
-    console.error('API key test error:', error);
+    console.error("API key test error:", error);
     // Re-throw quota and access errors so they can be handled by the UI
-    if ((error as Error).message.includes('quota exceeded') ||
-        (error as Error).message.includes('access denied')) {
+    if (
+      (error as Error).message.includes("quota exceeded") ||
+      (error as Error).message.includes("access denied")
+    ) {
       throw error;
     }
     return false;
   }
 }
-
 
 // Core Gemini API call with retry logic
 async function callGeminiAPIWithRetry(
@@ -1048,13 +1367,13 @@ async function callGeminiAPIWithRetry(
   apiKey: string,
   modelUrl: string,
   retryCount = 0,
-  useHeaderAuth = true
+  useHeaderAuth = true,
 ): Promise<string> {
   // Check cache for duplicate requests
   const cacheKey = getCacheKey(prompt, modelUrl);
   const cachedResponse = getCachedResponse(cacheKey);
   if (cachedResponse) {
-    console.log('Using cached response for duplicate request');
+    console.log("Using cached response for duplicate request");
     return cachedResponse;
   }
 
@@ -1066,77 +1385,83 @@ async function callGeminiAPIWithRetry(
     let response: Response;
 
     const requestBody = {
-      contents: [{
-        parts: [{
-          text: prompt
-        }]
-      }],
+      contents: [
+        {
+          parts: [
+            {
+              text: prompt,
+            },
+          ],
+        },
+      ],
       generationConfig: {
         temperature: 0.7,
         topK: 40,
         topP: 0.95,
-        maxOutputTokens: modelUrl.includes('flash') ? 8192 : 16384, // Flash has lower limits
+        maxOutputTokens: modelUrl.includes("flash") ? 8192 : 16384, // Flash has lower limits
       },
       safetySettings: [
         {
           category: "HARM_CATEGORY_HARASSMENT",
-          threshold: "BLOCK_MEDIUM_AND_ABOVE"
+          threshold: "BLOCK_MEDIUM_AND_ABOVE",
         },
         {
           category: "HARM_CATEGORY_HATE_SPEECH",
-          threshold: "BLOCK_MEDIUM_AND_ABOVE"
+          threshold: "BLOCK_MEDIUM_AND_ABOVE",
         },
         {
           category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
-          threshold: "BLOCK_MEDIUM_AND_ABOVE"
+          threshold: "BLOCK_MEDIUM_AND_ABOVE",
         },
         {
           category: "HARM_CATEGORY_DANGEROUS_CONTENT",
-          threshold: "BLOCK_MEDIUM_AND_ABOVE"
-        }
-      ]
+          threshold: "BLOCK_MEDIUM_AND_ABOVE",
+        },
+      ],
     };
 
     try {
       // Method 1: Header authentication (preferred)
       if (useHeaderAuth) {
         response = await fetch(modelUrl, {
-          method: 'POST',
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
-            'x-goog-api-key': apiKey,
+            "Content-Type": "application/json",
+            "x-goog-api-key": apiKey,
           },
           body: JSON.stringify(requestBody),
-          signal: controller.signal
+          signal: controller.signal,
         });
       } else {
-        throw new Error('Fallback to query auth');
+        throw new Error("Fallback to query auth");
       }
     } catch {
       // Method 2: Query parameter authentication (fallback)
-      console.log('Falling back to query parameter authentication');
+      console.log("Falling back to query parameter authentication");
       response = await fetch(`${modelUrl}?key=${apiKey}`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(requestBody),
-        signal: controller.signal
+        signal: controller.signal,
       });
     }
 
     clearTimeout(timeoutId);
 
     if (!response.ok) {
-      const errorText = await response.text().catch(() => 'Unknown error');
+      const errorText = await response.text().catch(() => "Unknown error");
       let errorMessage = `Gemini API error: ${response.status} ${response.statusText}`;
 
       if (response.status === 429) {
-        errorMessage = 'API quota exceeded. You\'ve reached your free tier limit. Please upgrade your plan or wait for quota reset.';
+        errorMessage =
+          "API quota exceeded. You've reached your free tier limit. Please upgrade your plan or wait for quota reset.";
       } else if (response.status === 403) {
-        errorMessage = 'API access denied. Please check that your API key has Gemini API enabled.';
+        errorMessage =
+          "API access denied. Please check that your API key has Gemini API enabled.";
       } else if (response.status === 503) {
-        errorMessage = 'The model is overloaded. Please try again later.';
+        errorMessage = "The model is overloaded. Please try again later.";
       }
 
       throw new Error(`${errorMessage} - ${errorText}`);
@@ -1147,31 +1472,48 @@ async function callGeminiAPIWithRetry(
     // Check for API errors in response body
     if (data.error) {
       const errorCode = data.error.code;
-      let errorMessage = `Gemini API error: ${data.error.message || 'Unknown API error'}`;
+      let errorMessage = `Gemini API error: ${
+        data.error.message || "Unknown API error"
+      }`;
 
       if (errorCode === 503) {
-        errorMessage = 'The model is overloaded. Please try again later.';
+        errorMessage = "The model is overloaded. Please try again later.";
       } else if (errorCode === 429) {
-        errorMessage = 'API quota exceeded. You\'ve reached your free tier limit. Please upgrade your plan or wait for quota reset.';
+        errorMessage =
+          "API quota exceeded. You've reached your free tier limit. Please upgrade your plan or wait for quota reset.";
       }
 
       throw new Error(errorMessage);
     }
 
     // Validate response structure
-    if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
-      throw new Error('Invalid response structure from Gemini API');
+    if (
+      !data.candidates ||
+      !data.candidates[0] ||
+      !data.candidates[0].content
+    ) {
+      throw new Error("Invalid response structure from Gemini API");
     }
 
     const candidate = data.candidates[0];
 
     // Check if the response was blocked or incomplete
-    if (candidate.finishReason === 'SAFETY' || candidate.finishReason === 'RECITATION') {
-      throw new Error('Response was blocked by safety filters. Please try a different prompt.');
+    if (
+      candidate.finishReason === "SAFETY" ||
+      candidate.finishReason === "RECITATION"
+    ) {
+      throw new Error(
+        "Response was blocked by safety filters. Please try a different prompt.",
+      );
     }
 
-    if (!candidate.content || !candidate.content.parts || !candidate.content.parts[0] || !candidate.content.parts[0].text) {
-      throw new Error('Empty response from Gemini API');
+    if (
+      !candidate.content ||
+      !candidate.content.parts ||
+      !candidate.content.parts[0] ||
+      !candidate.content.parts[0].text
+    ) {
+      throw new Error("Empty response from Gemini API");
     }
 
     const result = candidate.content.parts[0].text;
@@ -1180,7 +1522,6 @@ async function callGeminiAPIWithRetry(
     setCachedResponse(cacheKey, result);
 
     return result;
-
   } catch (error) {
     console.error(`Gemini API call attempt ${retryCount + 1} failed:`, error);
 
@@ -1195,11 +1536,22 @@ async function callGeminiAPIWithRetry(
       case ErrorType.RETRYABLE:
         // Retry logic with exponential backoff
         if (retryCount < MAX_RETRIES) {
-          const retryDelay = classifiedError.retryAfter || calculateRetryDelay(retryCount);
-          console.log(`Retrying in ${Math.round(retryDelay)}ms... (${classifiedError.message})`);
+          const retryDelay =
+            classifiedError.retryAfter || calculateRetryDelay(retryCount);
+          console.log(
+            `Retrying in ${Math.round(retryDelay)}ms... (${
+              classifiedError.message
+            })`,
+          );
 
           await delay(retryDelay);
-          return callGeminiAPIWithRetry(prompt, apiKey, modelUrl, retryCount + 1, useHeaderAuth);
+          return callGeminiAPIWithRetry(
+            prompt,
+            apiKey,
+            modelUrl,
+            retryCount + 1,
+            useHeaderAuth,
+          );
         }
         throw new Error(`Max retries exceeded: ${classifiedError.message}`);
     }
@@ -1218,6 +1570,7 @@ async function callGeminiStreamWithRetry(
   modelUrl: string,
   onChunk: (fullText: string) => void,
   retryCount = 0,
+  sourceUrls?: string[],
 ): Promise<string> {
   const cacheKey = getCacheKey(prompt, modelUrl);
   const cached = getCachedResponse(cacheKey);
@@ -1227,35 +1580,51 @@ async function callGeminiStreamWithRetry(
   }
 
   // Convert :generateContent → :streamGenerateContent?alt=sse
-  const streamUrl = modelUrl.replace(':generateContent', ':streamGenerateContent') + '?alt=sse';
+  const streamUrl =
+    modelUrl.replace(":generateContent", ":streamGenerateContent") + "?alt=sse";
 
   const controller = new AbortController();
   const adaptiveTimeout = calculateAdaptiveTimeout(prompt);
   const timeoutId = setTimeout(() => controller.abort(), adaptiveTimeout);
 
-  const requestBody = {
+  const requestBody: Record<string, unknown> = {
     contents: [{ parts: [{ text: prompt }] }],
     generationConfig: {
       temperature: 0.7,
       topK: 40,
       topP: 0.95,
-      maxOutputTokens: modelUrl.includes('flash') ? 8192 : 16384,
+      maxOutputTokens: modelUrl.includes("flash") ? 8192 : 16384,
     },
     safetySettings: [
-      { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
-      { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
-      { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
-      { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
+      {
+        category: "HARM_CATEGORY_HARASSMENT",
+        threshold: "BLOCK_MEDIUM_AND_ABOVE",
+      },
+      {
+        category: "HARM_CATEGORY_HATE_SPEECH",
+        threshold: "BLOCK_MEDIUM_AND_ABOVE",
+      },
+      {
+        category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+        threshold: "BLOCK_MEDIUM_AND_ABOVE",
+      },
+      {
+        category: "HARM_CATEGORY_DANGEROUS_CONTENT",
+        threshold: "BLOCK_MEDIUM_AND_ABOVE",
+      },
     ],
   };
+  if (sourceUrls && sourceUrls.length > 0) {
+    requestBody.tools = [{ url_context: {} }];
+  }
 
   let response: Response;
   try {
     response = await fetch(streamUrl, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
-        'x-goog-api-key': apiKey,
+        "Content-Type": "application/json",
+        "x-goog-api-key": apiKey,
       },
       body: JSON.stringify(requestBody),
       signal: controller.signal,
@@ -1265,42 +1634,54 @@ async function callGeminiStreamWithRetry(
     // Network error → retry once then fall through to non-streaming fallback
     if (retryCount < MAX_RETRIES) {
       await delay(BASE_RETRY_DELAY);
-      return callGeminiStreamWithRetry(prompt, apiKey, modelUrl, onChunk, retryCount + 1);
+      return callGeminiStreamWithRetry(
+        prompt,
+        apiKey,
+        modelUrl,
+        onChunk,
+        retryCount + 1,
+        sourceUrls,
+      );
     }
     throw e;
   }
   clearTimeout(timeoutId);
 
   if (!response.ok) {
-    const errorText = await response.text().catch(() => 'Unknown error');
+    const errorText = await response.text().catch(() => "Unknown error");
     const status = response.status;
+    if (status === 400 && /url.?context|tool/i.test(errorText)) {
+      throw new UrlContextUnsupportedError(
+        `url_context not supported by ${modelUrl}: ${errorText}`,
+      );
+    }
     let errorMessage = `Gemini API error: ${status} ${response.statusText}`;
-    if (status === 429) errorMessage = 'API quota exceeded.';
-    else if (status === 403) errorMessage = 'API access denied.';
-    else if (status === 404) errorMessage = 'Model not found.';
+    if (status === 429) errorMessage = "API quota exceeded.";
+    else if (status === 403) errorMessage = "API access denied.";
+    else if (status === 404) errorMessage = "Model not found.";
     throw new Error(`${errorMessage} ${errorText}`);
   }
 
   if (!response.body) {
-    throw new Error('Gemini stream returned no body');
+    throw new Error("Gemini stream returned no body");
   }
 
   const reader = response.body.getReader();
   const decoder = new TextDecoder();
-  let buffer = '';
-  let fullText = '';
+  let buffer = "";
+  let fullText = "";
 
   try {
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
       buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split('\n');
-      buffer = lines.pop() || '';
+      const lines = buffer.split("\n");
+      buffer = lines.pop() || "";
       for (const line of lines) {
-        if (!line.startsWith('data:')) continue;
+        if (!line.startsWith("data:")) continue;
         const data = line.slice(5).trim();
-        if (!data || data === '[DONE]') continue;
+        if (!data || data === "[DONE]") continue;
         try {
           const parsed = JSON.parse(data);
           const text = parsed?.candidates?.[0]?.content?.parts?.[0]?.text;
@@ -1308,7 +1689,9 @@ async function callGeminiStreamWithRetry(
             fullText += text;
             onChunk(fullText);
           }
-        } catch (_) { /* skip malformed event */ }
+        } catch (_) {
+          /* skip malformed event */
+        }
       }
     }
   } catch (e) {
@@ -1317,30 +1700,87 @@ async function callGeminiStreamWithRetry(
   }
 
   if (!fullText) {
-    throw new Error('Gemini stream produced no text');
+    throw new Error("Gemini stream produced no text");
   }
 
   setCachedResponse(cacheKey, fullText);
   return fullText;
 }
 
-// Call Gemini Pro for content generation (higher quality) with multiple fallback models.
-// Streaming variant — each model uses the SSE endpoint so bytes flow continuously.
-async function callGeminiProAPI(prompt: string, apiKey: string, onChunk: (t: string) => void): Promise<string> {
-  console.log('Attempting Gemini Pro API call (stream)...');
-  return callGeminiWithFallback(prompt, apiKey, [
-    { name: 'Gemini 3 Pro Preview', url: GEMINI_PRO_URL },
-    { name: 'Gemini 3 Flash Preview', url: GEMINI_FLASH_URL },
-    { name: 'Gemini 2.5 Flash', url: GEMINI_FALLBACK_FLASH_URL },
-  ], onChunk);
+// Hybrid source-of-truth strategy:
+//   1. Try Gemini's native url_context tool (model fetches the URLs itself).
+//   2. If the model rejects the tool, retrieve the pages server-side and inject
+//      the extracted text into the prompt instead.
+async function callGenerationWithSources(
+  basePrompt: string,
+  apiKey: string,
+  useProModel: boolean,
+  onChunk: (t: string) => void,
+  sourceUrls: string[],
+): Promise<string> {
+  const listed = `${basePrompt}
+
+SOURCES — consult these URLs with your URL context tool and ground every factual claim in them:
+${sourceUrls.map((u, i) => `[${i + 1}] ${u}`).join("\n")}
+Cite sources inline using [n] notation.`;
+  try {
+    return useProModel
+      ? await callGeminiProAPI(listed, apiKey, onChunk, sourceUrls)
+      : await callGeminiFlashAPI(listed, apiKey, onChunk, sourceUrls);
+  } catch (err) {
+    if (!(err instanceof UrlContextUnsupportedError)) throw err;
+    console.warn(
+      "url_context unsupported; falling back to server-side retrieval",
+    );
+    const material = await buildSourceContext(sourceUrls);
+    if (!material)
+      throw new Error("Could not retrieve any of the provided source URLs.");
+    const injected = `${basePrompt}${material}`;
+    return useProModel
+      ? await callGeminiProAPI(injected, apiKey, onChunk)
+      : await callGeminiFlashAPI(injected, apiKey, onChunk);
+  }
 }
 
-async function callGeminiFlashAPI(prompt: string, apiKey: string, onChunk: (t: string) => void): Promise<string> {
-  console.log('Attempting Gemini Flash API call (stream)...');
-  return callGeminiWithFallback(prompt, apiKey, [
-    { name: 'Gemini 3 Flash Preview', url: GEMINI_FLASH_URL },
-    { name: 'Gemini 2.5 Flash', url: GEMINI_FALLBACK_FLASH_URL },
-  ], onChunk);
+// Call Gemini Pro for content generation (higher quality) with multiple fallback models.
+// Streaming variant — each model uses the SSE endpoint so bytes flow continuously.
+async function callGeminiProAPI(
+  prompt: string,
+  apiKey: string,
+  onChunk: (t: string) => void,
+  sourceUrls?: string[],
+): Promise<string> {
+  console.log("Attempting Gemini Pro API call (stream)...");
+  return callGeminiWithFallback(
+    prompt,
+    apiKey,
+    [
+      { name: "Gemini 3 Pro Preview", url: GEMINI_PRO_URL },
+      { name: "Gemini 3 Flash Preview", url: GEMINI_FLASH_URL },
+      { name: "Gemini 2.5 Flash", url: GEMINI_FALLBACK_FLASH_URL },
+    ],
+    onChunk,
+    sourceUrls,
+  );
+}
+
+async function callGeminiFlashAPI(
+  prompt: string,
+  apiKey: string,
+  onChunk: (t: string) => void,
+  sourceUrls?: string[],
+): Promise<string> {
+  console.log("Attempting Gemini Flash API call (stream)...");
+  return callGeminiWithFallback(
+    prompt,
+    apiKey,
+    [
+      { name: "Gemini 3 Flash Preview", url: GEMINI_FLASH_URL },
+      { name: "Gemini 2.5 Flash", url: GEMINI_FALLBACK_FLASH_URL },
+    ],
+    onChunk,
+    sourceUrls,
+  );
 }
 
 async function callGeminiWithFallback(
@@ -1348,44 +1788,59 @@ async function callGeminiWithFallback(
   apiKey: string,
   fallbackModels: { name: string; url: string }[],
   onChunk: (t: string) => void,
+  sourceUrls?: string[],
 ): Promise<string> {
   for (let i = 0; i < fallbackModels.length; i++) {
     const model = fallbackModels[i];
     try {
       console.log(`Trying ${model.name}...`);
-      const result = await callGeminiStreamWithRetry(prompt, apiKey, model.url, onChunk);
+      const result = await callGeminiStreamWithRetry(
+        prompt,
+        apiKey,
+        model.url,
+        onChunk,
+        0,
+        sourceUrls,
+      );
       return result;
     } catch (error) {
+      if (error instanceof UrlContextUnsupportedError) throw error;
       console.warn(`${model.name} failed:`, (error as Error).message);
       const classifiedError = classifyError(error);
       if (classifiedError.modelNotFound) continue;
-      if (classifiedError.type === ErrorType.QUOTA_EXCEEDED && i < fallbackModels.length - 1) continue;
+      if (
+        classifiedError.type === ErrorType.QUOTA_EXCEEDED &&
+        i < fallbackModels.length - 1
+      )
+        continue;
       if (classifiedError.type === ErrorType.RETRYABLE) continue;
       throw error;
     }
   }
-  throw new Error('All Gemini fallback models failed');
+  throw new Error("All Gemini fallback models failed");
 }
 
 // Parse JSON response with improved reliability
 function parseGeminiResponse(text: string): any {
   // Ensure text is actually a string
-  if (typeof text !== 'string') {
-    throw new Error('Invalid response type from Gemini API');
+  if (typeof text !== "string") {
+    throw new Error("Invalid response type from Gemini API");
   }
 
   // Clean the text to extract JSON
   let cleanedText = text.trim();
 
   // Remove markdown code blocks if present
-  cleanedText = cleanedText.replace(/```(?:json)?\s*/gi, '').replace(/```\s*$/gi, '');
+  cleanedText = cleanedText
+    .replace(/```(?:json)?\s*/gi, "")
+    .replace(/```\s*$/gi, "");
 
   // Find the JSON object boundaries
-  const startBrace = cleanedText.indexOf('{');
-  const lastBrace = cleanedText.lastIndexOf('}');
+  const startBrace = cleanedText.indexOf("{");
+  const lastBrace = cleanedText.lastIndexOf("}");
 
   if (startBrace === -1 || lastBrace === -1 || startBrace >= lastBrace) {
-    throw new Error('No valid JSON object found in response');
+    throw new Error("No valid JSON object found in response");
   }
 
   // Extract just the JSON part
@@ -1395,12 +1850,15 @@ function parseGeminiResponse(text: string): any {
     // Try direct parsing first
     return JSON.parse(cleanedText);
   } catch (parseError) {
-    console.warn('Direct JSON parse failed, attempting fixes:', (parseError as Error).message);
+    console.warn(
+      "Direct JSON parse failed, attempting fixes:",
+      (parseError as Error).message,
+    );
 
     // Apply common JSON fixes
     let fixedText = cleanedText
       // Fix trailing commas
-      .replace(/,(\s*[}\]])/g, '$1')
+      .replace(/,(\s*[}\]])/g, "$1")
       // Fix single quotes to double quotes (carefully)
       .replace(/'([^']*)'/g, (match, content) => {
         // Only replace single quotes around string values, not inside
@@ -1410,15 +1868,23 @@ function parseGeminiResponse(text: string): any {
       // Fix unquoted keys
       .replace(/([{,]\s*)([a-zA-Z_][a-zA-Z0-9_]*)\s*:/g, '$1"$2":')
       // Normalize whitespace
-      .replace(/\s+/g, ' ')
+      .replace(/\s+/g, " ")
       .trim();
 
     try {
-      console.log('Attempting fixed parse:', fixedText.substring(0, 200));
+      console.log("Attempting fixed parse:", fixedText.substring(0, 200));
       return JSON.parse(fixedText);
     } catch (fixedError) {
-      console.error('Fixed JSON parse also failed:', (fixedError as Error).message);
-      throw new Error(`Unable to parse Gemini response as JSON after fixes. Response: ${cleanedText.substring(0, 500)}...`);
+      console.error(
+        "Fixed JSON parse also failed:",
+        (fixedError as Error).message,
+      );
+      throw new Error(
+        `Unable to parse Gemini response as JSON after fixes. Response: ${cleanedText.substring(
+          0,
+          500,
+        )}...`,
+      );
     }
   }
 }

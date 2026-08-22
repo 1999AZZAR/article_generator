@@ -2,10 +2,17 @@
 // English strings are the default markup; the script reads the i18n table
 // injected below and re-paints fields when the user changes language.
 
-import { MAIN_STRINGS, Locale } from './i18n';
-import { renderHead, renderFooter, renderTopbar, getTopbarStrings, FOOTER_STRINGS, ARCHIVAL_DETAILS_HTML } from './styles';
-import { SELECT_CSS, SELECT_SCRIPT } from './select';
-import { SPECIMEN_JS } from './specimen';
+import { MAIN_STRINGS, Locale } from "./i18n";
+import {
+  renderHead,
+  renderFooter,
+  renderTopbar,
+  getTopbarStrings,
+  FOOTER_STRINGS,
+  ARCHIVAL_DETAILS_HTML,
+} from "./styles";
+import { SELECT_CSS, SELECT_SCRIPT } from "./select";
+import { SPECIMEN_JS } from "./specimen";
 
 const PAGE_CSS = `
 ${SELECT_CSS}
@@ -55,6 +62,7 @@ ${SELECT_CSS}
 .form-group label { display: block; font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; font-weight: 600; margin-bottom: 8px; color: var(--black); }
 .form-group label .req { color: var(--accent); font-weight: 700; }
 .form-group input[type="text"],
+.form-group input[type="url"],
 .form-group input[type="number"],
 .form-group textarea,
 .form-group select {
@@ -92,6 +100,7 @@ ${SELECT_CSS}
     font-size: 12px; font-weight: 500; letter-spacing: 0.04em; text-transform: uppercase;
 }
 .chip .x { cursor: pointer; color: var(--accent); font-weight: 700; line-height: 1; }
+.chip.chip-url { text-transform: none; letter-spacing: 0; max-width: 100%; overflow-wrap: anywhere; }
 
 .add-btn {
     border: 1px solid var(--black); background: var(--white); color: var(--black);
@@ -266,7 +275,7 @@ ${SELECT_CSS}
 // the i18n table that's embedded as a JSON blob.
 const BODY_HTML = `
 <div class="container">
-    ${renderTopbar('generator', 'english')}
+    ${renderTopbar("generator", "english")}
 
     <div class="byok-banner" id="byokBanner">
         <div class="byok-banner-row">
@@ -409,6 +418,15 @@ const BODY_HTML = `
         </div>
 
         <div class="form-group full">
+            <label for="sourceInput" id="sourcesLabel">Sources (optional)</label>
+            <div class="tag-row">
+                <input type="url" id="sourceInput" placeholder="Add a source URL (Wikipedia, news, paper) and press Enter">
+                <button type="button" class="add-btn" id="addSourceBtn">Add</button>
+            </div>
+            <div class="tag-input" id="sourcesContainer" data-empty=""></div>
+        </div>
+
+        <div class="form-group full">
             <label for="mainIdea" id="mainIdeaLabel">Main Idea / Plot</label>
             <textarea id="mainIdea" name="mainIdea" rows="3" placeholder="Describe the main idea, plot or concept the AI should build upon."></textarea>
         </div>
@@ -443,7 +461,7 @@ const BODY_HTML = `
 
 <div class="result-container" id="resultContainer"></div>
 
-    ${renderFooter(FOOTER_STRINGS['english'])}
+    ${renderFooter(FOOTER_STRINGS["english"])}
 </div>
 
 ${ARCHIVAL_DETAILS_HTML}
@@ -530,6 +548,7 @@ const SCRIPT = `
         setLabel('languageLabel', t.languageLabel.replace(/\\s*\\*\\s*$/, ''));
         setLabel('tagsLabel', t.tagsLabel);
         setLabel('keywordsLabel', t.keywordsLabel);
+        setLabel('sourcesLabel', t.sourcesLabel);
         setLabel('mainIdeaLabel', t.mainIdeaLabel);
         // Placeholders
         const setPh = (id, v) => { const e = document.getElementById(id); if (e) e.placeholder = v; };
@@ -537,6 +556,7 @@ const SCRIPT = `
         setPh('mainIdea', t.mainIdeaPlaceholder);
         setPh('tagInput', t.tagsPlaceholder);
         setPh('keywordInput', t.keywordsPlaceholder);
+        setPh('sourceInput', t.sourcesPlaceholder);
         setPh('customAuthorStyle', t.customAuthorPlaceholder);
         setPh('customNewspaperStyle', t.customNewspaperPlaceholder);
         setPh('chapterCount', t.chapterCountPlaceholder);
@@ -559,6 +579,7 @@ const SCRIPT = `
         authorGroups.forEach(function(og, i) { if (groupLabels[i]) og.label = groupLabels[i]; });
         setOpt('addTagBtn', t.addButton);
         setOpt('addKeywordBtn', t.addButton);
+        setOpt('addSourceBtn', t.addButton);
         setOpt('generateButtonLabel', t.generateButton);
         setOpt('resetBtn', t.resetButton);
         setOpt('statusLabel', t.statusLabel);
@@ -568,6 +589,8 @@ const SCRIPT = `
         if (tagsContainer) tagsContainer.setAttribute('data-empty', t.tagsEmpty);
         const keywordsContainer = document.getElementById('keywordsContainer');
         if (keywordsContainer) keywordsContainer.setAttribute('data-empty', t.keywordsEmpty);
+        const sourcesContainer = document.getElementById('sourcesContainer');
+        if (sourcesContainer) sourcesContainer.setAttribute('data-empty', t.sourcesEmpty);
         // Auth links
         const signInLink = document.getElementById('authSignInLink');
         if (signInLink) {
@@ -791,11 +814,12 @@ const SCRIPT = `
         });
     }
 
-    function setupTagSystem(inputId, containerId, array, addBtnId) {
+    function setupTagSystem(inputId, containerId, array, addBtnId, validate) {
         const input = document.getElementById(inputId);
         const container = document.getElementById(containerId);
         const addBtn = document.getElementById(addBtnId);
         function addItem(value) {
+            if (validate && !validate(value)) return;
             if (value && !array.includes(value)) {
                 array.push(value);
                 renderItems();
@@ -810,7 +834,8 @@ const SCRIPT = `
             container.innerHTML = '';
             array.forEach((item, index) => {
                 const tag = document.createElement('div');
-                tag.className = 'chip';
+                const isUrl = /^https?:\/\//i.test(item);
+                tag.className = 'chip' + (isUrl ? ' chip-url' : '');
                 tag.innerHTML = escapeHtml(item) + ' <span class="x" data-index="' + index + '">&times;</span>';
                 container.appendChild(tag);
             });
@@ -847,8 +872,16 @@ const SCRIPT = `
 
         const tagsArr = [];
         const keywordsArr = [];
+        const sourcesArr = [];
         setupTagSystem('tagInput', 'tagsContainer', tagsArr, 'addTagBtn');
         setupTagSystem('keywordInput', 'keywordsContainer', keywordsArr, 'addKeywordBtn');
+        function isValidSourceUrl(value) {
+            try {
+                const u = new URL(value);
+                return u.protocol === 'https:' || u.protocol === 'http:';
+            } catch (_) { return false; }
+        }
+        const sourcesTagSystem = setupTagSystem('sourceInput', 'sourcesContainer', sourcesArr, 'addSourceBtn', isValidSourceUrl);
 
         syncAuthPill();
         repaint(savedLanguage);
@@ -866,6 +899,7 @@ const SCRIPT = `
                 mainIdea: document.getElementById('mainIdea').value,
                 tags: tagsArr,
                 keywords: keywordsArr,
+                sources: sourcesArr,
             };
             localStorage.setItem('quillFormData', JSON.stringify(formData));
         }
@@ -885,6 +919,11 @@ const SCRIPT = `
                 document.getElementById('mainIdea').value = data.mainIdea || '';
                 if (data.tags) { tagsArr.length = 0; tagsArr.push.apply(tagsArr, data.tags); }
                 if (data.keywords) { keywordsArr.length = 0; keywordsArr.push.apply(keywordsArr, data.keywords); }
+                if (data.sources) {
+                    sourcesArr.length = 0;
+                    sourcesArr.push.apply(sourcesArr, data.sources.filter(isValidSourceUrl));
+                    sourcesTagSystem.renderItems();
+                }
                 if (data.type === 'novel') chapterCountGroup.style.display = '';
                 else chapterCountGroup.style.display = 'none';
                 if (data.authorStyle === 'custom') { customAuthorStyle.style.display = 'block'; customAuthorStyle.required = true; }
@@ -898,8 +937,10 @@ const SCRIPT = `
             form.reset();
             tagsArr.length = 0;
             keywordsArr.length = 0;
+            sourcesArr.length = 0;
             document.getElementById('tagsContainer').innerHTML = '';
             document.getElementById('keywordsContainer').innerHTML = '';
+            document.getElementById('sourcesContainer').innerHTML = '';
             chapterCountGroup.style.display = 'none';
             customAuthorStyle.style.display = 'none';
             customAuthorStyle.required = false;
@@ -1031,6 +1072,7 @@ const SCRIPT = `
                 chapterCount: form.chapterCount.value ? parseInt(form.chapterCount.value, 10) : undefined,
                 language: form.language.value,
                 mainIdea: form.mainIdea.value || undefined,
+                sources: sourcesArr.length > 0 ? sourcesArr : undefined,
             };
             loading.classList.add('show');
             generateBtn.disabled = true;
@@ -1448,7 +1490,7 @@ const SCRIPT = `
 })();
 `;
 
-export function generateMainPageHTML(locale: Locale = 'english'): string {
+export function generateMainPageHTML(locale: Locale = "english"): string {
   const strings = MAIN_STRINGS[locale];
   return `<!DOCTYPE html>
 <html lang="${locale}">
@@ -1456,16 +1498,19 @@ ${renderHead({ title: strings.documentTitle, pageStyles: PAGE_CSS })}
 <body>
 ${BODY_HTML}
 <script>
-window.__QUILL_I18N__ = ${JSON.stringify({ main: MAIN_STRINGS, footer: FOOTER_STRINGS })};
+window.__QUILL_I18N__ = ${JSON.stringify({
+    main: MAIN_STRINGS,
+    footer: FOOTER_STRINGS,
+  })};
 window.__QUILL_INITIAL_LOCALE__ = ${JSON.stringify(locale)};
 window.__QUILL_TOPBAR__ = ${JSON.stringify({
-  english: renderTopbar('generator', 'english'),
-  indonesian: renderTopbar('generator', 'indonesian'),
-})};
+    english: renderTopbar("generator", "english"),
+    indonesian: renderTopbar("generator", "indonesian"),
+  })};
 window.__QUILL_TOPBAR_STRINGS__ = ${JSON.stringify({
-  english: getTopbarStrings('english'),
-  indonesian: getTopbarStrings('indonesian'),
-})};
+    english: getTopbarStrings("english"),
+    indonesian: getTopbarStrings("indonesian"),
+  })};
 </script>
 <script>${SCRIPT}</script>
 <script>${SELECT_SCRIPT}</script>
