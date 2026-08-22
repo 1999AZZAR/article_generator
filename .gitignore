@@ -76,3 +76,7 @@ test_export.rtf
 .wrangler/
 
 /src/generated/prisma
+
+# Project Guardian
+memory.db
+memory.db-journal
