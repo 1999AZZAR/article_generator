@@ -166,6 +166,10 @@ export const SELECT_CSS = `
     font-style: italic;
     text-align: center;
 }
+@media (max-width: 900px) {
+    .q-select-search { font-size: 16px; }
+    .q-select-dropdown { max-height: 60dvh; }
+}
 `;
 
 export const SELECT_SCRIPT = `
@@ -230,6 +234,8 @@ export const SELECT_SCRIPT = `
             search.placeholder = 'Search…';
             search.setAttribute('aria-label', 'Search options');
             search.setAttribute('autocomplete', 'off');
+            search.setAttribute('inputmode', 'search');
+            search.setAttribute('enterkeyhint', 'search');
             searchWrap.appendChild(search);
             dropdown.insertBefore(searchWrap, optionsEl);
         }
@@ -321,7 +327,12 @@ export const SELECT_SCRIPT = `
             trigger.setAttribute('aria-expanded', 'true');
             wrapper.classList.add('q-select-open');
             if (search) {
-                setTimeout(function() { search.focus(); }, 0);
+                var finePointer = window.matchMedia
+                    ? window.matchMedia('(hover: hover) and (pointer: fine)').matches
+                    : false;
+                if (finePointer) {
+                    setTimeout(function() { search.focus(); }, 0);
+                }
             } else {
                 var first = optionsEl.querySelector('.q-select-option:not([disabled]):not([hidden])');
                 if (first) setTimeout(function() { first.focus(); }, 0);
@@ -456,7 +467,10 @@ export const SELECT_SCRIPT = `
             }
         });
 
+        var lastViewportW = window.innerWidth;
         window.addEventListener('resize', function() {
+            if (window.innerWidth === lastViewportW) return;
+            lastViewportW = window.innerWidth;
             if (trigger.getAttribute('aria-expanded') === 'true') close(false);
         });
 
