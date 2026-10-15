@@ -34,6 +34,7 @@ export default {
       "flower-vault.glassgallery.my.id",
       "landscape-vault.glassgallery.my.id",
       "insect-vault.glassgallery.my.id",
+      "machina-vault.glassgallery.my.id",
       "quill.glassgallery.my.id",
       "mema.glassgallery.my.id",
       "wikistream.glassgallery.my.id",
